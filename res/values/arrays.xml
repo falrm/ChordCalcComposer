@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<array name="timbres">
+		<item name="voice">@array/voice_types</item>
+		<item name="plucked_strings"></item>
+		<item name="bowed_strings"></item>
+		<item name="brass"></item>
+		<item name="piano"></item>
+	</array>
+	
+	<array name="voice_types">
+		<item name="soprano"></item>
+		<item name="alto"></item>
+		<item name="tenor"></item>
+		<item name="bass"></item>
+	</array>
+	
+	<array name="soprano_data">
+		<item name="clef">-6</item>
+		<item name="longname">@string/soprano_long</item>
+		<item name="shortname">@string/soprano_short</item>
+	</array>
+	
+	<array name="piano_data">
+		<item name="clefs">2</item>
+		<item name="clef0">-6</item>
+		<item name="clef1">6</item>
+	</array>
+</resources>

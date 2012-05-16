@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- Store clefs by the position of middle C in whole tones (alternating
+		line and spaces) from the center (treble B4) line of the staff. -->
+	<integer name="treble_clef_offset">-6</integer>
+	<integer name="bass_clef_offset">6</integer>
+</resources>
