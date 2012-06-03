@@ -20,10 +20,6 @@ public class Scale extends Chord {
 	public Scale(Collection<Integer> c, Modulus m) {
 		super(c,m);
 	}
-
-	public Scale(Scale c) {
-		super(c);
-	}
 	
 	public static Scale chromatic(Modulus m) {
 		Scale result = new Scale(m);

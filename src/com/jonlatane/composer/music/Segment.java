@@ -8,29 +8,34 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 import android.renderscript.*;
+import android.content.*;
 
-// A collection of many Voices combined with a start and end beat.  Contains all
-// elements of the voice
-public class Segment implements Iterable<Segment.RhythmMapPair>
+// A collection of one or many Voices combined with a common start and end beat.  At each point
+// in time we can retrieve a Map of each voice to its MusicalContext.
+public class Segment implements Iterable< Map<Rational,Map<Voice,Voice.MusicalContext>>.Entry >
 {
 	// Segment contains all beats from start up to (but excluding) end.
-	public final Rational start;
-	public final Rational end;
+	public final Rational START;
+	public final Rational END;
 	private final Set<Voice> _voices;
 	
-	private Segment() {_voices=new TreeSet<Voice>();start=null;end=null;};
+	private Segment() {_voices=new TreeSet<Voice>();START=null;END=null;};
 
+	public Segment(Rational start, Rational end) {
+		this(null, start, end);
+	}
 	public Segment(Voice v, Rational start, Rational end) {
-		this.start = start;
-		this.end = end;
+		this.START = start;
+		this.END = end;
 		
 		this._voices = new TreeSet<Voice>();
-		this._voices.add(v);
+		if( v != null )
+			this._voices.add(v);
 	}
 	
 	public Segment(Segment s) {
-		this.start = s.start;
-		this.end = s.end;
+		this.START = s.START;
+		this.END = s.END;
 		this._voices = s.getVoices();
 	}
 	
@@ -38,7 +43,7 @@ public class Segment implements Iterable<Segment.RhythmMapPair>
 		this(c.iterator().next());
 		
 		for( Segment s : c ) {
-			assert( s.start == start && s.end == end );
+			assert( s.START == START && s.END == END );
 			for(Voice v : s.getVoices())
 				getVoices().add(v);
 		}
@@ -49,17 +54,17 @@ public class Segment implements Iterable<Segment.RhythmMapPair>
 	}
 	
 	public Rational getLength() {
-		return end.minus(start);
+		return END.minus(START);
 	}
 
 	public boolean contains(Rational r) {
-		return (start.compareTo(r) <= 0) && (end.compareTo(r) > 0);
+		return (START.compareTo(r) <= 0) && (END.compareTo(r) > 0);
 	}
 	
 	public Rhythm getRhythm() {
 		Rhythm result = new Rhythm();
 		for(Voice v : _voices) {
-			result.addAll(v.getRhythm().subSet(start,end));
+			result.addAll(v.getRhythm().subSet(START,END));
 		}
 		return result;
 	}
@@ -75,7 +80,7 @@ public class Segment implements Iterable<Segment.RhythmMapPair>
 	
 	@Override
 	public int hashCode() {
-		int result = start.hashCode() ^ end.hashCode();
+		int result = START.hashCode() ^ END.hashCode();
 		
 		for(Voice v : _voices)
 			result = result ^ v.hashCode();
@@ -84,7 +89,7 @@ public class Segment implements Iterable<Segment.RhythmMapPair>
 	}
 	
 	public Segment union( Segment s ) {
-		assert( s.start == start && s.end == end );
+		assert( s.START == START && s.END == END );
 		Segment result = new Segment(s);
 		for(Voice v : getVoices() ) {
 			getVoices().add(v);
@@ -98,51 +103,43 @@ public class Segment implements Iterable<Segment.RhythmMapPair>
 		return union(s);
 	}
 	
-	public class RhythmMapPair {
-		Rational BEAT;
-		Map<Voice,Voice.MusicalContext> CONTEXT = new HashMap<Voice,Voice.MusicalContext>();
-	}
-	class SegmentIterator implements Iterator<RhythmMapPair> {
-		Rhythm r = getRhythm();
-		Iterator<Rational> itr;
-		RhythmMapPair next;
+	public Map<Voice,Voice.MusicalContext> getContextMapAt(Rational r) {
 		
-		public SegmentIterator() {
-			this(false);
-		}
-		public SegmentIterator( boolean reverse ) {
-			next = new RhythmMapPair();
-			if(reverse)
-				itr = r.descendingIterator();
-			else
-				itr = r.iterator();
-		}
-		public boolean hasNext() {
-			return itr.hasNext();
-		}
-		public RhythmMapPair next() {
-			next.BEAT = itr.next();
-			next.CONTEXT.clear();
-			for(Voice v : getVoicesRealizedAt(next.BEAT)) {
-				next.CONTEXT.put(v,v.getMusicalContextAt(next.BEAT));
-			}
-			return next;
-		}
-		public void remove() {
-			
-		}
 	}
 	
-	public Iterator<RhythmMapPair> iterator() {
-		return new SegmentIterator();
+	public Iterator< Map<Rational,Map<Voice,Voice.MusicalContext>>.Entry > iterator() {
+		return new Iterator< Map<Rational,Map<Voice,Voice.MusicalContext>>.Entry >() {
+			
+		};
 	}
-	class DescendingIteratorSegment extends Segment {
-		@Override
-		public Iterator<RhythmMapPair> iterator() {
-			return new SegmentIterator(true);
+	
+	public Rational relative(Rational r) {
+		return r.minus(START);
+	}
+	
+	public Segment freeSegment() {
+		Segment result = new Segment(Rational.ZERO, relative(this.END));
+		result.getVoices().clear();
+		Map<Voice,Voice> cloneMap = new HashMap<Voice,Voice>();
+		for(Voice v : getVoices()) {
+			Voice vClone = new Voice();
+			result.getVoices().add(vClone);
+			cloneMap.put(v, vClone);
 		}
-	}
-	public Iterator<RhythmMapPair> descendingIterator() {
-		return new SegmentIterator(true);
+		
+		// Copy realization information
+		for(Voice.RhythmMapPair rmp : this) {
+			// rmp is a
+			Rational r = rmp.BEAT;
+			Map<Voice,Voice.MusicalContext> M = rmp.CONTEXT;
+			for( Map.Entry<Voice,Voice.MusicalContext> e : M.entrySet() ) {
+				Voice target = cloneMap.get(e.getValue());
+				target.getRhythm().add( relative(rmp.BEAT) );
+				
+				target.getMusicalContextAt(rmp.BEAT).REALIZATION.setRealization( rmp.CONTEXT.get( e.getKey() ));
+			}
+		}
+		
+		return result;
 	}
 }

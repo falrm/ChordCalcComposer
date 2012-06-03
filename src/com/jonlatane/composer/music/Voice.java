@@ -1,55 +1,37 @@
 package com.jonlatane.composer.music;
 
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.TreeMap;
-import java.util.EnumSet;
-import java.util.SortedMap;
-import java.util.Vector;
+import java.util.*;
+import android.util.Log;
+import android.graphics.drawable.*;
 
-public class Voice implements SortedMap<Rational, Voice.MusicalContext> {
+public class Voice implements Iterable< Map<Rational,Voice.MusicalContext>.Entry > {
 	public class MusicalContext
 	{
 		private Rational location = null;
-		private Float realLocation = null;
-		private RealizationContext REALIZATION;
-		private VoiceContext VOICE;
-		private WorkContext WORK;
+		public final RealizationContext REALIZATION;
+		public final VoiceContext VOICE;
+		public final WorkContext WORK;
 		
 		MusicalContext( float location ) {
 			this(Rational.nearest(location));
-			realLocation = location;
 		}
 		
 		MusicalContext( Rational location) {
+			this( location, null );
+		}
+		
+		MusicalContext( Rational location, RealizationContext rc ) {
+			if( rc == null ) {
+				rc = new RealizationContext();
+			}
 			this.location = location;
 			this.VOICE = new VoiceContext();
 			this.WORK = new WorkContext();
-			this.REALIZATION = new RealizationContext();
+			this.REALIZATION = new RealizationContext(rc);
 		}
 		
-		public Rational getRationalLocation() {
+		public Rational getLocation() {
 			return location;
-		}
-		
-		public float getRealLocation() {
-			if(realLocation != null) {
-				return realLocation;
-			} else {
-				return (float)location.toDouble();
-			}
-		}
-		
-		public void reRealize( PitchSet realization ) {
-			REALIZATION = new RealizationContext(realization, REALIZATION.getArticulation());
-		}
-		
-		public void reRealize( PitchSet realization, Set<Articulation> articulations ) {
-			REALIZATION = new RealizationContext(realization, articulations);
-		}
-		
-		public void reRealize(RealizationContext original) {
-			REALIZATION = new RealizationContext(original);
 		}
 		
 		public class RealizationContext {
@@ -58,31 +40,42 @@ public class Voice implements SortedMap<Rational, Voice.MusicalContext> {
 				STACCATO, MARCATO, TENUTO, LEGATO, SPICCATO;
 			}
 			
+			private PitchSet _realization;
+			private EnumSet<Articulation> _articulations;
+			
 			public RealizationContext() {
-				this(PitchSet.REST);
+				this(new PitchSet());
 			}
 			
 			public RealizationContext( PitchSet realization ) {
 				this(realization, EnumSet.noneOf(Articulation.class));
 			}
 			public RealizationContext( PitchSet realization, Set<Articulation> articulations ) {
-				setRealization(realization);
-				setArticulation(articulations);
+				setRealizationInCover(realization);
+				setArticulationInCover(articulations);
 			}
 			public RealizationContext( RealizationContext rc ) {
 				this(rc.getRealization(), rc.getArticulation());
 			}
 			
-			private PitchSet _realization;
 			public PitchSet getRealization() {
 				return _realization;
 			}
-			public void setRealization(PitchSet ps) {
+			public void setRealizationInCover(PitchSet ps) {
 				_realization = ps;
+			}
+			public void setRealizationHere(PitchSet ps) {
+				if( getLocation() != _realizationCover.floorKey( getLocation() ) ) {
+					MusicalContext mc = new MusicalContext( getLocation() );
+					_realizationCover.put( getLocation(), mc );
+					mc.REALIZATION.setRealizationInCover( ps );
+				} else {
+					setRealizationInCover(ps);
+				}
 			}
 			
 			public Rational getRhythmicContext() {
-				Rational lower = _rhythm.floor(getRationalLocation());
+				Rational lower = _rhythm.floor(getLocation());
 				if( lower == null )
 					lower = Rational.ZERO;
 				
@@ -93,16 +86,24 @@ public class Voice implements SortedMap<Rational, Voice.MusicalContext> {
 				return upper.minus(lower);
 			}
 
-			private EnumSet<Articulation> _articulations = EnumSet.noneOf(Articulation.class);
 			public Set<Articulation> getArticulation() {
 				return _articulations;
 			}
-			public void setArticulation(Set<Articulation> articulations) {
+			public void setArticulationInCover(Set<Articulation> articulations) {
 				this._articulations = EnumSet.copyOf(articulations);
+			}
+			public void setArticulationHere(Set<Articulation> articulations) {
+				if( getLocation() != _realizationCover.floorKey( getLocation() ) ) {
+					MusicalContext mc = new MusicalContext( getLocation() );
+					_realizationCover.put( getLocation(), mc );
+					mc.REALIZATION.setArticulationInCover( articulations );
+				} else {
+					setArticulationInCover(articulations);
+				}
 			}
 			
 			public Segment getSegment() {
-				Rational lower = _rhythm.floor(getRationalLocation());
+				Rational lower = _rhythm.floor(getLocation());
 				if( lower == null )
 					lower = Rational.ZERO;
 
@@ -116,30 +117,45 @@ public class Voice implements SortedMap<Rational, Voice.MusicalContext> {
 
 		public class VoiceContext {
 
-			private Chord _chord;
-			private Scale _scale;
-
-			public VoiceContext() {
-				/* Realize information from the voice here */
-				_chord = _chordCover.floorEntry(getRationalLocation()).getValue();
-				_scale = _scaleCover.floorEntry(getRationalLocation()).getValue();
-			}
-			
-			private void invariant() {
-				assert(_chord.MODULUS.OCTAVE_STEPS == _scale.MODULUS.OCTAVE_STEPS);
-			}
-
 			public Chord getChord() {
-				return _chord;
+				return _chordCover.floorEntry(getLocation()).getValue();
 			}
 			public Scale getScale() {
-				return _scale;
+				return _scaleCover.floorEntry(getLocation()).getValue();
+			}
+			public Key getKey() {
+				return _keyCover.floorEntry(getLocation()).getvalue();
+			}
+			
+			public void setChordInCover(Chord c) {
+				_chordCover.floorEntry(getLocation()).setValue(c);
+			}
+			public void setScaleInCover(Scale s) {
+				_scaleCover.floorEntry(getLocation()).setValue(s);
+			}
+			public void setKeyInCover(Key k) {
+				_keyCover.floorEntry(getLocation()).setValue(k);
+			}
+			
+			public void setChordHere(Chord c) {
+				_chordCover.put(getLocation(), c);
+			}
+			public void setScaleHere( Scale s ) {
+
+				_scaleCover.put(getLocation(), s);
+			}
+			public void setKeyHere(Key k) {
+				_keyCover.put(getLocation(), k);
 			}
 		}
 
 		public class WorkContext {
+			Work _parent;
 			public WorkContext() {
-				/* Realize information from the parent work context map here */
+				this(null);
+			}
+			public WorkContext(Work w) {
+				_parent = w;
 			}
 		}
 
@@ -166,7 +182,9 @@ public class Voice implements SortedMap<Rational, Voice.MusicalContext> {
 		}
 		
 		public PitchSet getRealizationScaleClasses() {
-			
+			PitchSet result = new PitchSet();
+			//TODO
+			return result;
 		}
 	}
 
@@ -177,9 +195,15 @@ public class Voice implements SortedMap<Rational, Voice.MusicalContext> {
 	* Our harmonic context elements each cover the Voice!  All Chords and Scales
 	* share our Voice's modulus.
 	*/
+	public class Cover<T> extends TreeMap<Segment, T>  {
+		public Iterator< Map<Rational, >.Entry rhythmIterator {
+			
+		}
+	}
 	private TreeMap<Rational, MusicalContext> _realizationCover;
 	private TreeMap<Rational, Chord> _chordCover;
 	private TreeMap<Rational, Scale> _scaleCover;
+	private TreeMap<Rational, Key> _keyCover;
 	private void _coverInvariant() {
 		assert(_rhythm.headSet(_rhythm.last()).equals(_realizationCover.keySet()))
 			: "Realization cover does not fit rhythm";
@@ -202,11 +226,114 @@ public class Voice implements SortedMap<Rational, Voice.MusicalContext> {
 	}
 	public Voice(Chord.Modulus m) {
 		this._modulus = m;
-		this._rhythm = new Rhythm();
+		
+		// The _rhythm and _realizationCover are tightly coupled - the keySet of _realizationCover
+		// should equal _rhythm always.
+		this._rhythm = new Rhythm() {
+			@Override
+			public boolean add(Rational r) {
+				if(!_realizationCover.keySet().contains(r)) {
+					_realizationCover.put(r, new MusicalContext(r));
+				}
+				return super.add(r);
+			}
+			
+			@Override
+			public boolean remove(Rational r) {
+				if(_realizationCover.keySet().contains(r)) {
+					_realizationCover.remove(r);
+				}
+				return super.remove(r);
+			}
+		};
+		
+		this._realizationCover = new TreeMap<Rational, MusicalContext>() {
+			@Override
+			public MusicalContext put(Rational r, MusicalContext mc) {
+				getRhythm().add(r);
+				mc.location = r;
+				return super.put(r,mc);
+			}
+			@Override
+			public MusicalContext remove(Rational r) {
+				MusicalContext result = super.remove(r);
+				getRhythm().remove(r);
+				return result;
+			}
+		};
+		
+		
+		this._chordCover = new TreeMap<Rational, Chord>() {
+			@Override
+			public Chord remove(Rational r) {
+				assert( !r.equals(Rational.ZERO) ) : "Cannot remove starting chord";
+				return super.remove(r);
+			}
+		};
+		_chordCover.put(Rational.ZERO, new Chord(this._modulus));
+		
+		this._scaleCover = new TreeMap<Rational, Scale>(){
+			@Override
+			public Scale remove(Rational r) {
+				assert( !r.equals(Rational.ZERO) ) : "Cannot remove starting scale";
+				return super.remove(r);
+			}
+		};
+		_scaleCover.put(Rational.ZERO, new Scale(this._modulus));
+		
+		this._keyCover = new TreeMap<Rational, Key>(){
+			@Override
+			public Chord remove(Rational r) {
+				assert( !r.equals(Rational.ZERO) ) : "Cannot remove starting key";
+				return super.remove(r);
+			}
+		};
+		_keyCover.put(Rational.ZERO, new Key(this._modulus));
 	}
 	
+	public SortedMap<Rational,Chord> getChords() {
+		return _chordCover;
+	}
+
+	public SortedMap<Rational,Scale> getScales() {
+		return _scaleCover;
+	}
+	
+	public SortedMap<Rational,Key> getKeys() {
+		return _keyCover;
+	}
+	
+
 	public Rhythm getRhythm() {
 		return _rhythm;
+	}
+	
+	private Rhythm _realizedRhythm = new Rhythm();
+	void updateRealizedRhythm() {
+		_realizedRhythm.clear();
+		_realizedRhythm.addAll( getRhythm() );
+		_realizedRhythm.addAll(getChords().keySet());
+		_realizedRhythm.addAll(getScales().keySet());
+		_realizedRhythm.addAll(getKeys().keySet());
+	}
+	public Rhythm getRealizedRhythm() {
+		return _realizedRhythm;
+	}
+	
+	public void subdivide(Rational q, Segment s) {
+		assert(s.getVoices().contains(this));
+		assert(q.compareTo(Rational.ZERO) > 0);
+		
+		for( Rational i = s.START; i.compareTo(s.END) < 0; i = i.plus(q) ) {
+			getRhythm().add(i);
+		}
+		
+		updateRealizedRhythm();
+		
+	}
+	
+	public boolean definedOn(Rational r) {
+		return r.compareTo(Rational.ZERO) > 0 && r.compareTo(getRhythm().last()) < 0;
 	}
 	
 	public MusicalContext getMusicalContextAt(Rational r) {
@@ -225,16 +352,6 @@ public class Voice implements SortedMap<Rational, Voice.MusicalContext> {
 		return result;
 	}
 	
-	// Copy the given Realization Context (notes and articulation) to the current
-	// point in the voice
-	public void reRealize(Rational r, MusicalContext.RealizationContext rc) {
-		getMusicalContextAt(r).reRealize( rc );
-	}
-	
-	public MusicalContext getMusicalContextAt(float f) {
-		return getMusicalContextAt(Rational.nearest(f));
-	}
-	
 	public Segment segment() {
 		return segment(_rhythm.first(),_rhythm.last());
 	}
@@ -244,5 +361,38 @@ public class Voice implements SortedMap<Rational, Voice.MusicalContext> {
 				r1.compareTo( _rhythm.last() ) < 0 &&
 				r2.compareTo( _rhythm.last() ) < 0);
 		return new Segment(this, r1, r2);
+	}
+	
+	public Iterator< Map<Rational,Voice.MusicalContext>.Entry > iterator() {
+		return new Iterator< Map<Rational,Voice.MusicalContext>.Entry >() {
+			Iterator<Rational> itr = getRealizedRhythm().iterator();
+			public Map<Rational,Voice.MusicalContext>.Entry next() {
+				return new Map<Rational,Voice.MusicalContext>.Entry() {
+					@Override
+					Rational myBeat = itr.next();
+					public Rational getKey() {
+						return myBeat;
+					}
+					
+					@Override
+					public Voice.MusicalContext getValue() {
+						return getMusicalContextAt(myBeat);
+					}
+					
+					@Override
+					public void setValue(Voice.MusicalContext v) {
+						getMusicalContextAt(myBeat).REALIZATION.setRealization( v.REALIZATION.getRealization() );
+					}
+				};
+			}
+			
+			public boolean hasNext() {
+				return itr.hasNext();
+			}
+			
+			public void remove() {
+				
+			}
+		};
 	}
 }

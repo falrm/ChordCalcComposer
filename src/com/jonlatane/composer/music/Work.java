@@ -1,25 +1,32 @@
 package com.jonlatane.composer.music;
 import java.util.Vector;
 import java.util.TreeSet;
+import java.util.Set;
+import java.util.SortedSet;
 
-public class Work extends Vector<Part> {
-	private TreeSet<Rational> overallRhythm;
-	public TreeSet<TreeSet<Part>> grandStaves;
+public class Work {
+	private Set<Voice> _voices;
+	
 	public Work() {
-		super();
-		overallRhythm = new TreeSet<Rational>();
-		updateOverallRhythm();
+		_voices = new TreeSet<Voice>();
 	}
 	
-	public void updateOverallRhythm() {
-		overallRhythm.clear();
-		for(Part p : this) {
-			p.updateOverallRhythm();
-			overallRhythm.addAll(p.getOverallRhythm());
+	public Work( Work w ) {
+		_voices = w.getVoices();
+	}
+	
+	private TreeSet<Rational> _rhythm =  new TreeSet<Rational>();
+	public SortedSet<Rational> getRhythm() {
+		return _rhythm;
+	}
+	void updateRhythm() {
+		_rhythm.clear();
+		for( Voice v : _voices ) {
+			_rhythm.addAll(v.getRhythm());
 		}
 	}
 	
-	public TreeSet<Rational> getOverallRhythm() {
-		return overallRhythm;
+	public Set<Voice> getVoices() {
+		return _voices;
 	}
 }

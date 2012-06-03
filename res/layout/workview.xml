@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:id="@+id/rootView" android:layout_width="fill_parent" android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android">
+	<ScrollView android:layout_width="40dp" android:layout_height="fill_parent">
+		<LinearLayout android:id="@+id/sideButtonsArea" android:layout_width="fill_parent" android:layout_height="wrap_content" android:orientation="vertical">
+			<Button android:id="@+id/button01" android:layout_width="fill_parent" android:layout_height="40dp"/>
+			<Button android:id="@+id/button02" android:layout_width="fill_parent" android:layout_height="40dp"/>
+			<Button android:id="@+id/button03" android:layout_width="fill_parent" android:layout_height="40dp"/>
+			<Button android:id="@+id/button04" android:layout_width="fill_parent" android:layout_height="40dp"/>
+		</LinearLayout>
+	</ScrollView>
+	<AbsoluteLayout android:id="@+id/musicViewContainer" android:layout_width="wrap_content" android:layout_height="fill_parent">
+		<ScrollView android:id="@+id/verticalScroller" android:layout_width="wrap_content" android:layout_height="fill_parent" android:layout_x="-1dp" android:layout_y="0dp">
+			<LinearLayout android:id="@+id/staffLinesTable" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
+				<LinearLayout android:id="@+id/systemView00" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef00" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature00" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature00" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller00" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+						<LinearLayout android:src="@layout/systemview" />
+					</ScrollView> 
+				</LinearLayout>
+				<LinearLayout android:id="@+id/systemView01" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef01" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature01" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature01" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller01" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+						
+					</ScrollView> 
+				</LinearLayout>
+				<LinearLayout android:id="@+id/systemView02" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef02" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature02" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature02" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller02" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+						
+					</ScrollView> 
+				</LinearLayout>
+				<LinearLayout android:id="@+id/systemView03" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef03" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature03" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature03" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller03" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+						
+					</ScrollView> 
+				</LinearLayout>
+				<LinearLayout android:id="@+id/systemView04" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef04" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature04" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature04" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller04" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+						
+					</ScrollView> 
+				</LinearLayout>
+				<LinearLayout android:id="@+id/systemView05" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef05" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature05" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature05" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller05" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+						
+					</ScrollView> 
+				</LinearLayout>
+				<LinearLayout android:id="@+id/systemView06" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef06" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature06" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature06" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller06" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+						
+					</ScrollView> 
+				</LinearLayout>
+				<LinearLayout android:id="@+id/systemView07" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef07" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature07" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature07" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller07" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+						
+					</ScrollView> 
+				</LinearLayout>
+				<LinearLayout android:id="@+id/systemView08" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef08" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature08" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature08" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller08" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+						
+					</ScrollView> 
+				</LinearLayout>
+				<LinearLayout android:id="@+id/systemView09" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller09" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+			
+					</ScrollView> 
+				</LinearLayout>
+				<LinearLayout android:id="@+id/systemView10" android:layout_width="wrap_content" android:layout_height="30dp">
+					<AbsoluteLayout android:id="@+id/systemClef10" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemTimeSignature10" android:layout_width="20dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<AbsoluteLayout android:id="@+id/systemKeySignature10" android:layout_width="30dp" android:layout_height="fill_parent">
+					</AbsoluteLayout>
+					<ScrollView android:id="@+id/systemScroller10" android:layout_width="wrap_content" android:layout_height="fill_parent" android:orientation="horizontal">
+					
+					</ScrollView> 
+				</LinearLayout>
+			</LinearLayout>
+		</ScrollView>
+	</AbsoluteLayout>
+</LinearLayout>

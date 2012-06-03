@@ -13,12 +13,6 @@ import java.util.TreeMap;
 * The PitchSet's Modulus (which has a default value of 12) represents the number of values in the octave
 */
 public class PitchSet extends TreeSet<Integer> {
-	/**
-	 * SubPulses indicate points where a note should be tied visually.
-	 * More aurally speaking, these may reflect vibrato patterns or ideas
-	 * of underlying motion.
-	 */
-	public TreeSet<Rational> subPulses = new TreeSet<Rational>();
 	
 	public PitchSet() {
 		super();

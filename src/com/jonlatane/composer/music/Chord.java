@@ -2,6 +2,7 @@ package com.jonlatane.composer.music;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * Chords work much like PitchSets, but they have a Modulus: the number of tones an octave is divided into. Ex: 
@@ -116,19 +117,35 @@ public class Chord extends PitchSet {
 		return root;
 	}
 	
-	public String getName() {
-		return name;
-	}
-	
 	void invariant() {
 		assert( true );
 	}
 	
-	void updateName() {
+	/* Reduces the chord to a String that includes harmonic context.
+	 * 
+	 */
+	public String toString(Voice.RhythmMapPair rmp) {
+		String result = "";
 		
+		if( this.MODULUS.OCTAVE_STEPS == 12 ) {
+			String enharmonic = "?"; //TODO
+			for( Map.Entry<Voice,Voice.MusicalContext> e : rmp.CONTEXT.entrySet() ) {
+				e.getValue().get
+			}
+		} else {
+			result = "Only 12 tone chords have string representations";
+		}
+		return result;
+	}
+	public int hashCode() {
+		return toString().hashCode();
 	}
 	
-	void updateContents() {
-		
+	/*
+	* Convenience methods
+	*/
+	public boolean isTriad() {
+		return size() == 3;
 	}
+	public boolean
 }

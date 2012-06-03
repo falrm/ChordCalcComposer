@@ -26,4 +26,50 @@
 		<item name="clef0">-6</item>
 		<item name="clef1">6</item>
 	</array>
+	
+	<!-- This is used directly in the creation of Keys. Only the names here can be used
+		as tonic enharmonics for simplicity.  No keys of Cb for you! Note that this includes
+		keys to all Scales -->
+	<array name="12tonePitches">
+		<item>C</item>
+		<item>@array/12tone1</item>
+		<item>D</item>
+		<item>@array/12tone3</item>
+		<item>E</item>
+		<item>F</item>
+		<item>@array/12tone6</item>
+		<item>G</item>
+		<item>@array/12tone8</item>
+		<item>A</item>
+		<item>@array/12tone10</item>
+		<item>B</item>
+	</array>
+	<array name="12tone0">
+		<item>B#</item>
+		<item>C</item>
+	</array>
+	<array name="12tone1">
+		<item>C#</item>
+		<item>Db</item>
+	</array>
+
+	<array name="12tone3">
+		<item>D#</item>
+		<item>Eb</item>
+	</array>
+
+	<array name="12tone6">
+		<item>F#</item>
+		<item>Gb</item>
+	</array>
+
+	<array name="12tone8">
+		<item>G#</item>
+		<item>Ab</item>
+	</array>
+
+	<array name="12tone10">
+		<item>A#</item>
+		<item>Bb</item>
+	</array>
 </resources>
