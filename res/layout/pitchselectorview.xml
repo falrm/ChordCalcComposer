@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This is a handy way of selecting pitches in 12-tone at least-->
+<GridView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:columnCount="4"
+	android:rowCount="4">
+	
+</GridView>

@@ -1,8 +1,6 @@
 package com.jonlatane.composer.music;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Chords work much like PitchSets, but they have a Modulus: the number of tones an octave is divided into. Ex: 
@@ -32,6 +30,21 @@ public class Chord extends PitchSet {
 		}
 		public int hashCode() {
 			return OCTAVE_STEPS;
+		}
+		
+		private static final HashMap<Integer,Key> _chromatics = new HashMap<Integer,Key>();
+		public Key chromatic() {
+			Key result;
+			if( _chromatics.containsKey(OCTAVE_STEPS) ) {
+				result = _chromatics.get(OCTAVE_STEPS);
+			} else {
+				result = new Key(this);
+				for(int i = 0; i < OCTAVE_STEPS; i++) {
+					result.add(i);
+				}
+				_chromatics.put(this.OCTAVE_STEPS,result);
+			}
+			return result;
 		}
 	}
 	
@@ -121,24 +134,16 @@ public class Chord extends PitchSet {
 		assert( true );
 	}
 	
-	/* Reduces the chord to a String that includes harmonic context.
-	 * 
-	 */
-	public String toString(Voice.RhythmMapPair rmp) {
+	public String toString(Key k) {
+		assert(k.MODULUS.OCTAVE_STEPS == this.MODULUS.OCTAVE_STEPS);
 		String result = "";
 		
 		if( this.MODULUS.OCTAVE_STEPS == 12 ) {
-			String enharmonic = "?"; //TODO
-			for( Map.Entry<Voice,Voice.MusicalContext> e : rmp.CONTEXT.entrySet() ) {
-				e.getValue().get
-			}
+			//TODO
 		} else {
-			result = "Only 12 tone chords have string representations";
+			result = "Not12Tone";
 		}
 		return result;
-	}
-	public int hashCode() {
-		return toString().hashCode();
 	}
 	
 	/*
@@ -147,5 +152,4 @@ public class Chord extends PitchSet {
 	public boolean isTriad() {
 		return size() == 3;
 	}
-	public boolean
 }

@@ -28,7 +28,7 @@ public class Part extends Vector<Voice> {
 		return overallRhythm;
 	}
 	
-	public synchronized void updateOverallRhythm() {
+	/*public synchronized void updateOverallRhythm() {
 		overallRhythm.clear();
 		for( Voice v : this ) {
 			for( Map.Entry<Rational,PitchSet> m : v.entrySet() ) {
@@ -38,10 +38,5 @@ public class Part extends Vector<Voice> {
 				}
 			}
 		}
-	}
-	
-	public class PartDisplayOverride {
-		public Rational start,end;
-		public Part whereToDisplay;
-	}
+	}*/
 }

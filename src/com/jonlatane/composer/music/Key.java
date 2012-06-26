@@ -10,11 +10,11 @@ import java.util.Collection;
 * This class is implemented atop Google Resource APIs.
 * Other resource APIs may have easy-to-implement functional equivalents.
 */
-public class Key extends Scale
+public final class Key extends Scale
 {
 	private String _rootName;
 	public static void initializeKeys(Resources rs) {
-		TypedArray ts = 
+		//TODO p
 	}
 	
 	public Key(Modulus m) {

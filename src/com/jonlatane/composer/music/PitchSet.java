@@ -1,11 +1,6 @@
 package com.jonlatane.composer.music;
 
-import java.util.Vector;
-import java.util.TreeSet;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Arrays;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
 * A PitchSet represents a set of pitches.  We'll assume for the time being middle C (C4) is 0.
@@ -64,4 +59,21 @@ public class PitchSet extends TreeSet<Integer> {
 	}
 	
 	public static final PitchSet REST = new PitchSet();
+	
+	@Override
+	public int hashCode() {
+		int result = 1;
+		for(Integer i : this ) {
+			result = result ^ i;
+		}
+		return result;
+	}
+	
+	public Chord toChord() {
+		return new Chord(this);
+	}
+	
+	public Scale toScale() {
+		return new Scale(this);
+	}
 }
