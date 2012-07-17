@@ -2,7 +2,7 @@ package com.jonlatane.composer.music;
 
 import java.util.*;
 
-public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, Iterable<Rational>, Cloneable
+public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.music.Segment
 {
 	public Rhythm() {
 		super();
@@ -13,7 +13,7 @@ public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, It
 	
 	/*
 	* A Segment lies over top of a Rhythm and has deep cloning abilities.  They are our means
-	* of moving rhythms around
+	* of moving rhythms around and doing cool stuff
 	*/
 	public class Segment implements com.jonlatane.composer.music.Segment {
 		private final Rational _start, _end;
@@ -44,8 +44,9 @@ public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, It
 			return result;
 		}
 
-		public SortedSet<Rational> getSet() {
-			return tailSet(_start).headSet(_end);
+		// returns the view of the overlying rhythm this segment represents
+		private SortedSet<Rational> getSet() {
+			return segmentView(getStart(),getEnd());
 		}
 		
 		public Iterator<Rational> iterator() {
@@ -56,28 +57,114 @@ public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, It
 			return getEnd().minus(getStart());
 		}
 		
-		public boolean contains(Rational r) {
+		public boolean spans(Rational r) {
 			return (r.compareTo(getStart()) >= 0) && (r.compareTo(getEnd()) < 0);
 		}
 		
+		public boolean spans(Collection<Rational> c) {
+			boolean result = true;
+			for( Rational r : c ) {
+				if(!spans(r)) {
+					result = false;
+					break;
+				}
+			}
+			return result;
+		}
+		
+		public boolean spans(com.jonlatane.composer.music.Segment s) {
+			return spans(s.getStart()) && (spans(s.getEnd())||s.getEnd().equals(getEnd()));
+		}
+		
+		//SortedSet methods...
+		public boolean contains(Rational r) {
+			return getSet().contains(r);
+		}
+		public boolean contains(Object o) {
+			return getSet().contains(o);
+		}
+		
+		public Rational last() {
+			return getSet().last();
+		}
+		public Segment subSet(Rational r1, Rational r2) {
+			return new Segment(r1, r2);
+		}
+		public Segment headSet(Rational r) {
+			return new Segment(r, getEnd());
+		}
+		public Segment tailSet(Rational r) {
+			return new Segment(r, getEnd());
+		}
+		
+		public Object[] toArray() {
+			return getSet().toArray();
+		}
+		public <T> T[] toArray(T[] a) {
+			return getSet().toArray(a);
+		}
+		public boolean containsAll(Collection<?> c) {
+			return getSet().containsAll(c);
+		}
+		public boolean addAll(Collection<Rational> c) {
+			boolean result = false;
+			for( Rational r : c ) {
+				if( spans( r ) )
+					result = result || add(r);
+			}
+			return result;
+		}
+		public boolean retainAll(Collection<?> c) {
+			return retainAll(c);
+		}
+		public int size() {
+			return size();
+		}
+		public  boolean removeAll(Collection<?> c) {
+			return removeAll(c);
+		}
+		public Rational first() {
+			return getSet().first();
+		}
+		public void clear() {
+			getSet().clear();
+		}
+		public boolean add(Rational r) {
+			return add(r);
+		}
+		public Comparator comparator() {
+			return null;
+		}
+		public boolean remove(Object o) {
+			return getSet().remove(o);
+		}
+		public boolean isEmpty() {
+			return getSet().isEmpty();
+		}
+		
+		// SEGMENT MANIPULATION COOLNESS! These should be efficient
 		@Override
-		public Rhythm.Segment clone() {
+		public com.jonlatane.composer.music.Segment clone() {
 			Rhythm Q = new Rhythm();
 			for( Rational r : this ) {
 				Q.add(r);
 			}
-			return Q.all();
+			return Q;
 		}
-		
-		//return a cloned segment that
-		public Rhythm.Segment normalize() {
+
+		//return a cloned segment that starts at 0
+		public com.jonlatane.composer.music.Segment normalize() {
 			Rhythm Q = new Rhythm();
 			for( Rational r : this ) {
 				Q.add( r.minus(_start) );
 			}
-			return Q.all();
+			return Q;
 		}
-		
+		public com.jonlatane.composer.music.Segment difference(Segment s) {
+			com.jonlatane.composer.music.Segment result = clone();
+			
+			return result;
+		}
 	}
 	
 	public class Covering<K> extends TreeMap<Rhythm.Segment,K>
@@ -92,7 +179,11 @@ public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, It
 			return true; //TODO
 		}
 		
-		public Set<K> getObjectsAt(Rational r) {
+		public K getObjectAt(Rational r) {
+			return ((K[])getAllObjectsAt(r).toArray())[0];
+		}
+		
+		public Set<K> getAllObjectsAt(Rational r) {
 			HashSet<K> result = new HashSet<K>();
 			
 			Iterator<Rhythm.Segment> itr = headMap(tailSegment(r), true).descendingKeySet().iterator();
@@ -110,12 +201,16 @@ public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, It
 			for( Segment s : keySet() ) {
 				if( s.getStart().compareTo(r) > 0 )
 					break;
-				if( s.contains( r ) {
+				if( s.contains( r ) ) {
 					result = true;
 					break;
 				}
 			}
 			return result;
+		}
+		
+		public Set<com.jonlatane.composer.music.Segment> getSegments() {
+			return (Set<com.jonlatane.composer.music.Segment>)keySet();
 		}
 	}
 	
@@ -125,7 +220,7 @@ public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, It
 	public class NonIntersectingCovering<K> extends TreeMap<Rhythm.Segment,K>
 	implements com.jonlatane.composer.music.Covering<K> {	
 
-		public Set<K> getObjectsAt(Rational r) {
+		public Set<K> getAllObjectsAt(Rational r) {
 			HashSet<K> result = new HashSet<K>();
 			
 			Rhythm.Segment ceiling = ceilingKey(tailSegment(r));
@@ -133,6 +228,24 @@ public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, It
 				result.add(get(ceiling));
 			
 			return result;
+		}
+		
+
+		public boolean contains(Rational r) {
+			boolean result = false;
+			for( Segment s : keySet() ) {
+				if( s.getStart().compareTo(r) > 0 )
+					break;
+				if( s.contains( r ) ) {
+					result = true;
+					break;
+				}
+			}
+			return result;
+		}
+		
+		public Set<com.jonlatane.composer.music.Segment> getSegments() {
+			return (Set<com.jonlatane.composer.music.Segment>)keySet();
 		}
 	}
 	
@@ -152,7 +265,7 @@ public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, It
 			_m = m;
 		}
 		
-		public Set<K> getObjectsAt(Rational r) {
+		public Set<K> getAllObjectsAt(Rational r) {
 			HashSet<K> result = new HashSet<K>();
 			Rational segmentStart = lowerKey(r);
 			if(segmentStart == null) {
@@ -164,6 +277,26 @@ public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, It
 
 			return result;
 		}
+		
+
+		public boolean contains(Rational r) {
+			return r.compareTo(Rational.ZERO) >= 0 &&
+				r.compareTo(getEnd()) < 0;
+		}
+		
+
+		public Set<com.jonlatane.composer.music.Segment> getSegments() {
+			HashSet<com.jonlatane.composer.music.Segment> result = new HashSet<com.jonlatane.composer.music.Segment>();
+			Set<Rational> keys = keySet();
+			for(Rational i : keys) {
+				Rational start = i;
+				Rational end = higherKey(i);
+				if( end != null ) {
+					result.add( new Segment(start, end) );
+				}
+			}
+			return result;
+		}
 	}
 	
 	@Override
@@ -172,15 +305,52 @@ public class Rhythm extends TreeSet<Rational> implements SortedSet<Rational>, It
 		return super.add(r);
 	}
 	
-	public Rhythm.Segment all() {
-		return this.new Segment(Rational.ZERO, this.last());
+	private SortedSet<Rational> segmentView(Rational start, Rational end) {
+		return subSet(start, end);
 	}
-	
-	public Rhythm.Segment segment(Rational start, Rational end) {
-		return this.new Segment(start, end);
+	private com.jonlatane.composer.music.Segment asSegment() {
+		return new Segment(Rational.ZERO, last());
 	}
-	
 	public Rhythm.Segment tailSegment(Rational start) {
 		return this.new Segment(start, last());
+	}
+	
+	public Rational getStart() {
+		return Rational.ZERO;
+	}
+	public Rational getEnd() {
+		return last();
+	}
+
+	public Rational getLength() {
+		return getEnd().minus(getStart());
+	}
+
+	public int compareTo(com.jonlatane.composer.music.Segment s) {
+		return compareTo(s);
+	}
+	
+	public Rhythm clone() {
+		return new Rhythm(this);
+	}
+	
+	public boolean contains(Rational r) {
+		return super.contains(r);
+	}
+	
+	public com.jonlatane.composer.music.Segment normalize() {
+		return clone();
+	}
+	
+	public Rational last() {
+		return last();
+	}
+	
+	public boolean spans(Rational r) {
+		return (r.compareTo(getStart()) >= 0) && (r.compareTo(getEnd()) < 0);
+	}
+
+	public boolean spans(com.jonlatane.composer.music.Segment s) {
+		return spans(s.getStart()) && (spans(s.getEnd())||s.getEnd().equals(getEnd()));
 	}
 }

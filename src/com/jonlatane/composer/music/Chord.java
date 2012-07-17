@@ -18,6 +18,7 @@ public class Chord extends PitchSet {
 	*/
 	public static class Modulus {
 		public final int OCTAVE_STEPS;
+		public static final Modulus TWELVETONE = new Modulus();
 		public Modulus() {
 			this(12);
 		}
@@ -123,7 +124,11 @@ public class Chord extends PitchSet {
 	 */
 	@Override
 	public boolean contains( Integer i ) {
-		return super.contains(i) || super.contains(MODULUS.getPitchClass(i));
+		return super.contains(MODULUS.getPitchClass(i));
+	}
+	
+	public void setRoot(int i) {
+		this.root = i;
 	}
 	
 	public Integer getRoot() {
@@ -151,5 +156,20 @@ public class Chord extends PitchSet {
 	*/
 	public boolean isTriad() {
 		return size() == 3;
+	}
+	
+	// For 12-tone systems
+	public int guessRoot() {
+		assert(MODULUS.OCTAVE_STEPS == 12);
+		int result = 0;
+		int resultCertainty = 0;
+		
+		for(Integer i : this) {
+			int tmpCertainty = 0;
+			if(contains(i + 3) || contains(i + 4)) {
+				tmpCertainty += 1;
+			}
+		}
+		return result;
 	}
 }

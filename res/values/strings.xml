@@ -16,4 +16,7 @@
 
 	<string name="piano_long">Piano</string>
 	<string name="piano_short">Pno</string>
+		
+	<string name="kbd_bottom_note">Eb4</string>
+	<string name="keyWidth">20dp</string>
 </resources>

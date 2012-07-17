@@ -8,49 +8,43 @@
 package com.jonlatane.composer;
 
 public final class R {
-    public static final class array {
-        public static final int piano_data=0x7f040003;
-        public static final int soprano_data=0x7f040002;
-        public static final int timbres=0x7f040000;
-        public static final int voice_types=0x7f040001;
-    }
     public static final class attr {
     }
     public static final class drawable {
         public static final int ic_launcher=0x7f020000;
+        public static final int musictest=0x7f020001;
     }
     public static final class id {
-        public static final int mySideButtons=0x7f070003;
-        public static final int mySystemsLinearView=0x7f070005;
-        public static final int myVoiceView=0x7f070001;
-        public static final int myWorkTrackScroller=0x7f070004;
-        public static final int myWorkView=0x7f070002;
-        public static final int sheetmusic_surfaceview=0x7f070000;
+        public static final int segmentLinearLayout=0x7f060000;
     }
     public static final class integer {
-        public static final int bass_clef_offset=0x7f050001;
+        public static final int bass_clef_offset=0x7f040001;
+        public static final int keyboard_key_width=0x7f040002;
         /**  Store clefs by the position of middle C in whole tones (alternating
 		line and spaces) from the center (treble B4) line of the staff. 
          */
-        public static final int treble_clef_offset=0x7f050000;
+        public static final int treble_clef_offset=0x7f040000;
     }
     public static final class layout {
         public static final int main=0x7f030000;
-        public static final int musicviewingscreen=0x7f030001;
-        public static final int voiceview=0x7f030002;
-        public static final int workview=0x7f030003;
+        public static final int musicviewingactivity=0x7f030001;
+        public static final int octaveview=0x7f030002;
+        public static final int pitchselectorview=0x7f030003;
+        public static final int segmentview=0x7f030004;
     }
     public static final class string {
-        public static final int alto_long=0x7f060003;
-        public static final int alto_short=0x7f060004;
-        public static final int app_name=0x7f060000;
-        public static final int bass_long=0x7f060007;
-        public static final int bass_short=0x7f060008;
-        public static final int piano_long=0x7f060009;
-        public static final int piano_short=0x7f06000a;
-        public static final int soprano_long=0x7f060001;
-        public static final int soprano_short=0x7f060002;
-        public static final int tenor_long=0x7f060005;
-        public static final int tenor_short=0x7f060006;
+        public static final int alto_long=0x7f050003;
+        public static final int alto_short=0x7f050004;
+        public static final int app_name=0x7f050000;
+        public static final int bass_long=0x7f050007;
+        public static final int bass_short=0x7f050008;
+        public static final int kbd_bottom_note=0x7f05000b;
+        public static final int keyWidth=0x7f05000c;
+        public static final int piano_long=0x7f050009;
+        public static final int piano_short=0x7f05000a;
+        public static final int soprano_long=0x7f050001;
+        public static final int soprano_short=0x7f050002;
+        public static final int tenor_long=0x7f050005;
+        public static final int tenor_short=0x7f050006;
     }
 }

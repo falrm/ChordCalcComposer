@@ -28,4 +28,10 @@ public class Scale extends Chord {
 		}
 		return result;
 	}
+	
+	//returns 0 if the chord is tonic, 2 if it is a ii/II, 4 for a iii/III, 5 for a iv/IV, etc.
+	// bounds are constrained by the modulus
+	public int rootFunction(Chord c) {
+		return MODULUS.getPitchClass(c.getRoot() - getRoot());
+	}
 }

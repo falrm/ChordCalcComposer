@@ -3,12 +3,8 @@ package com.jonlatane.composer.music;
 
 import android.util.Log;
 public class WorkTest {
-	public WorkTest() {
-		
-	}
-	
 	public static Work odeToJoy() {
-		Work result = new Work();
+		/*Work result = new Work();
 		TimeSignature ts = new TimeSignature(4,4);
 		Voice v1 = new Voice();
 		
@@ -36,6 +32,8 @@ public class WorkTest {
 		
 		result.add(p);
 		
-		return result;
+		return result;*/
+		
+		return null;
 	}
 }
