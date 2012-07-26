@@ -2,8 +2,12 @@ package com.jonlatane.composer.music;
 
 import java.util.*;
 
-// A Covered Segment is the interface of a Voice, a Staff
+// A Covered Segment is a segment along with a set of coverings.  Implementations
+// should assume one covering per class type for simplicity.
 public interface CoveredSegment extends Segment {
+	// return true if replacing another covering
+	public boolean addCovering(Covering<?> covering, Class cl);
+	public boolean removeCovering(Class cl);
 
 	@Override public CoveredSegment tailSet(Rational r);
 	@Override public CoveredSegment headSet(Rational r);
@@ -49,26 +53,12 @@ public interface CoveredSegment extends Segment {
 	public Rational positionOfLast(Class c);
 	public Object getLast(Class c);
 	
-	// The following should have sane default behaviors that can be changed by the application
-	// of a ClosureGenerator, defined below
-	public Key getClosingKey();
-	public Scale getClosingScale();
-	public Chord getClosingChord();
-	public PitchSet getClosingRealization();
-	
-	public void setClosureGenerator(ClosureGenerator g);
-	
-	public interface ClosureGenerator {
-		public Key getClosingKey();
-		public Scale getClosingScale();
-		public Chord getClosingChord();
-		public PitchSet getClosingRealization();
-		
-		public Covering<Key> getKeyProgression();
-		public Covering<Scale> getScaleProgression();
-		public Covering<Chord> getChordProgression();
-		public Covering<PitchSet> getRealization();
-		
-		public Covering<?> 
-	}
+	@Override CoveredSegment clone();
+	@Override CoveredSegment normalize();
+	//@Override public CoveredSegment symDiff(Segment s);
+	//@Override public CoveredSegment plus(Segment s);
+	//@Override public CoveredSegment minus();
+	//@Override public CoveredSegment downbeats();
+	//@Override public CoveredSegment upbeats();
+	//@Override public CoveredSegment decoratedDownbeats();
 }

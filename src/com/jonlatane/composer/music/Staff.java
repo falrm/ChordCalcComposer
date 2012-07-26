@@ -6,7 +6,7 @@ import java.util.*;
 public class Staff extends Rhythm
 {
 	private Integer _transposition = 0;
-	private final TreeSet<Voice.Segment> _data = new TreeSet<Voice.Segment>();
+	private final TreeSet<Voice.VoiceSegment> _data = new TreeSet<Voice.VoiceSegment>();
 	
 	public Chord inStaffKey(Chord c) {
 		return c;

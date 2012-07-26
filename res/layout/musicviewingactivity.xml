@@ -24,8 +24,13 @@
 			android:layout_width="fill_parent"
 			android:layout_height="100px"/>
 	</LinearLayout>
-	<AbsoluteLayout
+	<LinearLayout
+		android:orientation="vertical"
 		android:layout_width = "wrap_content"
 		android:layout_height="wrap_content" >
-	</AbsoluteLayout>
+		<com.jonlatane.composer.view.ScrollableRhythmView
+			android:id="@+id/firstRhythmView"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"/>
+	</LinearLayout>
 </LinearLayout>

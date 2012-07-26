@@ -15,7 +15,8 @@ public final class R {
         public static final int musictest=0x7f020001;
     }
     public static final class id {
-        public static final int segmentLinearLayout=0x7f060000;
+        public static final int firstRhythmView=0x7f060000;
+        public static final int segmentLinearLayout=0x7f060001;
     }
     public static final class integer {
         public static final int bass_clef_offset=0x7f040001;

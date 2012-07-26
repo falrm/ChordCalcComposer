@@ -22,6 +22,15 @@ public interface Segment extends Comparable<Segment>, SortedSet<Rational>, Clone
 	public int hashCode();
 	
 	// the following methods should return cloned Segments (since Segments are Cloneable)
+	@Override public Segment clone();
 	public Segment normalize();
-	public Segment difference(Segment s);
+	//public Segment symDiff(Segment s);
+	//public Segment plus(Segment s);
+	//public Segment minus(Segment s);
+	//public Segment downbeats();
+	//public segment downbeats(Rational r);
+	//public Segment upbeats();
+	//public Segment upbeats(Rational r);
+	//public Segment decoratedDownbeats();
+	//public Segment decoratedDownbeats(Rational r);
 }

@@ -2,7 +2,7 @@ package com.jonlatane.composer.music;
 
 import java.util.*;
 
-public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.music.Segment
+public class Rhythm extends TreeSet<Rational> implements Segment
 {
 	public Rhythm() {
 		super();
@@ -15,29 +15,33 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 	* A Segment lies over top of a Rhythm and has deep cloning abilities.  They are our means
 	* of moving rhythms around and doing cool stuff
 	*/
-	public class Segment implements com.jonlatane.composer.music.Segment {
-		private final Rational _start, _end;
-		public Segment(Rational start, Rational end) {
-			assert( start.compareTo(first()) <= 0 );
-			assert( end.compareTo(last()) >= 0 );
-			
-			_start = start;
-			_end = end;
+	public class RhythmSegment implements Segment {
+		private Rational _start, _end;
+		public RhythmSegment(Rational start, Rational end) {
+			setStart(start);
+			setEnd(end);
 		}
-		public Segment( Rhythm.Segment s ) {
-			this(s._start, s._end);
+		public RhythmSegment( Segment s ) {
+			this(s.getStart(), s.getEnd());
 		}
 		
 		public Rational getStart() {
 			return _start;
 		}
-		
+		private void setStart(Rational start) {
+			assert( start.compareTo(first()) <= 0 );
+			_start = start;
+		}
 		public Rational getEnd() {
 			return _end;
 		}
+		private void setEnd(Rational end) {
+			assert( end.compareTo(last()) >= 0 );
+			_end = end;
+		}
 		
 		@Override
-		public int compareTo(com.jonlatane.composer.music.Segment s) {
+		public int compareTo(Segment s) {
 			int result = _start.compareTo(s.getStart());
 			if( result == 0 )
 				result = _end.compareTo(s.getEnd());
@@ -72,7 +76,7 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 			return result;
 		}
 		
-		public boolean spans(com.jonlatane.composer.music.Segment s) {
+		public boolean spans(Segment s) {
 			return spans(s.getStart()) && (spans(s.getEnd())||s.getEnd().equals(getEnd()));
 		}
 		
@@ -87,14 +91,14 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 		public Rational last() {
 			return getSet().last();
 		}
-		public Segment subSet(Rational r1, Rational r2) {
-			return new Segment(r1, r2);
+		public RhythmSegment subSet(Rational r1, Rational r2) {
+			return new RhythmSegment(r1, r2);
 		}
-		public Segment headSet(Rational r) {
-			return new Segment(r, getEnd());
+		public RhythmSegment headSet(Rational r) {
+			return new RhythmSegment(r, getEnd());
 		}
-		public Segment tailSet(Rational r) {
-			return new Segment(r, getEnd());
+		public RhythmSegment tailSet(Rational r) {
+			return new RhythmSegment(r, getEnd());
 		}
 		
 		public Object[] toArray() {
@@ -144,7 +148,7 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 		
 		// SEGMENT MANIPULATION COOLNESS! These should be efficient
 		@Override
-		public com.jonlatane.composer.music.Segment clone() {
+		public Segment clone() {
 			Rhythm Q = new Rhythm();
 			for( Rational r : this ) {
 				Q.add(r);
@@ -153,32 +157,77 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 		}
 
 		//return a cloned segment that starts at 0
-		public com.jonlatane.composer.music.Segment normalize() {
+		public Segment normalize() {
 			Rhythm Q = new Rhythm();
 			for( Rational r : this ) {
 				Q.add( r.minus(_start) );
 			}
 			return Q;
 		}
-		public com.jonlatane.composer.music.Segment difference(Segment s) {
-			com.jonlatane.composer.music.Segment result = clone();
+		public Segment difference(RhythmSegment s) {
+			Segment result = clone();
 			
 			return result;
 		}
 	}
 	
-	public class Covering<K> extends TreeMap<Rhythm.Segment,K>
-	implements com.jonlatane.composer.music.Covering<K> {	
-		public boolean isComplete() {
-			return false; //TODO?
+	public class RhythmCovering<K> extends TreeMap<RhythmSegment,K>
+	implements Covering<K> {
+		// Stored for efficiency
+		private Segment _span;
+		// In this case, will not change anything else (since this is not
+		// non-intersecting.  The end of the object's Segment is the beginning
+		// of the first Segment after r
+		public void add(K obj, Rational r) {
+			Rational segEnd = subMap(tailSegment(r), false, tailSegment(lastKey().getEnd()), true).firstKey().getStart();
+			put(new RhythmSegment(r, segEnd), obj);
 		}
-		public boolean isPartial() {
-			return !isComplete();
+		public void add(K obj, Rational start, Rational end) {
+			put(new RhythmSegment(start, end), obj);
 		}
-		public boolean isIntersecting() {
-			return true; //TODO
+		public void add(K obj, Segment s) {
+			put(new RhythmSegment(s.getStart(),s.getEnd()),obj);
 		}
-		
+		public void clear(Segment s) {
+			SortedMap<RhythmSegment,K> descMap = headMap(new RhythmSegment(s));
+			while( !descMap.isEmpty() ) {
+				RhythmSegment descSeg = descMap.lastKey();
+				if( descSeg.getEnd().compareTo(s.getStart()) >= 0)
+					descSeg.setEnd(s.getStart());
+				descMap = descMap.headMap(descMap.lastKey());
+			}
+			Iterator<RhythmSegment> itr = tailMap(new RhythmSegment(s),false).navigableKeySet().iterator();
+			while(itr.hasNext()) {
+				RhythmSegment next = itr.next();
+				if(next.getStart().compareTo(s.getEnd()) >= 0)
+					break;
+				else
+					next.setStart(s.getEnd());
+			}	
+		}
+		public Segment getSegment(Segment s) {
+			return new RhythmSegment(s);
+		}
+		public CoveredSegment getAsCoveredSegment(Rational start, Rational end) {
+			CoveredSegment result = new Voice(/*all()*/);;//.subSet(start, end);
+			//TODO
+			return result;
+		}
+		private void updateSpan() {
+			_span = new RhythmSegment(firstKey().getStart(), lastKey().getEnd());
+		}
+		public boolean spans(Object o) {
+			if( o instanceof Rational) {
+				return _span.spans((Rational)o);
+			} else if( o instanceof Segment ) {
+				return _span.spans((Segment)o);
+			} else if( o instanceof RhythmCovering ) {
+				return spans((RhythmCovering)o);
+			}
+		}
+		private boolean spansCovering(RhythmCovering c) {
+			return _span.spans(c._span);
+		}
 		public K getObjectAt(Rational r) {
 			return ((K[])getAllObjectsAt(r).toArray())[0];
 		}
@@ -186,9 +235,9 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 		public Set<K> getAllObjectsAt(Rational r) {
 			HashSet<K> result = new HashSet<K>();
 			
-			Iterator<Rhythm.Segment> itr = headMap(tailSegment(r), true).descendingKeySet().iterator();
+			Iterator<Segment> itr = (Iterator<Segment>)headMap(tailSegment(r), true).descendingKeySet().iterator();
 			while(itr.hasNext()) {
-				Rhythm.Segment s = itr.next();
+				Segment s = itr.next();
 				if( s.getEnd().compareTo(r) > 0 )
 					result.add( get(s) );
 			}
@@ -209,21 +258,34 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 			return result;
 		}
 		
-		public Set<com.jonlatane.composer.music.Segment> getSegments() {
-			return (Set<com.jonlatane.composer.music.Segment>)keySet();
+		public Segment getRhythm() {
+			return getRhythm(false);
+		}
+		public Segment getRhythm(boolean endInclusive) {
+			Segment result = new Rhythm();
+			for(Segment s : keySet()) {
+				result.add(s.getStart());
+				if(endInclusive)
+					result.add(s.getEnd());
+			}
+			return result;
+		}
+		
+		public NavigableSet<Segment> getSegments() {
+			return (NavigableSet<Segment>)navigableKeySet();
 		}
 	}
 	
 	/*
 	* Non-intersecting Coverings can be accessed a bit faster than other kinds
 	*/
-	public class NonIntersectingCovering<K> extends TreeMap<Rhythm.Segment,K>
-	implements com.jonlatane.composer.music.Covering<K> {	
+	public class NonIntersectingCovering<K> extends TreeMap<Rhythm.RhythmSegment,K>
+	implements Covering<K> {	
 
 		public Set<K> getAllObjectsAt(Rational r) {
 			HashSet<K> result = new HashSet<K>();
 			
-			Rhythm.Segment ceiling = ceilingKey(tailSegment(r));
+			Rhythm.RhythmSegment ceiling = ceilingKey(tailSegment(r));
 			if( ceiling.getEnd().compareTo(r) > 0 )
 				result.add(get(ceiling));
 			
@@ -233,7 +295,7 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 
 		public boolean contains(Rational r) {
 			boolean result = false;
-			for( Segment s : keySet() ) {
+			for( RhythmSegment s : keySet() ) {
 				if( s.getStart().compareTo(r) > 0 )
 					break;
 				if( s.contains( r ) ) {
@@ -244,9 +306,22 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 			return result;
 		}
 		
-		public Set<com.jonlatane.composer.music.Segment> getSegments() {
-			return (Set<com.jonlatane.composer.music.Segment>)keySet();
+		public Set<Segment> getSegments() {
+			return (Set<Segment>)keySet();
 		}
+		public Segment getRhythm() {
+			return getRhythm(false);
+		}
+		public Segment getRhythm(boolean segmentEndInclusive) {
+			Rhythm result = new Rhythm();
+			for( Segment s : keySet() ) {
+				result.add(s.getStart());
+				if( segmentEndInclusive )
+					result.add(s.getEnd());
+			}
+			return result;
+		}
+		
 	}
 	
 	
@@ -255,7 +330,7 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 	* afforded faster access and ease of manipulation
 	*/
 	public class HarmonicCovering<K extends Chord> extends TreeMap<Rational,K>
-	implements com.jonlatane.composer.music.Covering<K> {
+	implements Covering<K> {
 		private final Chord.Modulus _m;
 		
 		public HarmonicCovering() {
@@ -285,14 +360,14 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 		}
 		
 
-		public Set<com.jonlatane.composer.music.Segment> getSegments() {
-			HashSet<com.jonlatane.composer.music.Segment> result = new HashSet<com.jonlatane.composer.music.Segment>();
+		public Set<Segment> getSegments() {
+			HashSet<Segment> result = new HashSet<Segment>();
 			Set<Rational> keys = keySet();
 			for(Rational i : keys) {
 				Rational start = i;
 				Rational end = higherKey(i);
 				if( end != null ) {
-					result.add( new Segment(start, end) );
+					result.add( new RhythmSegment(start, end) );
 				}
 			}
 			return result;
@@ -308,11 +383,14 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 	private SortedSet<Rational> segmentView(Rational start, Rational end) {
 		return subSet(start, end);
 	}
-	private com.jonlatane.composer.music.Segment asSegment() {
-		return new Segment(Rational.ZERO, last());
+	private Segment asSegment() {
+		return new RhythmSegment(Rational.ZERO, last());
 	}
-	public Rhythm.Segment tailSegment(Rational start) {
-		return this.new Segment(start, last());
+	public Rhythm.RhythmSegment tailSegment(Rational start) {
+		return this.new RhythmSegment(start, last());
+	}
+	public Segment getSegment(Rational start, Rational end) {
+		return this.new RhythmSegment(start, end);
 	}
 	
 	public Rational getStart() {
@@ -326,7 +404,7 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 		return getEnd().minus(getStart());
 	}
 
-	public int compareTo(com.jonlatane.composer.music.Segment s) {
+	public int compareTo(Segment s) {
 		return compareTo(s);
 	}
 	
@@ -338,7 +416,7 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 		return super.contains(r);
 	}
 	
-	public com.jonlatane.composer.music.Segment normalize() {
+	public Segment normalize() {
 		return clone();
 	}
 	
@@ -350,7 +428,9 @@ public class Rhythm extends TreeSet<Rational> implements com.jonlatane.composer.
 		return (r.compareTo(getStart()) >= 0) && (r.compareTo(getEnd()) < 0);
 	}
 
-	public boolean spans(com.jonlatane.composer.music.Segment s) {
+	public boolean spans(Segment s) {
 		return spans(s.getStart()) && (spans(s.getEnd())||s.getEnd().equals(getEnd()));
 	}
+	
+	public static final Segment ZERO=new Rhythm().new RhythmSegment(Rational.ZERO, new Rational(1,4096));
 }

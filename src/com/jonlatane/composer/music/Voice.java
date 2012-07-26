@@ -9,8 +9,8 @@ public class Voice extends Rhythm implements CoveredSegment {
 	private HashMap<Class,com.jonlatane.composer.music.Covering<?>> _data = 
 		new HashMap<Class,com.jonlatane.composer.music.Covering<?>>();
 	
-	class Segment extends Rhythm.Segment implements CoveredSegment {
-		public Segment(Rational start, Rational end) {
+	class VoiceSegment extends Rhythm.RhythmSegment implements CoveredSegment {
+		public VoiceSegment(Rational start, Rational end) {
 			super(start,end);
 		}
 		
