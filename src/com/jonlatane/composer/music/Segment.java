@@ -14,15 +14,15 @@ public interface Segment extends Comparable<Segment>, SortedSet<Rational>, Clone
 	public boolean spans(Rational r);
 	public boolean spans(Segment s);
 	
-	@Override public Segment tailSet(Rational r);
-	@Override public Segment headSet(Rational r);
-	@Override public Segment subSet(Rational r1, Rational r2);
+	public Segment tailSet(Rational r);
+	public Segment headSet(Rational r);
+	public Segment subSet(Rational r1, Rational r2);
 	
 	@Override
 	public int hashCode();
 	
 	// the following methods should return cloned Segments (since Segments are Cloneable)
-	@Override public Segment clone();
+	public Segment clone();
 	public Segment normalize();
 	//public Segment symDiff(Segment s);
 	//public Segment plus(Segment s);

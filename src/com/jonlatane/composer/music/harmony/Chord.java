@@ -1,4 +1,4 @@
-package com.jonlatane.composer.music;
+package com.jonlatane.composer.music.harmony;
 
 import java.util.*;
 
@@ -109,7 +109,7 @@ public class Chord extends PitchSet {
 	* @return true if the Chord was modified by the operation
 	*/
 	@Override
-	public boolean addAll(Collection<Integer> c) {
+	public boolean addAll(Collection<? extends Integer> c) {
 		boolean result = false;
 		for(Integer i : c) {
 			result = result || add(i);
@@ -122,7 +122,6 @@ public class Chord extends PitchSet {
 	 * 
 	 * @return true if the Chord contains the class of the pitch
 	 */
-	@Override
 	public boolean contains( Integer i ) {
 		return super.contains(MODULUS.getPitchClass(i));
 	}

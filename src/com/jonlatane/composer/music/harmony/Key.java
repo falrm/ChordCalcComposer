@@ -1,4 +1,4 @@
-package com.jonlatane.composer.music;
+package com.jonlatane.composer.music.harmony;
 
 import android.content.res.Resources;
 import android.content.res.TypedArray;

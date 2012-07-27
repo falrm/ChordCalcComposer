@@ -1,6 +1,7 @@
 package com.jonlatane.composer.music;
 
 import java.util.*;
+import com.jonlatane.composer.music.harmony.*;
 
 public class Rhythm extends TreeSet<Rational> implements Segment
 {
