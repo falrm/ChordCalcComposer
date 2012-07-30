@@ -4,7 +4,14 @@ import java.util.*;
 import android.renderscript.*;
 import android.content.*;
 
-
+/**
+ * A Segment is a half-open interval of the the real line with Rational endpoints, 
+ * and a set of Rationals in those bounds.  Segments have a natural ordering based first
+ * on their start, then their end, then their contents.  This is to facilitate quick access
+ * through sorted structures of Coverings of segments.
+ * 
+ * @author Jon
+ */
 public interface Segment extends Comparable<Segment>, SortedSet<Rational>, Cloneable
 {
 	public Rational getStart();

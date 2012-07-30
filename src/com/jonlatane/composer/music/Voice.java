@@ -79,7 +79,7 @@ public class Voice extends Rhythm implements CoveredSegment {
 		synchronize(_data.get(PitchSet.class));
 	}
 	
-	synchronized void synchronize(com.jonlatane.composer.music.Covering c) {
+	synchronized void synchronize(Covering c) {
 		clear();
 		for( com.jonlatane.composer.music.Segment s : c.getSegments() ) {
 			add(s.getStart());

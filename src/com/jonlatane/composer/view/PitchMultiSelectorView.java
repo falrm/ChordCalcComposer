@@ -2,12 +2,9 @@ package com.jonlatane.composer.view;
 
 import android.view.*;
 import android.util.*;
-import android.widget.*;
 import android.content.*;
 
-import java.util.*;
-
-import com.jonlatane.composer.music.*;
+import com.jonlatane.composer.music.harmony.*;
 
 public abstract class PitchMultiSelectorView extends View
 {

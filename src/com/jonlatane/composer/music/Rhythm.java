@@ -1,6 +1,7 @@
 package com.jonlatane.composer.music;
 
 import java.util.*;
+
 import com.jonlatane.composer.music.harmony.*;
 
 public class Rhythm extends TreeSet<Rational> implements Segment
@@ -41,7 +42,6 @@ public class Rhythm extends TreeSet<Rational> implements Segment
 			_end = end;
 		}
 		
-		@Override
 		public int compareTo(Segment s) {
 			int result = _start.compareTo(s.getStart());
 			if( result == 0 )
@@ -236,9 +236,10 @@ public class Rhythm extends TreeSet<Rational> implements Segment
 		public Set<K> getAllObjectsAt(Rational r) {
 			HashSet<K> result = new HashSet<K>();
 			
-			Iterator<Segment> itr = (Iterator<Segment>)headMap(tailSegment(r), true).descendingKeySet().iterator();
+			// Look backwards first
+			Iterator<RhythmSegment> itr = headMap(tailSegment(r), true).descendingKeySet().iterator();
 			while(itr.hasNext()) {
-				Segment s = itr.next();
+				Segment s = (Segment)itr.next();
 				if( s.getEnd().compareTo(r) > 0 )
 					result.add( get(s) );
 			}
@@ -272,15 +273,15 @@ public class Rhythm extends TreeSet<Rational> implements Segment
 			return result;
 		}
 		
-		public NavigableSet<Segment> getSegments() {
-			return (NavigableSet<Segment>)navigableKeySet();
+		public Set<Segment> getSegments() {
+			return navigableKeySet();
 		}
 	}
 	
 	/*
 	* Non-intersecting Coverings can be accessed a bit faster than other kinds
 	*/
-	public class NonIntersectingCovering<K> extends TreeMap<Rhythm.RhythmSegment,K>
+	public class NonIntersectingCovering<K> extends TreeMap<RhythmSegment,K>
 	implements Covering<K> {	
 
 		public Set<K> getAllObjectsAt(Rational r) {
@@ -307,8 +308,10 @@ public class Rhythm extends TreeSet<Rational> implements Segment
 			return result;
 		}
 		
-		public Set<Segment> getSegments() {
-			return (Set<Segment>)keySet();
+		public NavigableSet<RhythmSegment> getSegments() {
+			NavigableSet<RhythmSegment> result = navigableKeySet();
+			
+			return result;
 		}
 		public Segment getRhythm() {
 			return getRhythm(false);

@@ -1,7 +1,17 @@
 package com.jonlatane.composer.music;
 
-import java.util.Set;
+import java.util.*;
 
+/**
+ * A Covering is a mapping function from a set of Segments to objects of type K.
+ * We may assume a few things about coverings such as whether they allow for intersection
+ * (which lets us make some assumptions about efficiently implementing things).
+ * 
+ * 
+ * @author Jon
+ *
+ * @param <K>
+ */
 public interface Covering<K>
 {
 	// generally a HashSet for efficiency
@@ -44,4 +54,10 @@ public interface Covering<K>
 	
 	// this should manipulate the segments in question
 	public void clear(Segment s);
+	/**
+	 * Returns a view of the set of segments in the domain of the Covering.
+	 * 
+	 * @return
+	 */
+	public NavigableSet<? extends Segment> getSegments();
 }
