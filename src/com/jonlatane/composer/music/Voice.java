@@ -1,6 +1,7 @@
 package com.jonlatane.composer.music;
 
 import java.util.*;
+import com.jonlatane.composer.music.harmony.*;
 import com.jonlatane.composer.music.coverings.*;
 import android.util.Log;
 
@@ -9,22 +10,10 @@ public class Voice extends Rhythm implements CoveredSegment {
 	private HashMap<Class,com.jonlatane.composer.music.Covering<?>> _data = 
 		new HashMap<Class,com.jonlatane.composer.music.Covering<?>>();
 	
-	class VoiceSegment extends Rhythm.RhythmSegment implements CoveredSegment {
+	class VoiceSegment extends RhythmSegment implements CoveredSegment {
 		public VoiceSegment(Rational start, Rational end) {
 			super(start,end);
 		}
-		
-		public Rational harmonicDifference(Class s) {
-			assert(s.equals(Chord.class) || s.equals(Scale.class) || s.equals(Key.class));
-			Rational result = Rational.ZERO;
-			HarmonicCovering harmony = (HarmonicCovering)_data.get(s);
-			NonIntersectingCovering<PitchSet> realization = 
-				(NonIntersectingCovering<PitchSet>)_data.get(PitchSet.class);
-			
-			return result;
-		}
-		
-		
 	}
 	
 	public Voice() {

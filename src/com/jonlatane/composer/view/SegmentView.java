@@ -5,6 +5,7 @@ import android.content.*;
 import android.util.*;
 import android.view.*;
 
+import com.jonlatane.composer.R;
 import com.jonlatane.composer.music.*;
 
 public class SegmentView extends HorizontalScrollView

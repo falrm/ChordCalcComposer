@@ -21,10 +21,6 @@ public interface Segment extends Comparable<Segment>, SortedSet<Rational>, Clone
 	public boolean spans(Rational r);
 	public boolean spans(Segment s);
 	
-	public Segment tailSet(Rational r);
-	public Segment headSet(Rational r);
-	public Segment subSet(Rational r1, Rational r2);
-	
 	@Override
 	public int hashCode();
 	

@@ -11,7 +11,6 @@ import java.util.*;
  *
  */
 public interface CoveredSegment extends Segment {
-	// return true if replacing another covering
 	/**
 	 * Adds the covering and, assuming the covering is of type cl
 	 * 
@@ -28,24 +27,10 @@ public interface CoveredSegment extends Segment {
 	 * @return true if a covering was removed
 	 */
 	public boolean removeCovering(Class cl);
-
-	@Override public CoveredSegment tailSet(Rational r);
-	@Override public CoveredSegment headSet(Rational r);
-	@Override public CoveredSegment subSet(Rational r1, Rational r2);
 	
 	public Object getObjectOfTypeAt(Class c, Rational r);
 	public Set<Object> getAllObjectsOfTypeAt(Class c, Rational r);
-	
-	// Because the covering has so much more information in it, we should update
-	// how spanning works.  In the case of PitchSets, this will equate to sonority.
-	// 
-	public boolean spans(PitchSet o, Class c);
-	public boolean spans(CoveredSegment s, Class c);
-	
-	// These apply amongst all Classes
-	public boolean spans(Object o);
-	public boolean spans(CoveredSegment s);
-	
+		
 	// The SortedSet part of a Segment (i.e., the rhythm itself)
 	// can be mutated and synchronized with Coverings by the methods below.
 	// So a voice

@@ -1,6 +1,7 @@
 package com.jonlatane.composer.music;
 
 import java.util.*;
+import com.jonlatane.composer.music.harmony.*;
 
 // A staff is a pair of a transposition and a 
 public class Staff extends Rhythm

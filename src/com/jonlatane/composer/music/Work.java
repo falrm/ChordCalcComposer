@@ -1,7 +1,7 @@
 package com.jonlatane.composer.music;
 import java.util.*;
 
-public class Work extends HashSet<Voice> implements Rhythm.RhythmSynchronized {
+public class Work extends HashSet<Voice> {
 	private Set<Voice> _voices;
 	
 	public Work() {
