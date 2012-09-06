@@ -1,6 +1,7 @@
 package com.jonlatane.composer.music;
 
 import java.util.*;
+
 import com.jonlatane.composer.music.harmony.*;
 import com.jonlatane.composer.music.coverings.*;
 import android.util.Log;
@@ -13,6 +14,108 @@ public class Voice extends Rhythm implements CoveredSegment {
 	class VoiceSegment extends RhythmSegment implements CoveredSegment {
 		public VoiceSegment(Rational start, Rational end) {
 			super(start,end);
+		}
+
+		@Override
+		public boolean addCovering(Covering<?> covering, Class cl) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean removeCovering(Class cl) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public Object getObjectOfTypeAt(Class c, Rational r) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Set<Object> getAllObjectsOfTypeAt(Class c, Rational r) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public void updateRhythmFromDefaultCovering() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mergeRhythmToDefaultCovering() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void setDefaultCovering(Class c) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void setDefaultCovering(Class c, boolean includeSegmentEndings) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public Covering<?> getDefaultCovering() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Class getDefaultCoveringClass() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public boolean getDefaultCoveringIncludesSegmentEndings() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public int getMeasureNumber(Rational r) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public int getBeatOfMeasure(Rational r) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public int getHarmonicSeparation(Class c1, Class c2) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public int getMotion(Class c1) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public Rational positionOfLast(Class c) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object getLast(Class c) {
+			// TODO Auto-generated method stub
+			return null;
 		}
 	}
 	
@@ -73,5 +176,107 @@ public class Voice extends Rhythm implements CoveredSegment {
 		for( com.jonlatane.composer.music.Segment s : c.getSegments() ) {
 			add(s.getStart());
 		}
+	}
+
+	@Override
+	public boolean addCovering(Covering<?> covering, Class cl) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean removeCovering(Class cl) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Object getObjectOfTypeAt(Class c, Rational r) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Set<Object> getAllObjectsOfTypeAt(Class c, Rational r) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void updateRhythmFromDefaultCovering() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mergeRhythmToDefaultCovering() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setDefaultCovering(Class c) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setDefaultCovering(Class c, boolean includeSegmentEndings) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Covering<?> getDefaultCovering() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Class getDefaultCoveringClass() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean getDefaultCoveringIncludesSegmentEndings() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public int getMeasureNumber(Rational r) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getBeatOfMeasure(Rational r) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getHarmonicSeparation(Class c1, Class c2) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getMotion(Class c1) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public Rational positionOfLast(Class c) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object getLast(Class c) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

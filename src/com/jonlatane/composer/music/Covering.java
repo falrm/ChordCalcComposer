@@ -10,7 +10,7 @@ import java.util.*;
  * 
  * @author Jon
  *
- * @param <K>
+ * @param <K> an object type such as Chords, PitchSets, Articulations, Keys and so forth
  */
 public interface Covering<K>
 {

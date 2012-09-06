@@ -14,11 +14,36 @@ import android.content.*;
  */
 public interface Segment extends Comparable<Segment>, SortedSet<Rational>, Cloneable
 {
+	/**
+	 * Return the start of the segment
+	 * @return
+	 */
 	public Rational getStart();
+	/**
+	 * Return the end of the segment
+	 * @return
+	 */
 	public Rational getEnd();
+	/**
+	 * Return the length of the segment (getStart().minus(getEnd()))
+	 * @return
+	 */
 	public Rational getLength();
 	
+	/**
+	 * Return true if and only if r is within the bounds of the segment (i.e., greater than or equal to the start,
+	 * and strictly less than the end)
+	 * @param r
+	 * @return
+	 */
 	public boolean spans(Rational r);
+	
+	/**
+	 * Return true if and only if s is completely within the bounds of this segment (i.e., s.getStart() and s.getEnd()
+	 * are gte and lte getStart and getEnd respectively)
+	 * @param s
+	 * @return
+	 */
 	public boolean spans(Segment s);
 	
 	@Override
