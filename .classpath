@@ -13,5 +13,4 @@
 		</accessrules>
 	</classpathentry>
 	<classpathentry kind="output" path="bin/classes"/>
-	<classpathentry kind="output" path="bin"/>
 </classpath>

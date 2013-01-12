@@ -34,4 +34,9 @@ public class Scale extends Chord {
 	public int rootFunction(Chord c) {
 		return MODULUS.getPitchClass(c.getRoot() - getRoot());
 	}
+	
+	// May be overridden by melodic minor or bebop scales.
+	public Scale descendingVersion() {
+		return this;
+	}
 }

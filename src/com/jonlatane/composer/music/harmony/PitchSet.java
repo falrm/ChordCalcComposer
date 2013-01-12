@@ -8,7 +8,8 @@ import java.util.*;
 * The PitchSet's Modulus (which has a default value of 12) represents the number of values in the octave
 */
 public class PitchSet extends TreeSet<Integer> {
-	
+	private static final long serialVersionUID = -3127526528166358783L;
+
 	public PitchSet() {
 		super();
 	}

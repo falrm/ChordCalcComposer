@@ -1,6 +1,7 @@
 package com.jonlatane.composer.music.harmony;
 
 import java.util.*;
+import java.util.regex.*;
 
 /**
  * Chords work much like PitchSets, but they have a Modulus: the number of tones an octave is divided into. Ex: 
@@ -18,7 +19,6 @@ public class Chord extends PitchSet {
 	*/
 	public static class Modulus {
 		public final int OCTAVE_STEPS;
-		public static final Modulus TWELVETONE = new Modulus();
 		public Modulus() {
 			this(12);
 		}
@@ -47,28 +47,9 @@ public class Chord extends PitchSet {
 			}
 			return result;
 		}
-	}
-	
-	/**
-	* An Inversion is a chord with an additional bass element.
-	*/
-	public static class Inversion extends Chord {
-		private Integer bass;
-		
-		public Inversion( Chord c ) {
-			super(c);
-		}
-		
-		public int getBass() {
-			return bass;
-		}
-		
-		public void setBass(int i) {
-			this.bass = MODULUS.getPitchClass(i);
-		}
-	}
-	
+	}	
 
+	public static Modulus TWELVETONE = new Modulus();
 	public final Modulus MODULUS;
  	private Integer root;
 	String name;
@@ -157,16 +138,54 @@ public class Chord extends PitchSet {
 		return size() == 3;
 	}
 	
-	// For 12-tone systems
+	// For 12-tone systems.
 	public int guessRoot() {
 		assert(MODULUS.OCTAVE_STEPS == 12);
 		int result = 0;
-		int resultCertainty = 0;
+		int certainty = 0;
 		
+		//Here is some voodoo magic numbers crap.  We check
+		//each note for how much we think it's root based on its internal structure
 		for(Integer i : this) {
 			int tmpCertainty = 0;
+			// 3s
 			if(contains(i + 3) || contains(i + 4)) {
+				tmpCertainty += 5;
+			}
+			// 7s
+			if(contains(i +10) || contains(i + 11)) {
+				tmpCertainty += 4;
+			}
+			// 5s
+			if(contains(i +10) || contains(i + 11)) { //dim/P
+				tmpCertainty += 3;
+			}
+			// 9s
+			if(contains(i + 1) || contains(i + 2)) { //dim/P
+				tmpCertainty += 2;
+			}
+			// 11s, 13s
+			if(contains(i + 1) || contains(i + 2)) { //dim/P
 				tmpCertainty += 1;
+			}
+			
+			// Update result if necessary
+			if(tmpCertainty > certainty) {
+				result = i;
+				certainty = tmpCertainty;
+			}
+		}
+		return result;
+	}
+	
+	public static Chord getChordByName(String s) {
+		Chord result = new Chord();
+		// EX: F+M7#6#9
+		Pattern p = Pattern.compile("(A|B|C|D|E|F|G)(#|b)?(M|m)(7)?((?:b|#\\d)");
+		Matcher m = p.matcher(s);
+		if(m.matches()) {
+			for(int i = 0; i < m.groupCount(); i = i + 1) {
+				
 			}
 		}
 		return result;
