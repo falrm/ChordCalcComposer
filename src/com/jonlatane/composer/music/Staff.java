@@ -2,6 +2,8 @@ package com.jonlatane.composer.music;
 
 import java.util.*;
 
+import android.util.Pair;
+
 public class Staff {
 	private Vector<Voice> _voices;
 	private Meter _meter;
@@ -22,14 +24,14 @@ public class Staff {
 			for(Voice v : _voices) {
 				Pair<Rational, Collection<Object>> next = v.nextChangeAfter(r);
 				if( next != null ) {
-					if (__cache.containsKey(next.getLeft())) {
+					if (__cache.containsKey(next.first)) {
 						Map<Voice, Collection<Object>> cacheContent = __cache
-								.get(next.getLeft());
-						cacheContent.put(v, next.getRight());
+								.get(next.first);
+						cacheContent.put(v, next.second);
 					} else {
 						HashMap<Voice, Collection<Object>> h = new HashMap<Voice, Collection<Object>>();
-						h.put(v, next.getRight());
-						__cache.put(next.getLeft(), h);
+						h.put(v, next.second);
+						__cache.put(next.first, h);
 					}
 				}
 			}
@@ -46,14 +48,14 @@ public class Staff {
 				Voice v = e.getKey();
 				Pair<Rational, Collection<Object>> next = v.nextChangeAfter(r);
 				if(next != null ) {
-					if (__cache.containsKey(next.getLeft())) {
+					if (__cache.containsKey(next.first)) {
 						Map<Voice, Collection<Object>> cacheContent = __cache
-								.get(next.getLeft());
-						cacheContent.put(v, next.getRight());
+								.get(next.first);
+						cacheContent.put(v, next.second);
 					} else {
 						HashMap<Voice, Collection<Object>> h = new HashMap<Voice, Collection<Object>>();
-						h.put(v, next.getRight());
-						__cache.put(next.getLeft(), h);
+						h.put(v, next.second);
+						__cache.put(next.first, h);
 					}
 				}
 			}

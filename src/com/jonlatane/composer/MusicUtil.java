@@ -3,6 +3,8 @@ package com.jonlatane.composer;
 import java.util.Collection;
 import java.util.Map;
 
+import android.util.Pair;
+
 import com.jonlatane.composer.music.*;
 import com.jonlatane.composer.music.harmony.*;
 public class MusicUtil
@@ -35,10 +37,10 @@ public class MusicUtil
 	public static String outputContents(Score s) {
 		String result = "";
 		for( Pair<Rational, Map<Staff,Map<Voice,Collection<Object>>>> nextChange = s.nextChangeAfter(new Rational(0,1)); nextChange != null;
-				nextChange = s.nextChangeAfter(nextChange.getLeft())) {
-			Rational r = nextChange.getLeft();
+				nextChange = s.nextChangeAfter(nextChange.first)) {
+			Rational r = nextChange.first;
 			result += r + ":: ";
-			for(Map.Entry<Staff, Map<Voice,Collection<Object>>> staff : nextChange.getRight().entrySet() ) {
+			for(Map.Entry<Staff, Map<Voice,Collection<Object>>> staff : nextChange.second.entrySet() ) {
 				for(Map.Entry<Voice,Collection<Object>> voice : staff.getValue().entrySet() ) {
 					result += voice.getKey().hashCode() + ":";
 					for(Object o : voice.getValue()) {

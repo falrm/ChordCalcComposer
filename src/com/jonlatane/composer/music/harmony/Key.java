@@ -1,22 +1,27 @@
 package com.jonlatane.composer.music.harmony;
 
-import android.content.res.Resources;
-import android.content.res.TypedArray;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collection;
+import android.util.Log;
+import android.util.Pair;
+import android.util.SparseArray;
+
 import java.util.*;
 
-/*
-* This class is implemented atop Google Resource APIs.
-* Other resource APIs may have easy-to-implement functional equivalents.
-*/
+/**
+ * This class is responsible for the work of enharmonics.  
+ * @author Jon
+ *
+ */
 public final class Key extends Scale
 {
-	private String _rootName;
-	private static final HashMap<Integer,Character> twelveToneNames = new HashMap<Integer,Character>();
+	private static final long serialVersionUID = 6430773851042936649L;
+	private static final String TAG = "Key";
+	private static final char[] heptatonicNotes = { 'C', 'D', 'E', 'F', 'G', 'A', 'B' };
+	private static final SparseArray<Character> twelveToneNames = new SparseArray<Character>();
 	private static final HashMap<Character,Integer> twelveToneInverse = new HashMap<Character,Integer>();
-	private static final HashMap<>
+	private static final String[] majorKeys = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
+	private static final String[] minorKeys = { "C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B" };
+	public static Key CMajor = new Key(new MajorScale(0));
+	
 	static{
 		twelveToneNames.put(0, 'C');
 		twelveToneNames.put(2, 'D');
@@ -25,6 +30,7 @@ public final class Key extends Scale
 		twelveToneNames.put(7, 'G');
 		twelveToneNames.put(9, 'A');
 		twelveToneNames.put(11,'B');
+		
 		twelveToneInverse.put('C',0);
 		twelveToneInverse.put('D',2);
 		twelveToneInverse.put('E',4);
@@ -32,17 +38,41 @@ public final class Key extends Scale
 		twelveToneInverse.put('G',7);
 		twelveToneInverse.put('A',9);
 		twelveToneInverse.put('B',11);
+		twelveToneInverse.put('c',0);
+		twelveToneInverse.put('d',2);
+		twelveToneInverse.put('e',4);
+		twelveToneInverse.put('f',5);
+		twelveToneInverse.put('g',7);
+		twelveToneInverse.put('a',9);
+		twelveToneInverse.put('b',11);
 	}
-	public Key(Modulus m) {
-		super(m);
+	
+	private String _rootName;
+	
+	public Key() {
+		super();
 	}
-
-	public Key(Collection<Integer> c) {
+	
+	public Key(Chord c) {
 		super(c);
-	}
-
-	public Key(Collection<Integer> c, Modulus m) {
-		super(c,m);
+		
+		String blah = "Key constructed with Chord [";
+		for(int i : c)
+			blah += i + ",";
+		blah += "] Root:" + c.getRoot();
+		Log.i(TAG,blah);
+		
+		if(c.getClass().equals(Key.class)) {
+			setRootName(((Key)c).getRootName());
+		} else if( c instanceof Scale ) {
+			Scale s = (Scale)c;
+			if(s.isMajor()) {
+				//Log.i(TAG,"Key is major" + (majorKeys.length));
+				_rootName = majorKeys[c.getRoot()];
+			}
+			if(s.isMinor())
+				_rootName = minorKeys[c.getRoot()];
+		}
 	}
 	
 	// Override these to be sure root and root name are consistent
@@ -59,18 +89,80 @@ public final class Key extends Scale
 		return _rootName;
 	}
 	
+	/**
+	 * Sets the root name if and only if the name matches the set root of the chord.  To change the root,
+	 * use setRoot().
+	 * @param str
+	 * @return
+	 */
+	public boolean setRootName(String str) {
+		if(noteNameToInt(str) == getRoot()) {
+			_rootName = str;
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	/**
+	 * Gets the note name for the given note using its own root name.  Assumes this is a heptatonic key (i.e., major minor or modal)
+	 * @param i
+	 * @return
+	 */
 	public String getNoteName(Integer i) {
 		String result = "";
 		
-		// Ideally the note is in the scale
-		if(contains(i)) {
-			result += twelveToneInverse.get(i % 12);
-		} else {
-			// If not, check if it's within range of a note in the key
-			Integer l = lower(i);
-			if( l - i == 1 ) {
-				
+		/*String scaleContents = "[";
+		for(Integer k : this) {
+			scaleContents += k+",";
+		}
+		scaleContents += "]";
+		Log.i(TAG,"Getting note name" +scaleContents + _rootName);*/
+		int rootCharIndex = twelveToneInverse.get( _rootName.charAt(0) );
+		
+		Pair<Integer,Integer> p = degreeOf(i);
+		if(p.first == p.second) {
+			char letterName = heptatonicNotes[(rootCharIndex + p.first-1) % 7];
+			result += letterName;
+			if( i < twelveToneInverse.get(letterName)) {
+				result += 'b';
 			}
+			if( i > twelveToneInverse.get(letterName)) {
+				result += '#';
+			}
+		} else {
+			Log.i(TAG,""+p.first+p.second);
+			// represent it as a sharp/double-sharp/flat
+			if( ((i-p.first) % 12) < ((p.second-i) % 12)) {
+				char letterName = heptatonicNotes[(rootCharIndex + p.first-1) % 7];
+				result += letterName;
+				
+				if( i < twelveToneInverse.get(letterName)) {
+					result += 'b';
+				}
+				if( i > twelveToneInverse.get(letterName)) {
+					result += '#';
+				}
+				if( i > (twelveToneInverse.get(letterName)-1)) {
+					result += '#';
+				}
+			//represent as a flat/double-flat/sharp
+			} else {
+				char letterName = heptatonicNotes[(rootCharIndex + p.second - 1) % 12];
+				result += letterName;
+				
+				if( i < twelveToneInverse.get(letterName)) {
+					result += 'b';
+				}
+				// Double-flats and sharps are possible maybe?
+				if( i < twelveToneInverse.get(letterName)-1) {
+					result += 'b';
+				}
+				if( i > twelveToneInverse.get(letterName)) {
+					result += '#';
+				}
+			}
+			
 		}
 		
 		return result;
@@ -104,5 +196,74 @@ public final class Key extends Scale
 		return new PitchSet(noteNameToInt(noteName));
 	}
 	
+	public static Pair<String,Integer> guessName(Chord c, Integer root, Key k) {
+		Pair<String,Integer> data = guessName(c, root);
+		String rootName = k.getNoteName(root);
+		return new Pair<String,Integer>(rootName+data.first, data.second);
+	}
 	
+	public static Pair<String,Integer> guessNameInC(Chord c, Integer root) {
+		//Log.i(TAG,"guessNameInC");
+		return guessName(c, root, CMajor);
+	}
+	
+	/**
+	 * Guess the name of the chord without knowing its root (we will ignore the root specified).
+	 * Assume the root is in the chord.
+	 * 
+	 * @param c
+	 * @return
+	 */
+	public static Pair<String,Integer> guessName(Chord c, Key k) {
+		Pair<String,Integer> result = new Pair<String,Integer>("", 0);
+		for(int i : c) {
+			Pair<String,Integer> contestant = guessName(c, i, k);
+			if(contestant.second > result.second) {
+				result = contestant;
+			}
+			Log.i(TAG, "Root " + i + "got " + contestant.first + " @ " + contestant.second);
+		}
+		return result;
+	}
+	
+	public static Pair<String,Integer> guessNameInC(Chord c) {
+		//Log.i(TAG, "Guessing chord name in C" + (Key.CMajor != null));
+		return guessName(c, Key.CMajor);
+	}
+	
+	/**
+	 * Guess the name of the chord without knowing its root (we will ignore the root specified).
+	 * Assume the root can be anything.
+	 * 
+	 * @param c
+	 * @return
+	 */
+	public static Pair<String,Integer> guessNameIncludeShells(Chord c, Key k) {
+		Pair<String,Integer> result = new Pair<String,Integer>("", 0);
+		for(int i = 0; i < 12; i++) {
+			Pair<String,Integer> contestant = guessName(c, i, k);
+			if(contestant.second > result.second) {
+				result = contestant;
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Guess the name of the chord without knowing its root (we will ignore the root specified).
+	 * Assume the root is in the key.
+	 * 
+	 * @param c
+	 * @return
+	 */
+	public static Pair<String,Integer> guessDiatonic(Chord c, Key k) {
+		Pair<String,Integer> result = new Pair<String,Integer>("", 0);
+		for(int i : k) {
+			Pair<String,Integer> contestant = guessName(c, i, k);
+			if(contestant.second > result.second) {
+				result = contestant;
+			}
+		}
+		return result;
+	}
 }

@@ -34,12 +34,4 @@ public class PitchSet extends TreeSet<Integer> {
 		}
 		return result;
 	}
-	
-	public Chord toChord() {
-		return new Chord(this);
-	}
-	
-	public Scale toScale() {
-		return new Scale(this);
-	}
 }

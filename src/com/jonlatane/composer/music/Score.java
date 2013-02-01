@@ -3,6 +3,8 @@ package com.jonlatane.composer.music;
 import java.util.*;
 import java.util.Map.Entry;
 
+import android.util.Pair;
+
 public class Score {
 	private Vector<Staff> _staves;
 	
@@ -23,14 +25,14 @@ public class Score {
 			for(Staff s : _staves) {
 				Pair<Rational, Map<Voice, Collection<Object>>> next = s.nextChangeAfter(r);
 				if(next != null) {
-					if (__cache.containsKey(next.getLeft())) {
+					if (__cache.containsKey(next.first)) {
 						Map<Staff, Map<Voice, Collection<Object>>> cacheContent = __cache
-								.get(next.getLeft());
-						cacheContent.put(s, next.getRight());
+								.get(next.first);
+						cacheContent.put(s, next.second);
 					} else {
 						HashMap<Staff, Map<Voice, Collection<Object>>> h = new HashMap<Staff, Map<Voice, Collection<Object>>>();
-						h.put(s, next.getRight());
-						__cache.put(next.getLeft(), h);
+						h.put(s, next.second);
+						__cache.put(next.first, h);
 					}
 				}
 			}
@@ -48,14 +50,14 @@ public class Score {
 				Staff s = e.getKey();
 				Pair< Rational, Map<Voice,Collection<Object>> > next = s.nextChangeAfter(r);
 				if(next != null) {
-					if (__cache.containsKey(next.getLeft())) {
+					if (__cache.containsKey(next.first)) {
 						Map<Staff, Map<Voice, Collection<Object>>> cacheContent = __cache
-								.get(next.getLeft());
-						cacheContent.put(s, next.getRight());
+								.get(next.first);
+						cacheContent.put(s, next.second);
 					} else {
 						HashMap<Staff, Map<Voice, Collection<Object>>> h = new HashMap<Staff, Map<Voice, Collection<Object>>>();
-						h.put(s, next.getRight());
-						__cache.put(next.getLeft(), h);
+						h.put(s, next.second);
+						__cache.put(next.first, h);
 					}
 				}
 			}

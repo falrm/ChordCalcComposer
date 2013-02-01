@@ -1,6 +1,7 @@
 package com.jonlatane.composer.music;
 
 import java.util.*;
+import android.util.Pair;
 import com.jonlatane.composer.music.harmony.*;
 
 public class Voice {
