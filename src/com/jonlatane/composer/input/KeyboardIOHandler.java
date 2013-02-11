@@ -354,6 +354,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	public Chord getChord() {
 		Chord c = new Chord(_currentlyPressed);
 		c.setRoot(getHarmonicRoot());
+		Log.i(TAG,"Found Chord " + c.toString());
 		return c;
 	}
 	

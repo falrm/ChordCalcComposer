@@ -115,7 +115,9 @@ public class Chord extends PitchSet {
 	 * @return true if the Chord contains the class of the pitch
 	 */
 	public boolean contains( Integer i ) {
-		return super.contains(MODULUS.getPitchClass(i));
+		boolean result = super.contains(MODULUS.getPitchClass(i));
+		Log.i(TAG,"Saying " + super.toString() + " contains " + MODULUS.getPitchClass(i) + " is " + result);
+		return result;
 	}
 	
 	public void setRoot(Integer i) {
@@ -137,7 +139,7 @@ public class Chord extends PitchSet {
 	 * @param root
 	 * @return
 	 */
-	private static Pair<String, Integer> nameSixSevensColors(Chord c, Integer root) {
+	private static Pair<String, Integer> nameFiveSixSevensColors(Chord c, Integer root) {
 		String name = "";
 		int certainty = 0;
 		
@@ -323,7 +325,7 @@ public class Chord extends PitchSet {
 				certainty = certainty + 1;
 			}
 			
-			Pair<String, Integer> decorations = nameSixSevensColors(c, root);
+			Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
 			name = name + decorations.first;
 			certainty += decorations.second;
 			
@@ -338,7 +340,7 @@ public class Chord extends PitchSet {
 				Log.i(TAG,"m3P5 is in the chord!");
 				certainty += 8;
 
-				Pair<String, Integer> decorations = nameSixSevensColors(c, root);
+				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
 				name = name + "-" + decorations.first;
 				certainty += decorations.second;
 				
@@ -347,7 +349,7 @@ public class Chord extends PitchSet {
 				Log.i(TAG,"m3#5 is in the chord!");
 				certainty -= 4;
 
-				Pair<String, Integer> decorations = nameSixSevensColors(c, root);
+				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
 				name = name + "-" + decorations.first;
 				certainty += decorations.second;
 
@@ -397,7 +399,7 @@ public class Chord extends PitchSet {
 					// half-dim
 					certainty += 7;
 					
-					Pair<String, Integer> decorations = nameSixSevensColors(c, root);
+					Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
 					name = name + "-" + decorations.first;
 					certainty += decorations.second;
 				
@@ -406,14 +408,18 @@ public class Chord extends PitchSet {
 					// half-dim
 					certainty += 2;
 					
-					Pair<String, Integer> decorations = nameSixSevensColors(c, root);
+					Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
 					name = name + "-" + decorations.first;
 					certainty += decorations.second;
 				} else {
-					Pair<String, Integer> decorations = nameSixSevensColors(c, root);
+					Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
 					name = name + "-" + decorations.first;
 					certainty += decorations.second;
 				}
+			} else {
+				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
+				name = name + "-" + decorations.first;
+				certainty += decorations.second;
 			}
 
 		// No 3 present - There is no third in this chord, let's look at other possibilities
@@ -422,14 +428,14 @@ public class Chord extends PitchSet {
 			if(c.contains(root+5)) {
 				certainty += 7;
 				
-				Pair<String, Integer> decorations = nameSixSevensColors(c, root);
+				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
 				name = name + decorations.first + "sus";
 				certainty += decorations.second;
 			// sus2
 			} else if(c.contains(root + 2)) {
 				certainty += 7;
 				
-				Pair<String, Integer> decorations = nameSixSevensColors(c, root);
+				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
 				name = name + decorations.first + "sus2";
 				certainty += decorations.second;
 			// 5 chord
@@ -441,8 +447,8 @@ public class Chord extends PitchSet {
 				certainty += 8;
 				name = name + "5";
 			} else {
-				Pair<String, Integer> decorations = nameSixSevensColors(c, root);
-				name = name + "No345" + decorations.first;
+				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
+				name = name + decorations.first;
 				certainty += decorations.second;
 			}
 		}
