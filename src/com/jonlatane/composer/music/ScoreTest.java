@@ -1,15 +1,25 @@
-package com.jonlatane.composer;
+package com.jonlatane.composer.music;
 
-import java.util.Collection;
-import java.util.Map;
+import com.jonlatane.composer.music.harmony.Key;
+import com.jonlatane.composer.music.harmony.PitchSet;
 
-import android.util.Pair;
+import junit.framework.TestCase;
 
-import com.jonlatane.composer.music.*;
-import com.jonlatane.composer.music.harmony.*;
-public class MusicUtil
-{
-	public static Score odeToJoy() {
+public class ScoreTest extends TestCase {
+
+	public ScoreTest(String name) {
+		super(name);
+	}
+
+	protected void setUp() throws Exception {
+		super.setUp();
+	}
+
+	protected void tearDown() throws Exception {
+		super.tearDown();
+	}
+
+	public void testOdeToJoy() {
 		Voice v = new Voice();
 		Staff s = new Staff(v);
 		Score result = new Score();
@@ -32,29 +42,7 @@ public class MusicUtil
 		realization.put(new Rational(29,2), Key.noteNameToPitchSet("D"));
 		realization.put(new Rational(15,1), Key.noteNameToPitchSet("D"));
 		
-		return result;
-	}
-	public static String outputContents(Score s) {
-		String result = "";
-		for( Pair<Rational, Map<Staff,Map<Voice,Collection<Object>>>> nextChange = s.nextChangeAfter(new Rational(0,1)); nextChange != null;
-				nextChange = s.nextChangeAfter(nextChange.first)) {
-			Rational r = nextChange.first;
-			result += r + ":: ";
-			for(Map.Entry<Staff, Map<Voice,Collection<Object>>> staff : nextChange.second.entrySet() ) {
-				for(Map.Entry<Voice,Collection<Object>> voice : staff.getValue().entrySet() ) {
-					result += voice.getKey().hashCode() + ":";
-					for(Object o : voice.getValue()) {
-						if(o.getClass().equals(PitchSet.class)) {
-							
-						}
-					}
-				}
-			}
-			result += "\n";
-		}
 		
-		return result;
 	}
 
 }
-

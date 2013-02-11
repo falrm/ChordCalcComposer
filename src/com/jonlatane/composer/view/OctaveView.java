@@ -1,7 +1,8 @@
 package com.jonlatane.composer.view;
 
-import com.jonlatane.composer.music.*;
 import com.jonlatane.composer.R;
+import com.jonlatane.composer.music.*;
+import com.jonlatane.composer.music.harmony.*;
 
 import android.util.*;
 import android.view.*;
@@ -32,7 +33,7 @@ public class OctaveView extends LinearLayout
 
 	public PitchSet getSelectedPitches() {
 		PitchSet result = new PitchSet();
-		findViewById(R.id(
+		//findViewById(R.id( //TODO
 		
 		return result;
 	}

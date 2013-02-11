@@ -1,4 +1,4 @@
-package com.jonlatane.composer.music;
+package com.jonlatane.composer.music.harmony;
 
 import java.util.*;
 
@@ -8,7 +8,8 @@ import java.util.*;
 * The PitchSet's Modulus (which has a default value of 12) represents the number of values in the octave
 */
 public class PitchSet extends TreeSet<Integer> {
-	
+	private static final long serialVersionUID = -3127526528166358783L;
+
 	public PitchSet() {
 		super();
 	}
@@ -32,13 +33,5 @@ public class PitchSet extends TreeSet<Integer> {
 			result = result ^ i;
 		}
 		return result;
-	}
-	
-	public Chord toChord() {
-		return new Chord(this);
-	}
-	
-	public Scale toScale() {
-		return new Scale(this);
 	}
 }

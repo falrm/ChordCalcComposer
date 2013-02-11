@@ -1,88 +1,158 @@
 package com.jonlatane.composer.music;
 
 import java.util.*;
-import com.jonlatane.composer.music.coverings.*;
-import android.util.Log;
+import android.util.Pair;
+import com.jonlatane.composer.music.harmony.*;
 
-public class Voice extends Rhythm implements CoveredSegment {
-	private Chord.Modulus _modulus = new Chord.Modulus();
-	private HashMap<Class,com.jonlatane.composer.music.Covering<?>> _data = 
-		new HashMap<Class,com.jonlatane.composer.music.Covering<?>>();
-	
-	class VoiceSegment extends Rhythm.RhythmSegment implements CoveredSegment {
-		public VoiceSegment(Rational start, Rational end) {
-			super(start,end);
-		}
-		
-		public Rational harmonicDifference(Class s) {
-			assert(s.equals(Chord.class) || s.equals(Scale.class) || s.equals(Key.class));
-			Rational result = Rational.ZERO;
-			HarmonicCovering harmony = (HarmonicCovering)_data.get(s);
-			NonIntersectingCovering<PitchSet> realization = 
-				(NonIntersectingCovering<PitchSet>)_data.get(PitchSet.class);
-			
-			return result;
-		}
-		
-		
-	}
+public class Voice {
+	private Meter _meter;
+	private RhythmMap<PitchSet> _realization;
+	private RhythmMap<Chord> _chords;
+	private RhythmMap<Scale> _scales;
+	private RhythmMap<Key> _keys;
 	
 	public Voice() {
-		// The use of HarmonicCovering types ensures we always have a key, chord, and scale.
-		// Worst case (12 tone construction) they are all chromatic.  Best case, we can
-		// assume a bit more
-		HarmonicCovering<Chord> chords = new HarmonicCovering<Chord>();
-		_data.put(Chord.class, chords );
-		_data.put(Scale.class, new HarmonicCovering<Scale>());
-		_data.put(Key.class, new HarmonicCovering<Key>());
+		this(new Meter());
+	}
+	
+	// Access point for Staves/Scores
+	Voice(Meter m) {
+		_meter = m;
+		_realization = new RhythmMap<PitchSet>();
+		_chords = new RhythmMap<Chord>();
+		_scales = new RhythmMap<Scale>();
+		_keys = new RhythmMap<Key>();
+	}
+	
+	public RhythmMap<PitchSet> getRealization() {
+		return _realization;
+	}
+	public RhythmMap<Chord> getChords() {
+		return _chords;
+	}
+	public RhythmMap<Scale> getScales() {
+		return _scales;
+	}
+	public RhythmMap<Key> getKeys() {
+		return _keys;
+	}
+	
+	// This is all to optimize sequential access to a voice.  Is is stupid?
+	private Iterator<Map.Entry<Rational,PitchSet>> __notes;
+	private Map.Entry<Rational,PitchSet> __nextNote;
+	private Iterator<Map.Entry<Rational,Chord>> __chords;
+	private Map.Entry<Rational,Chord> __nextChord;
+	private Iterator<Map.Entry<Rational,Scale>> __scales;
+	private Map.Entry<Rational,Scale> __nextScale;
+	private Iterator<Map.Entry<Rational,Key>> __keys;
+	private Map.Entry<Rational,Key> __nextKey;
+	
+	private Rational __previousResult;
+	// Works like an internal, self-contained iterator.  Returns null if empty.
+	public Pair<Rational, Collection<Object>> nextChangeAfter(Rational r) {
+		HashSet<Object> resultRHS = new HashSet<Object>();
+		if ((__previousResult == null) || (!r.equals(__previousResult))) {
+			// we must initialize everything and do it the hard way
+			__notes = _realization._data.tailMap(r, false).entrySet().iterator();
+			if( __notes.hasNext() ) {
+				__nextNote = __notes.next();
+			} else {
+				__nextNote = null;
+			}
+			__chords = _chords._data.tailMap(r, false).entrySet().iterator();
+			if (__chords.hasNext()) {
+				__nextChord = __chords.next();
+			} else {
+				__nextChord = null;
+			}
+			__scales = _scales._data.tailMap(r, false).entrySet().iterator();
+			if (__scales.hasNext()) {
+				__nextScale = __scales.next();
+			} else {
+				__nextScale = null;
+			}
+			__keys = _keys._data.tailMap(r, false).entrySet().iterator();
+			if (__keys.hasNext()) {
+				__nextKey = __keys.next();
+			} else {
+				__nextKey = null;
+			}
+		} //otherwise everything is in place.
 		
-		// Our Realization information - the pitches and articulations to be played
-		_data.put(PitchSet.class, new NonIntersectingCovering<PitchSet>());
-		_data.put(Articulation.class, new NonIntersectingCovering<Articulation>());
+		HashSet<Rational> h = new HashSet<Rational>();
+		for(Rational check : new Rational[] {__nextNote.getKey(), __nextChord.getKey(), __nextScale.getKey(), __nextKey.getKey()}) {
+			if( check != null ) {
+				h.add(check);
+			}
+		}
+		Rational next = Collections.min(h);
 		
-		_data.put(TimeSignature.class, new NonIntersectingCovering<TimeSignature>());
-	}
-	
-	public com.jonlatane.composer.music.Covering<?> getCovering(Class s) {
-		return _data.get(s);
-	}
-	
-	public NonIntersectingCovering<PitchSet> getRealization() {
-		return (NonIntersectingCovering<PitchSet>)_data.get(PitchSet.class);
-	}
-	
-	// gets everything at a point. Not very useful in real time but a good quick slice
-	// of all
-	public Set getObjectsAt( Rational r ) {
-		Set result = new HashSet();
-		for(Map.Entry<Class,com.jonlatane.composer.music.Covering<?>> e : _data.entrySet()) {
-			if( ( e.getValue() instanceof Rhythm.HarmonicCovering ||
-				e.getValue() instanceof Rhythm.NonIntersectingCovering) && 
-				e.getValue().contains(r)) {
-					result.addAll(e.getValue().getAllObjectsAt(r));
+		if(next.equals( __nextNote.getKey())) {
+			resultRHS.add(__nextNote.getValue());
+			if( __notes.hasNext() ) {
+				__nextNote = __notes.next();
+			} else {
+				__nextNote = null;
+			}
+		}
+		if(next.equals( __nextChord.getKey())) {
+			resultRHS.add(__nextChord.getValue());
+			if (__chords.hasNext()) {
+				__nextChord = __chords.next();
+			} else {
+				__nextChord = null;
+			}
+		}
+		if(next.equals( __nextScale.getKey())) {
+			resultRHS.add(__nextScale.getValue());
+			if (__scales.hasNext()) {
+				__nextScale = __scales.next();
+			} else {
+				__nextScale = null;
+			}
+		}
+		if(next.equals( __nextKey.getKey())) {
+			resultRHS.add(__nextKey.getValue());
+			if (__keys.hasNext()) {
+				__nextKey = __keys.next();
+			} else {
+				__nextKey = null;
 			}
 		}
 		
-		return result;
+		__previousResult = next;
+		return new Pair<Rational,Collection<Object>>(next, resultRHS);
 	}
 	
-	public Object getFirstObjectOfTypeAt(Class c, Rational r) {
-		assert(_data.containsKey(c));
-		Set<?> objs = _data.get(c).getAllObjectsAt(r);
-		Object result = null;
-		if(!objs.isEmpty())
-			result = objs.toArray()[0];
-		return result;
+	public interface VoicePoint {
+		public PitchSet getTones();
+		public Chord getChord();
+		public Scale getScale();
+		public Key getKey();
+		public Rational getCurrentBeat();
 	}
 	
-	synchronized void synchronize() {
-		synchronize(_data.get(PitchSet.class));
-	}
-	
-	synchronized void synchronize(com.jonlatane.composer.music.Covering c) {
-		clear();
-		for( com.jonlatane.composer.music.Segment s : c.getSegments() ) {
-			add(s.getStart());
-		}
+	public VoicePoint getPoint(Rational r) {
+		final Rational rPrime = new Rational(r.numerator(), r.denominator());
+		return new VoicePoint() {
+			public PitchSet getTones(){
+				return getRealization().getObjectAt(rPrime);
+			}
+			public Chord getChord(){
+				return getChords().getObjectAt(rPrime);
+			}
+			public Scale getScale() {
+				return getScales().getObjectAt(rPrime);
+			}
+			public Key getKey() {
+				return getKeys().getObjectAt(rPrime);
+			}
+			public Rational getCurrentBeat() {
+				return _meter.getBeatOf(rPrime);
+			}
+
+		};
+		
+
 	}
 }

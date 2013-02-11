@@ -1,7 +1,17 @@
 package com.jonlatane.composer.music;
 
-import java.util.Set;
+import java.util.*;
 
+/**
+ * A Covering is a mapping function from a set of Segments to objects of type K.
+ * We may assume a few things about coverings such as whether they allow for intersection
+ * (which lets us make some assumptions about efficiently implementing things).
+ * 
+ * 
+ * @author Jon
+ *
+ * @param <K> an object type such as Chords, PitchSets, Articulations, Keys and so forth
+ */
 public interface Covering<K>
 {
 	// generally a HashSet for efficiency
@@ -26,22 +36,38 @@ public interface Covering<K>
 	
 	//getRhythm() == getRhythm(false);
 	
-	// This segment should 
-	public Rhythm shiftToRhythm();
-	public Rhythm trimToRhythm();
+	public Segment getRhythm();
 	public Segment getRhythm(boolean segmentEndInclusive);
-	public CoveredSegment getAsCoveredSegment(Rational start, Rational end);
-	public CoveredSegment getAsCoveredSegment(Segment s);
+	public CoveredSegment getAsCoveredSegment();
 	
-	// Covering methods.  These may be implemented with varying data
-	// structures for efficiency depending on what we want to assume
-	// about the covering (mostly whether it's non-intersecting or not).
-	// In all cases, the covering should preserve
-	// its previous contents as best as possible.
-	public void add(K object, Rational r);
-	public void add(K object, Rational r, Rational length);
+	/**
+	 * Add the given Segment to the domain of the covering, pointing to the given object.
+	 * 
+	 * @param object the object to be added to the Covering
+	 * @param s the Segment to be added to the Covering
+	 */
 	public void add(K object, Segment s);
 	
-	// this should manipulate the segments in question
+	/**
+	 * Removes the segment from this Covering
+	 * 
+	 * @param s the segment to be removed
+	 * @return true iff the segment was present a removed.
+	 */
+	public boolean remove(Segment s);
+	
+	/**
+	 * This should first call remove(s).  It should then find any Segments in its domain
+	 * that intersect s and shorten them so that that is not the case.  After calling this
+	 * method, for any Rational r spanned by s, getObjectAt(r) should return null.
+	 *  
+	 * @param s the Segment to be cleared in this Covering.
+	 */
 	public void clear(Segment s);
+	
+	/**
+	 * Returns a view of the set of segments in the domain of the Covering as a function from Segments to Ks
+	 * @return
+	 */
+	public NavigableSet<? extends Segment> getSegments();
 }

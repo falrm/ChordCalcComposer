@@ -1,22 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
     <string name="app_name">Music Toy</string>
-	
-	<string name="soprano_long">Soprano</string>
-	<string name="soprano_short">S</string>
-
-	<string name="alto_long">Alto</string>
-	<string name="alto_short">A</string>
-
-	<string name="tenor_long">Tenor</string>
-	<string name="tenor_short">T</string>
-
-	<string name="bass_long">Bass</string>
-	<string name="bass_short">B</string>
-
-	<string name="piano_long">Piano</string>
-	<string name="piano_short">Pno</string>
-		
-	<string name="kbd_bottom_note">Eb4</string>
-	<string name="keyWidth">20dp</string>
+    <string name="soprano_long">Soprano</string>
+    <string name="soprano_short">S</string>
+    <string name="alto_long">Alto</string>
+    <string name="alto_short">A</string>
+    <string name="tenor_long">Tenor</string>
+    <string name="tenor_short">T</string>
+    <string name="bass_long">Bass</string>
+    <string name="bass_short">B</string>
+    <string name="piano_long">Piano</string>
+    <string name="piano_short">Pno</string>
+    <string name="kbd_bottom_note">Eb4</string>
+    <string name="keyWidth">20dp</string>
 </resources>
