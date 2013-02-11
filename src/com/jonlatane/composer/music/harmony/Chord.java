@@ -118,8 +118,11 @@ public class Chord extends PitchSet {
 		return super.contains(MODULUS.getPitchClass(i));
 	}
 	
-	public void setRoot(int i) {
-		this._root = MODULUS.getPitchClass(i);
+	public void setRoot(Integer i) {
+		if( i != null)
+			this._root = MODULUS.getPitchClass(i);
+		else
+			this._root = null;
 	}
 	
 	public Integer getRoot() {
@@ -296,7 +299,7 @@ public class Chord extends PitchSet {
 		
 		// Root - bonus points for having it!  Though maybe we can find shell voicings using the stuff below this, a 3 and a flat 7 are better than just the root
 		if (c.contains(root)) {
-			certainty += 10;
+			certainty += 20;
 			Log.i(TAG,"Root is in the chord!");
 		}
 		
@@ -448,30 +451,10 @@ public class Chord extends PitchSet {
 	}
 	
 	
-	
-	// For 12-tone systems.
-	public static int guessRoot(Chord c) {
-		int result = 0;
-		int bestCertainty = 0;
-		
-		//Here is some voodoo magic numbers crap.  We check
-		//each note for how much we think it's root based on its internal structure
-		for(Integer i : c) {
-			Pair<String, Integer> p = guessName(c, i);
-			
-			// Update result if necessary
-			if(p.second > bestCertainty) {
-				result = i;
-				bestCertainty = p.second;
-			}
-		}
-		return result;
-	}
-	
 	public static Chord getChordByName(String s) {
 		Chord result = new Chord();
 		// EX: F+M7#6#9
-		Pattern p = Pattern.compile("(A|B|C|D|E|F|G)(#|b)?(M|m)(7)?((?:b|#\\d)");
+		Pattern p = Pattern.compile("((?:A|B|C|D|E|F|G)(?:#|b))?(M|m)?(7|9|13)?((?:b|#\\d)");
 		Matcher m = p.matcher(s);
 		if(m.matches()) {
 			for(int i = 0; i < m.groupCount(); i = i + 1) {

@@ -2,7 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-	<com.jonlatane.composer.NonDelayedHorizontalScrollView
+	<com.jonlatane.composer.input.KeyboardScroller
+	    android:id="@+id/kbScroller"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
 	    android:layout_alignParentRight="true" >
@@ -837,5 +838,5 @@
 	    </RelativeLayout>
 	    
 	
-	</com.jonlatane.composer.NonDelayedHorizontalScrollView>
+	</com.jonlatane.composer.input.KeyboardScroller>
 </RelativeLayout>

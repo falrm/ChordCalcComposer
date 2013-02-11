@@ -21,6 +21,7 @@ public final class Key extends Scale
 	private static final String[] majorKeys = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
 	private static final String[] minorKeys = { "C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B" };
 	public static Key CMajor = new Key(new MajorScale(0));
+	public static Key CChromatic = new Key(new ChromaticScale(0));
 	
 	static{
 		twelveToneNames.put(0, 'C');
@@ -111,7 +112,7 @@ public final class Key extends Scale
 	 */
 	public String getNoteName(Integer i) {
 		String result = "";
-		
+		i = MODULUS.getPitchClass(i);
 		/*String scaleContents = "[";
 		for(Integer k : this) {
 			scaleContents += k+",";
@@ -164,7 +165,7 @@ public final class Key extends Scale
 			}
 			
 		}
-		
+		Log.i(TAG,"Got note name " + result);
 		return result;
 	}
 	
@@ -266,4 +267,30 @@ public final class Key extends Scale
 		}
 		return result;
 	}
+	
+	public static TreeMap<Integer,List<String>> getRootLikelihoodsAndNames(Collection<Integer> inputRootCandidates, Chord c, Key k) {
+		TreeMap<Integer,List<String>> result = new TreeMap<Integer,List<String>>();
+		
+		for( int n : inputRootCandidates) {
+			Pair<String,Integer> candidate = guessName(c, n);
+			if(c.getRoot() != null && n == c.getRoot()) {
+				candidate = new Pair<String,Integer>(candidate.first, candidate.second + 1000);
+			}
+			List<String> bucket = result.get(candidate.second);
+			if( bucket == null ) {
+				bucket = new LinkedList<String>();
+				result.put(candidate.second, bucket);
+			}
+			
+			String rootName = k.getNoteName(n);
+			bucket.add("[" + rootName + "] "+ candidate.first + " | ");
+		}
+		
+		return result;
+	}
+	
+	public static TreeMap<Integer,List<String>> getRootLikelihoodsAndNamesInC(Collection<Integer> inputRootCandidates, Chord c) {
+		return getRootLikelihoodsAndNames(inputRootCandidates, c, CMajor);
+	}
+
 }

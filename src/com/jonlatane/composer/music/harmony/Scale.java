@@ -152,12 +152,12 @@ public class Scale extends Chord {
 	 */
 	public Pair<Integer, Integer> degreeOf(int i) {
 
-		Integer upper = ceiling(i % 12);
+		Integer upper = ceiling(MODULUS.getPitchClass(i));
 		if( upper == null )
-			upper = ceiling((i % 12)-12);
-		Integer lower = floor(i % 12);
+			upper = ceiling((MODULUS.getPitchClass(i))-12);
+		Integer lower = floor(MODULUS.getPitchClass(i));
 		if( lower == null )
-			lower = floor((i % 12)+12);
+			lower = floor((MODULUS.getPitchClass(i))+12);
 		int chromatic = getRoot();
 		int degree = 0;
 		Integer lowerDegree = null;
