@@ -3,12 +3,10 @@ package com.jonlatane.composer.input;
 import com.jonlatane.composer.R;
 import com.jonlatane.composer.R.layout;
 
-import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.os.*;
 import android.view.*;
 
-@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 public class TwelthKeyboardFragment extends Fragment {
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

@@ -44,6 +44,8 @@ public class ChordDisplayActivity extends Activity
 		_myKbdIO.harmonicModeOn();
 		KeyboardScroller scroller = (KeyboardScroller)findViewById(R.id.kbScroller);
 		scroller.setKeyboardIOHander(_myKbdIO);
+		
+		//scroller.disableScrolling();
 	}
 	
 	private class UpdateChordDisplay extends AsyncTask<Chord, Integer, List<String>> {

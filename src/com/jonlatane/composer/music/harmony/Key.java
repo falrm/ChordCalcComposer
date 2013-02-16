@@ -283,7 +283,7 @@ public final class Key extends Scale
 			}
 			
 			String rootName = k.getNoteName(n);
-			bucket.add("[" + rootName + "] "+ candidate.first + " | ");
+			bucket.add(rootName + candidate.first);
 		}
 		
 		return result;

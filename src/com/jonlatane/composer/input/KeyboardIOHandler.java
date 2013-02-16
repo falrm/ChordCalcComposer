@@ -18,10 +18,15 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.widget.Button;
 
 public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	private static String TAG = "KBDIO";
+	
+	// References to other things in this package
+	private KeyboardScroller _kbs;
 	
 	private static int[] _keys = new int[] 
 			{ R.id.keyA0, R.id.keyAS0, R.id.keyB0,
@@ -34,9 +39,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		R.id.keyC7, R.id.keyCS7, R.id.keyD7, R.id.keyDS7,R.id.keyE7, R.id.keyF7, R.id.keyFS7, R.id.keyG7,R.id.keyGS7, R.id.keyA7, R.id.keyAS7, R.id.keyB7,
 		R.id.keyC8
 			};
-				
 	private static SparseIntArray _keysInverse = new SparseIntArray();
-	
 	private static HashSet<Integer> blackKeys = new HashSet<Integer>();
 	static {
 		for( int i = 0; i < _keys.length; i = i +  1 ) {
@@ -63,8 +66,19 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 			Button b = (Button)(a.findViewById(k));
 			b.setOnTouchListener(this);
 			b.setOnLongClickListener(this);
+			ViewTreeObserver o = b.getViewTreeObserver();
+			
+			// Make sure we don't get stuck keys
+			o.addOnPreDrawListener(new OnPreDrawListener() {
+				@Override
+				public boolean onPreDraw() {
+					catchRogues();
+					return true;
+				}
+			});
 		}
-		((KeyboardScroller)a.findViewById(R.id.kbScroller)).setKeyboardIOHander(this);
+		_kbs = ((KeyboardScroller)a.findViewById(R.id.kbScroller));
+		_kbs.setKeyboardIOHander(this);
 	}
 	
 	// The frequencies of C4-B4 (the middle octave)
@@ -237,6 +251,8 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		normalizeVolume();
 		getAudioTrackForNote(n).pause();
 		getAudioTrackForNote(n).setPlaybackHeadPosition(0);
+		
+		smartToggleScrolling();
 	}
 	
 	void pressNote(int n) {
@@ -260,10 +276,33 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		_recentlyUsedNotes.remove((Integer)n);
 		_recentlyUsedNotes.addFirst((Integer)n);
 		
+		smartToggleScrolling();
+		
 		// The magic
 		if( _myActivity.getClass().equals(ChordDisplayActivity.class) ) {
 			((ChordDisplayActivity)_myActivity).updateChordDisplay();
 		}
+	}
+	
+	void smartToggleScrolling() {
+		Thread t = new Thread() {
+			public void run() {
+	             try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	     		if(_currentlyPressed.size() > 0) {
+	     			Log.i(TAG,"Disabled scrolling");
+	    			_kbs.disableScrolling();
+	    		} else {
+	     			Log.i(TAG,"Enabled scrolling");
+	    			_kbs.enableScrolling();
+	    		}
+	         }
+		};
+		t.start();
 	}
 	
 	@Override

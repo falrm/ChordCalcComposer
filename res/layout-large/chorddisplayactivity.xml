@@ -9,7 +9,7 @@
         android:id="@+id/chordDisplayActivityKb"
         android:name="com.jonlatane.composer.input.TwelthKeyboardFragment"
         android:layout_width="match_parent"
-        android:layout_height="145dp"
+        android:layout_height="290dp"
         android:layout_alignParentBottom="true"
         tools:layout="@layout/twelthkeyboard" />
     
