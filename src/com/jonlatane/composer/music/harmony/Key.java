@@ -106,7 +106,17 @@ public final class Key extends Scale
 	}
 	
 	/**
-	 * Gets the note name for the given note using its own root name.  Assumes this is a heptatonic key (i.e., major minor or modal)
+	 * Gets the note name for the given note using its own root name.  Assumes this is a 
+	 * heptatonic key (i.e., major, minor or modal) that can be represented with only sharps,
+	 * flats, double sharps and double flats.  Naturals will also be represented if the
+	 * key assumes a note is flat.
+	 * 
+	 * Depending on this key, results will change accidentals dynamically.  For instance:
+	 * 
+	 *  Key | A | Ab
+	 *  C   | A | Ab
+	 *  C-  | An| A
+	 * 
 	 * @param i
 	 * @return
 	 */
@@ -138,13 +148,16 @@ public final class Key extends Scale
 				char letterName = heptatonicNotes[(rootCharIndex + p.first-1) % 7];
 				result += letterName;
 				
+				// Check for flats
 				if( i < twelveToneInverse.get(letterName)) {
 					result += 'b';
 				}
+				
+				// Check for sharps/double-sharps
 				if( i > twelveToneInverse.get(letterName)) {
 					result += '#';
 				}
-				if( i > (twelveToneInverse.get(letterName)-1)) {
+				if( i > (twelveToneInverse.get(letterName)+1)) {
 					result += '#';
 				}
 			//represent as a flat/double-flat/sharp
@@ -152,15 +165,17 @@ public final class Key extends Scale
 				char letterName = heptatonicNotes[(rootCharIndex + p.second - 1) % 12];
 				result += letterName;
 				
+				// Check for sharps
+				if( i > twelveToneInverse.get(letterName)) {
+					result += '#';
+				}
+				
+				// Check for flats/double flats
 				if( i < twelveToneInverse.get(letterName)) {
 					result += 'b';
 				}
-				// Double-flats and sharps are possible maybe?
 				if( i < twelveToneInverse.get(letterName)-1) {
 					result += 'b';
-				}
-				if( i > twelveToneInverse.get(letterName)) {
-					result += '#';
 				}
 			}
 			

@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
-    <style name="BestChord"> 
+    <style name = "GenericChord">
+        <item name="android:textIsSelectable">true</item>
+    </style>
+    <style name="BestChord" parent="GenericChord"> 
         <item name="android:textSize">200sp</item>
     </style>
-    <style name="OtherChord"> 
+    <style name="OtherChord" parent="GenericChord"> 
         <item name="android:textSize">160sp</item>
         <item name="android:layout_marginLeft">30sp</item>
         <item name="android:layout_marginRight">30sp</item>
     </style>
     
-    <style name="BestChordSmall"> 
+    <style name="BestChordSmall" parent="GenericChord"> 
         <item name="android:textSize">50sp</item>
     </style>
-    <style name="OtherChordSmall"> 
+    <style name="OtherChordSmall" parent="GenericChord"> 
         <item name="android:textSize">30sp</item>
         <item name="android:layout_marginLeft">30sp</item>
         <item name="android:layout_marginRight">30sp</item>
