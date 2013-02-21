@@ -251,8 +251,6 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		normalizeVolume();
 		getAudioTrackForNote(n).pause();
 		getAudioTrackForNote(n).setPlaybackHeadPosition(0);
-		
-		smartToggleScrolling();
 	}
 	
 	void pressNote(int n) {
@@ -275,35 +273,13 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		getAudioTrackForNote(n).play();
 		_recentlyUsedNotes.remove((Integer)n);
 		_recentlyUsedNotes.addFirst((Integer)n);
-		
-		smartToggleScrolling();
-		
+				
 		// The magic
 		if( _myActivity.getClass().equals(ChordDisplayActivity.class) ) {
 			((ChordDisplayActivity)_myActivity).updateChordDisplay();
 		}
 	}
 	
-	void smartToggleScrolling() {
-		Thread t = new Thread() {
-			public void run() {
-	             try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-	     		if(_currentlyPressed.size() > 0) {
-	     			Log.i(TAG,"Disabled scrolling");
-	    			_kbs.disableScrolling();
-	    		} else {
-	     			Log.i(TAG,"Enabled scrolling");
-	    			_kbs.enableScrolling();
-	    		}
-	         }
-		};
-		t.start();
-	}
 	
 	@Override
 	public boolean onLongClick(View arg0) {

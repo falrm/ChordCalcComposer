@@ -15,6 +15,7 @@ import android.graphics.Canvas;
 import android.os.*;
 import android.util.*;
 import android.view.*;
+import android.view.View.OnTouchListener;
 import android.widget.*;
 
 /**
@@ -26,9 +27,13 @@ import android.widget.*;
 public class ChordDisplayActivity extends Activity
 {
 	private KeyboardIOHandler _myKbdIO;
+	private KeyboardScroller _keyboardScroller;
+	private HorizontalScrollView _chordScroller;
 	private ManagedToneGenerator _tg;
+	
+	public int NUMFINGERSDOWN = 0;
+	
 	private static final String TAG = "ChordDisplayActivity";
-
 	private static final int[] _slots = {R.id.bestChord, R.id.second, R.id.third, R.id.fourth, R.id.fifth, R.id.sixth, R.id.seventh, R.id.eighth, R.id.ninth, R.id.tenth, R.id.eleventh};
 	
 	/** Called when the activity is first created. */
@@ -40,10 +45,14 @@ public class ChordDisplayActivity extends Activity
 		setContentView(R.layout.chorddisplayactivity);
 		//setContentView(view);
 		
+		// Set up the keyboard
 		_myKbdIO = new KeyboardIOHandler(this);
 		_myKbdIO.harmonicModeOn();
-		KeyboardScroller scroller = (KeyboardScroller)findViewById(R.id.kbScroller);
-		scroller.setKeyboardIOHander(_myKbdIO);
+		_keyboardScroller = (KeyboardScroller)findViewById(R.id.kbScroller);
+		_keyboardScroller.setKeyboardIOHander(_myKbdIO);
+		_chordScroller = (HorizontalScrollView)findViewById(R.id.chordDisplayScroller);
+		
+		RelativeLayout root= (RelativeLayout) findViewById(R.id.chordDisplayActivity);
 		
 		//scroller.disableScrolling();
 	}
@@ -72,28 +81,12 @@ public class ChordDisplayActivity extends Activity
 				TextView v = (TextView)findViewById(_slots[idx++]);
 				v.setText(s);
 			}
+			_chordScroller.scrollTo(0,0);
 		}
 
 
 	 }
 	public void updateChordDisplay() {
 		new UpdateChordDisplay().execute(_myKbdIO.getChord());
-		/*Thread t = new Thread() {
-			@Override
-			public void run() {
-				Chord c = new Chord(_myKbdIO.getPressedKeys());
-				TreeMap<Integer,List<String>> data = Key.getRootLikelihoodsAndNamesInC(Key.CChromatic, c);
-				int idx = 0;
-				for(Map.Entry<Integer,List<String>> e : data.descendingMap().entrySet() ) {
-					for( String s : e.getValue() ) {
-						if( idx > 11 ) break;
-						TextView v = (TextView)findViewById(_slots[idx++]);
-						
-						v.setText(s);
-					}
-				}
-			}
-		};
-		t.start();*/
 	}
 }
