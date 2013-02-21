@@ -1,5 +1,8 @@
 package com.jonlatane.composer.input;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -11,9 +14,10 @@ import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.ViewTreeObserver.OnScrollChangedListener;
 import android.widget.HorizontalScrollView;
+import android.widget.ToggleButton;
 
 public class KeyboardScroller extends HorizontalScrollView {
-	private String TAG = "KBScroller";
+	private static String TAG = "KBScroller";
 	private KeyboardIOHandler _io = null;
 	public KeyboardScroller(Context context) {
 		super(context);
@@ -56,16 +60,72 @@ public class KeyboardScroller extends HorizontalScrollView {
 		_io = kio;
 	}
 
-	public void disableScrolling() {
+	private int _scrollPosition = 0;
+	private boolean _scrollingEnabled = true;
+	private void disableScrolling() {
+		Log.i(TAG, "Disabled Scrolling");
+		_scrollPosition = getScrollX();
 		setOnTouchListener( new OnTouchListener(){ 
 		    @Override
 		    public boolean onTouch(View v, MotionEvent event) {
+		    	logUpDown(event);
+		    	smartToggleScrolling();
 		        return true; 
 		    }
 		});
+		_scrollPosition = getScrollX();
+    	scrollTo(_scrollPosition, 0);
+		_scrollingEnabled = false;
+	}
+	private void enableScrolling() {
+		Log.i(TAG, "Enabled Scrolling");
+		setOnTouchListener(null);
+    	scrollTo(_scrollPosition, 0);
+		_scrollingEnabled = true;
+	}
+		
+	private boolean smartToggleScrolling() {
+		if(!_scrollingEnabled) {
+			if( getUpDownFrequency(1000) < 6.0 ) {
+				enableScrolling();
+			}
+		} else {
+			if( getUpDownFrequency(1000) > 0.25 ) {
+				disableScrolling();
+			}
+		}
+		
+		return _scrollingEnabled;
 	}
 	
-	public void enableScrolling() {
-		setOnTouchListener(null);
+	private LinkedList<Long> previousUpDowns = new LinkedList<Long>();
+	private float getUpDownFrequency(long window) {
+		long now = System.currentTimeMillis();
+		
+		Iterator<Long> itr = previousUpDowns.iterator();
+		int numPressesInWindow = 0;
+		while(itr.hasNext()) {
+			long l = itr.next();
+			if( now - l > window ) {
+				itr.remove();
+			} else {
+				numPressesInWindow++;
+			}
+		}
+		if(numPressesInWindow < 2)
+			return 0;
+		return (float)numPressesInWindow/((float)window/1000);
 	}
-}
+	private void logUpDown(MotionEvent e) {
+		if(e.getActionMasked() == MotionEvent.ACTION_DOWN || e.getActionMasked() == MotionEvent.ACTION_UP) {
+			previousUpDowns.add(System.currentTimeMillis());
+		}
+	}
+	@Override
+	public boolean onTouchEvent(MotionEvent e) {
+			boolean result = super.onTouchEvent(e);
+			//logUpDown(e);
+			//smartToggleScrolling();
+			return result;
+		}
+	}
