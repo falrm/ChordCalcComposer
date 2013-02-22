@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.jonlatane.composer.input.*;
+import com.jonlatane.composer.io.*;
 import com.jonlatane.composer.music.*;
 import com.jonlatane.composer.music.harmony.*;
 import com.jonlatane.composer.music.coverings.*;
@@ -48,13 +48,28 @@ public class ChordDisplayActivity extends Activity
 		// Set up the keyboard
 		_myKbdIO = new KeyboardIOHandler(this);
 		_myKbdIO.harmonicModeOn();
+		
 		_keyboardScroller = (KeyboardScroller)findViewById(R.id.kbScroller);
 		_keyboardScroller.setKeyboardIOHander(_myKbdIO);
+		
 		_chordScroller = (HorizontalScrollView)findViewById(R.id.chordDisplayScroller);
 		
 		RelativeLayout root= (RelativeLayout) findViewById(R.id.chordDisplayActivity);
 		
 		//scroller.disableScrolling();
+	}
+	
+	@Override
+	public void onPause()
+	{
+		super.onPause();
+	    //_myKbdIO.
+	}
+
+	@Override
+	public void onResume()
+	{
+	    super.onResume();
 	}
 	
 	private class UpdateChordDisplay extends AsyncTask<Chord, Integer, List<String>> {
@@ -81,7 +96,7 @@ public class ChordDisplayActivity extends Activity
 				TextView v = (TextView)findViewById(_slots[idx++]);
 				v.setText(s);
 			}
-			_chordScroller.scrollTo(0,0);
+			_chordScroller.smoothScrollBy(-1000000,0);
 		}
 
 

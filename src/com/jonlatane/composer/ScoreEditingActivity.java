@@ -2,7 +2,7 @@ package com.jonlatane.composer;
 
 import java.util.TreeMap;
 
-import com.jonlatane.composer.input.KeyboardIOHandler;
+import com.jonlatane.composer.io.KeyboardIOHandler;
 import com.jonlatane.composer.music.*;
 import com.jonlatane.composer.music.harmony.*;
 import com.jonlatane.composer.music.coverings.*;
