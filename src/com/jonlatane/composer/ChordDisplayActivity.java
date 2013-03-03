@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.devsmart.android.ui.HorizontalListView;
 import com.jonlatane.composer.io.*;
 import com.jonlatane.composer.music.*;
 import com.jonlatane.composer.music.harmony.*;
@@ -40,10 +41,8 @@ public class ChordDisplayActivity extends Activity
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
-		//SurfaceView view = new SurfaceView(this);
+		
 		setContentView(R.layout.chorddisplayactivity);
-		//setContentView(view);
 		
 		// Set up the keyboard
 		_myKbdIO = new KeyboardIOHandler(this);
@@ -54,10 +53,47 @@ public class ChordDisplayActivity extends Activity
 		
 		_chordScroller = (HorizontalScrollView)findViewById(R.id.chordDisplayScroller);
 		
-		RelativeLayout root= (RelativeLayout) findViewById(R.id.chordDisplayActivity);
+		//RelativeLayout root= (RelativeLayout) findViewById(R.id.chordDisplayActivity);
 		
-		//scroller.disableScrolling();
+		// Set up lead sheet display
+		HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
+        listview.setAdapter(_adapter);  
 	}
+	
+	private static String[] _dataObjects = new String[]{ 
+		"CM7",  
+        "D-7",  
+        "G7",
+        "CM7" };
+	
+	private BaseAdapter _adapter = new BaseAdapter() {  
+		  
+        @Override  
+        public int getCount() {  
+            return _dataObjects.length;  
+        }  
+  
+        @Override  
+        public Object getItem(int position) {  
+            return null;  
+        }  
+  
+        @Override  
+        public long getItemId(int position) {  
+            return 0;  
+        }  
+  
+        @Override  
+        public View getView(int position, View convertView, ViewGroup parent) {  
+            View retval = LayoutInflater.from(parent.getContext()).inflate(R.layout.viewitem, null);  
+            TextView title = (TextView) retval.findViewById(R.id.leadSheetItemTV);  
+            title.setText(_dataObjects[position]);  
+              
+            return retval;  
+        }  
+          
+    };  
+
 	
 	@Override
 	public void onPause()
@@ -72,8 +108,17 @@ public class ChordDisplayActivity extends Activity
 	    super.onResume();
 	}
 	
+	// Keep track of when chord updates are started so only the most recent operation will update the views
+	private static long mostRecentUCDInitializationTime;
 	private class UpdateChordDisplay extends AsyncTask<Chord, Integer, List<String>> {
 		TreeMap<Integer,List<String>> data;
+		private long myInitializationTime;
+		
+		
+		public UpdateChordDisplay() {
+			myInitializationTime = System.currentTimeMillis();
+			mostRecentUCDInitializationTime = myInitializationTime;
+		}
 		
 		@Override
 		protected List<String> doInBackground(Chord... c) {
@@ -90,13 +135,15 @@ public class ChordDisplayActivity extends Activity
 		@Override
 		protected void onPostExecute(List<String> values) {
 			int idx = 0;
-			for( String s : values ) {
-				if( idx >= _slots.length) break;
-				
-				TextView v = (TextView)findViewById(_slots[idx++]);
-				v.setText(s);
+			if(mostRecentUCDInitializationTime == myInitializationTime) {
+				for( String s : values ) {
+					if( idx >= _slots.length) break;
+					
+					TextView v = (TextView)findViewById(_slots[idx++]);
+					v.setText(s);
+				}
+				_chordScroller.smoothScrollBy(-1000000,0);
 			}
-			_chordScroller.smoothScrollBy(-1000000,0);
 		}
 
 

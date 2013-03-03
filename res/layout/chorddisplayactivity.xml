@@ -6,6 +6,11 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
+    <com.devsmart.android.ui.HorizontalListView 
+        android:id="@+id/leadSheet" 
+        android:layout_width="fill_parent" 
+        android:layout_height="wrap_content" />  
+    
     <fragment
         android:id="@+id/chordDisplayActivityKb"
         android:name="com.jonlatane.composer.io.TwelthKeyboardFragment"

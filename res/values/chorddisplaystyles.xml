@@ -4,22 +4,38 @@
         <item name="android:textIsSelectable">true</item>
     </style>
     <style name="BestChord" parent="GenericChord"> 
-        <item name="android:textSize">200sp</item>
+        <item name="android:textSize">120sp</item>
+        <item name="android:textColor">#38c0f4</item>
+        <item name="android:layout_marginLeft">50sp</item>
+        <item name="android:layout_marginRight">50sp</item>
     </style>
-    <style name="OtherChord" parent="GenericChord"> 
-        <item name="android:textSize">160sp</item>
-        <item name="android:layout_marginLeft">30sp</item>
-        <item name="android:layout_marginRight">30sp</item>
+    <style name="OtherChord1" parent="GenericChord"> 
+        <item name="android:textSize">120sp</item>
+        <item name="android:layout_marginLeft">50sp</item>
+        <item name="android:layout_marginRight">50sp</item>
+    </style>
+    <style name="OtherChord2" parent="GenericChord"> 
+        <item name="android:textSize">120sp</item>
+        <item name="android:textColor">#87C6DE</item>
+        <item name="android:layout_marginLeft">50sp</item>
+        <item name="android:layout_marginRight">50sp</item>
     </style>
     
     <style name="BestChordSmall" parent="GenericChord"> 
         <item name="android:textSize">50sp</item>
+        <item name="android:textColor">#38c0f4</item>
+        <item name="android:layout_marginRight">30sp</item>
     </style>
-    <style name="OtherChordSmall" parent="GenericChord"> 
-        <item name="android:textSize">30sp</item>
+    <style name="OtherChordSmall1" parent="GenericChord"> 
+        <item name="android:textSize">50sp</item>
         <item name="android:layout_marginLeft">30sp</item>
         <item name="android:layout_marginRight">30sp</item>
-        <item name="android:layout_alignParentBottom">true</item>
+    </style>
+    <style name="OtherChordSmall2" parent="GenericChord"> 
+        <item name="android:textSize">50sp</item>
+        <item name="android:textColor">#87C6DE</item>
+        <item name="android:layout_marginLeft">30sp</item>
+        <item name="android:layout_marginRight">30sp</item>
     </style>
     
 

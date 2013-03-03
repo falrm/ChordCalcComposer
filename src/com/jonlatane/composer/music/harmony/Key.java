@@ -18,8 +18,8 @@ public final class Key extends Scale
 	private static final char[] heptatonicNotes = { 'C', 'D', 'E', 'F', 'G', 'A', 'B' };
 	private static final SparseArray<Character> twelveToneNames = new SparseArray<Character>();
 	private static final HashMap<Character,Integer> twelveToneInverse = new HashMap<Character,Integer>();
-	private static final String[] majorKeys = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
-	private static final String[] minorKeys = { "C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B" };
+	private static final String[] majorKeys = { "C", "D"+flat, "D", "E"+flat, "E", "F", "G"+flat, "G", "A"+flat, "A", "B"+flat, "B" };
+	private static final String[] minorKeys = { "C", "C#", "D", "E"+flat, "E", "F", "F#", "G", "G#", "A", "B"+flat, "B" };
 	public static Key CMajor = new Key(new MajorScale(0));
 	public static Key CChromatic = new Key(new ChromaticScale(0));
 	
@@ -136,7 +136,7 @@ public final class Key extends Scale
 			char letterName = heptatonicNotes[(rootCharIndex + p.first-1) % 7];
 			result += letterName;
 			if( i < twelveToneInverse.get(letterName)) {
-				result += 'b';
+				result += flat;
 			}
 			if( i > twelveToneInverse.get(letterName)) {
 				result += '#';
@@ -150,7 +150,7 @@ public final class Key extends Scale
 				
 				// Check for flats
 				if( i < twelveToneInverse.get(letterName)) {
-					result += 'b';
+					result += flat;
 				}
 				
 				// Check for sharps/double-sharps
@@ -172,10 +172,10 @@ public final class Key extends Scale
 				
 				// Check for flats/double flats
 				if( i < twelveToneInverse.get(letterName)) {
-					result += 'b';
+					result += flat;
 				}
 				if( i < twelveToneInverse.get(letterName)-1) {
-					result += 'b';
+					result += flat;
 				}
 			}
 			
@@ -196,7 +196,7 @@ public final class Key extends Scale
 		int  result = twelveToneInverse.get(chars[0]);
 		
 		for( int i = 1; i < chars.length; i = i+1) {
-			if( chars[i] == 'b' )
+			if( chars[i] == 'b' || chars[i] == flat.toCharArray()[0] )
 				result = result - 1;
 			else if( chars[i] == '#' )
 				result = result + 1;

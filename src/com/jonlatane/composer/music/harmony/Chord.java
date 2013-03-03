@@ -19,7 +19,8 @@ import android.util.Pair;
 public class Chord extends PitchSet {
  	private static final String TAG = "Chord";
 	private static final long serialVersionUID = 6734588916693899323L;
-
+	protected static final String flat = "\u266D";
+	private static final String diminished = "\u00B0";
 	/**
 	* The Modulus of a chord represents the number of tones in its octave. It exists in its most basic
 	* form at the Chord level.
@@ -280,8 +281,96 @@ public class Chord extends PitchSet {
 		return new Pair<String, Integer>(name, certainty);
 	}
 	
-	 
-	
+	/**
+	 * Return a String naming the tones requested (
+	 * @param c
+	 * @param root
+	 * @param nameSoFar
+	 * @param tones
+	 * @return
+	 */
+	private static String nameTones(Chord c, int root, int... tones) {
+		String result = "";
+		for(int m : tones)  {
+			switch(m) {
+				//color
+				case 9: if(c.contains(root+2) && !c.contains(root+5) && !c.contains(root+9)) {
+							result += "add9";
+						} else if(c.contains(root+1)) {
+							result += flat + "9";
+						} else if(c.contains(root + 3) && c.contains(root+4)) {
+							result += "#9";
+						}
+						break;
+				//only look for flat 9 (for sus2/sus24 chords)
+				case -9: if(c.contains(root+1)) {
+							result += flat + "9";
+						}
+						break;
+				
+				//color
+				case 11: if(c.contains(root+5) /*&& !c.contains(root+9)*/) {
+							result += "add11";
+						} else if(c.contains(root+6)  && c.contains(root+7)) {
+							result += "#11";
+						} // flat 11s are impossible as they will be seen as M3s
+						break;
+				//only look for sharp 11 (in sus chords)
+				case -11: if(c.contains(root+6)) {
+							result += "#11";
+						}
+						break;
+								
+				case 6: if(c.contains(root+9)) {
+							result +="add6";
+						} else if(c.contains(root+8) && c.contains(root+7)) {
+							result += flat + "6";
+						}
+						break;
+				// only look for flat 6 (for dim chords)
+				case -6: if(c.contains(root+8)) {
+							result += flat + "6";
+						}
+						break;
+				case 13: if(c.contains(root+9)) {
+							result += "add13";
+						} else if(c.contains(root+8) && c.contains(root+7)) {
+							result += flat + "13";
+						} else if(c.contains(root+10) && c.contains(root+11)) {
+							result += "#13";
+						}
+						break;
+
+				// only for cases where we assume the chord is major like sus/5 chords
+				case 7: if(c.contains(root+10)) {
+							result += "7";
+						} else if(c.contains(root+11)) {
+							result += "M7";
+						}
+						break;
+				
+				// in case there is a -5
+				case -7: if(c.contains(root+10)) {
+							result += "7-5";
+						} else if(c.contains(root+11)) {
+							result += "M7-5";
+						} else if(c.contains(root+9)) {
+							result += diminished + "7";
+						}
+						break;
+						
+				// in case of sus chords
+				case 5: if(c.contains(root+8)&&c.contains(root+9)) {
+							result += "+";
+						} else if(c.contains(root+6)) {
+							result += diminished;
+						}
+						break;
+			}
+				
+		}
+		return result;
+	}
 	
 	/**
 	 * Given the provided root, returns the name (excluding the root as it may be enharmonically named) of the chord and a "score" of how likely it is that
@@ -292,166 +381,540 @@ public class Chord extends PitchSet {
 	 * @return
 	 */
 	static Pair<String, Integer> guessName(Chord c, Integer root) {
-		String rootName = "";
-		String name = rootName;
+		String name = "";
 		int certainty = 0;
 		
 		
 		Log.i(TAG,"Guessing name for chord: " + c.toString() + "R:" + root);
 		
-		// Root - bonus points for having it!  Though maybe we can find shell voicings using the stuff below this, a 3 and a flat 7 are better than just the root
+		// Root should be in the chord, but doesn't have to be necessarily.
 		if (c.contains(root)) {
-			certainty += 20;
+			certainty += 12;
 			Log.i(TAG,"Root is in the chord!");
 		}
 		
-		// M3, with or without a 5
+		// M3
 		if (c.contains(root + 4)) {
 			Log.i(TAG,"M3 is in the chord!");
 			certainty += 10;
-			
 			// M3P5 - major triad present
 			if(c.contains(root+7)) {
 				Log.i(TAG,"P5 is in the chord!");
 				certainty += 8;
-			// M3#5 - augmented chord
+				
+				//M3P5M7 (major 7 type chord)
+				if(c.contains(root+11)) {
+					certainty += 8;
+					//M3P5M7M9
+					if(c.contains(root+2)) {
+						//M3P5M7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if(c.contains(root+9)) {
+							name += "M13";
+							name += nameTones(c,root,9,11);
+						//M3P5M7M9M11
+						} else if(c.contains(root+5)) {
+							name += "M11";
+							name += nameTones(c,root,9);
+						//M3P5M7M9, no M11, no M13
+						} else {
+							name += "M9";
+							name += nameTones(c,root,11,13);
+						}
+					// M3P5M7, no M9, no M11, no M13
+					} else {
+						name += "M7";
+						name += nameTones(c,root,9,11,13);
+					}
+					
+				//M3P5m7 (dominant 7)
+				} else if(c.contains(root+10)) {
+					certainty += 8;
+					//M3P5m7M9
+					if(c.contains(root+2)) {
+						//M3P5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if(c.contains(root+9)) {
+							name += "13";
+							name += nameTones(c,root,9,11);
+						//M3P5m7M9M11
+						} else if(c.contains(root+5)) {
+							name += "11";
+							name += nameTones(c,root,9);
+						//M3P5m7M9, no M11, no M13
+						} else {
+							name += "9";
+							name += nameTones(c,root,11,13);
+						}
+					// M3P5m7, no M9, no M11, no M13
+					} else {
+						name += "7";
+						name += nameTones(c,root,9,11,13);
+					}
+				//M3P5M6 (major 6 with no M7/m7 at all).  Slightly disfavor 6 chords under 7 chords.
+				} else if(c.contains(root+9)){
+					certainty += 6;
+					name = name + "6";
+					name += nameTones(c, root, 9, 11);
+				//M3P5 with no (non-flat)6 or any 7
+				} else {
+					//name = name + "M";
+					certainty += 8;
+					String colors = nameTones(c,root, -6, 9, 11);
+					if(colors.length() > 0  && (colors.startsWith("#")||colors.startsWith(flat)))
+						name += "M" + colors;
+					else
+						name += colors;
+				}
+			// M3+5 - augmented chord
 			} else if (c.contains(root + 8)) {
-				Log.i(TAG,"#5 is in the chord!");
-				certainty += 7;
-				//name = name + "+";
-			// M3b5 - unlikely that this is the root unless this is a colorful chord
-			} else if(c.contains(root + 6)) {
-				Log.i(TAG,"b5 is in the chord!");
-				certainty = certainty + 1;
+				Log.i(TAG,"+5 is in the chord!");
+				name += "+";
+				certainty += 9;
+				
+				//M3+5M7 (major 7+5 type chord)
+				if(c.contains(root+11)) {
+					certainty += 8;
+					//M3+5M7M9
+					if(c.contains(root+2)) {
+						//M3+5M7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if(c.contains(root+9)) {
+							name += "M13";
+							name += nameTones(c,root,9,11);
+						//M3+5M7M9M11
+						} else if(c.contains(root+5)) {
+							name += "M11";
+							name += nameTones(c,root,9);
+						//M3+5M7M9, no M11, no M13
+						} else {
+							name += "M9";
+							name += nameTones(c,root,11,13);
+						}
+					// M3+5M7, no M9, no M11, no M13
+					} else {
+						name += "M7";
+						name += nameTones(c,root,9,11,13);
+					}
+					
+				//M3+5m7 (dominant 7+5)
+				} else if(c.contains(root+10)) {
+					certainty += 8;
+					//M3+5m7M9
+					if(c.contains(root+2)) {
+						//M3+5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if(c.contains(root+9)) {
+							name += "13";
+							name += nameTones(c,root,9,11);
+						//M3+5m7M9M11
+						} else if(c.contains(root+5)) {
+							name += "11";
+							name += nameTones(c,root,9);
+						//M3+5m7M9, no M11, no M13
+						} else {
+							name += "9";
+							name += nameTones(c,root,11,13);
+						}
+					// M3+5m7, no M9, no M11, no M13
+					} else {
+						name += "7";
+						name += nameTones(c,root,9,11,13);
+					}
+				//M3+5M6 (major 6 with no M7/m7 at all)
+				} else if(c.contains(root+9)){
+					certainty += 6;
+					name = name + "6";
+					name += nameTones(c, root, 9, 11);
+				}
+			// M3-5P11 - major flat five chord. We require a P11 to be present
+			// because normally if there is no perfect 5 we'd rather call this a #11.  This is ugly so make it less certain
+			} else if (c.contains(root + 6)) {
+				Log.i(TAG, "-5 is in the chord!");
+				certainty += 1;
+
+				// M3-5M7 (major 7 type chord)
+				if (c.contains(root + 11)) {
+					certainty += 8;
+					// M3-5M7M9
+					if (c.contains(root + 2)) {
+						// M3-5M7M9M13 (11 is optional to call it a 13 chord, as
+						// the 11 is an avoid note)
+						if (c.contains(root + 9)) {
+							name += "M13-5";
+							name += nameTones(c, root, 9, 11);
+							// M3-5M7M9M11
+						} else if (c.contains(root + 5)) {
+							name += "M11-5";
+							name += nameTones(c, root, 9);
+							// M3-5M7M9, no M11, no M13
+						} else {
+							name += "M9-5";
+							name += nameTones(c, root, 11, 13);
+						}
+						// M3-5M7, no M9, no M11, no M13
+					} else {
+						name += "M7-5";
+						name += nameTones(c, root, 9, 11, 13);
+					}
+
+				// M3-5m7 (dominant 7 flat 5)
+				} else if (c.contains(root + 10)) {
+					certainty += 8;
+					// M3-5m7M9
+					if (c.contains(root + 2)) {
+						// M3-5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if (c.contains(root + 9)) {
+							name += "13-5";
+							name += nameTones(c, root, 9, 11);
+						// M3-5m7M9M11
+						} else if (c.contains(root + 5)) {
+							name += "11-5";
+							name += nameTones(c, root, 9);
+						// M3-5m7M9, no M11, no M13
+						} else {
+							name += "9-5";
+							name += nameTones(c, root, 11, 13);
+						}
+					// M3-5m7, no M9, no M11, no M13
+					} else {
+						name += "7-5";
+						name += nameTones(c, root, 9, 11, 13);
+					}
+				// M3-5M6 (major 6 with no M7/m7 at all)
+				} else if (c.contains(root + 9)) {
+					certainty += 6;
+					name += "6-5";
+					name += nameTones(c, root, 9, 11);
+				//M3-5 with no (non-flat)6 or any 7
+				} else {
+					name += "M-5";
+					name += nameTones(c,root, -6, 9, 11);
+				}
+			// No 5 present (name as if there's a major 5)
+			} else {
+				Log.i(TAG, "No5 is in the chord!");
+				if(c.contains(root))
+					certainty += 7;
+				//M3x5M7 (major 7 type chord)
+				if(c.contains(root+11)) {
+					certainty += 8;
+					//M3x5M7M9
+					if(c.contains(root+2)) {
+						//M3x5M7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if(c.contains(root+9)) {
+							name += "M13";
+							name += nameTones(c,root,9,11);
+						//M3x5M7M9M11
+						} else if(c.contains(root+5)) {
+							name += "M11";
+							name += nameTones(c,root,9);
+						//M3x5M7M9, no M11, no M13
+						} else {
+							name += "M9";
+							name += nameTones(c,root,11,13);
+						}
+					// M3x5M7, no M9, no M11, no M13
+					} else {
+						name += "M7";
+						name += nameTones(c,root,9,11,13);
+					}
+					
+				//M3x5m7 (dominant 7)
+				} else if(c.contains(root+10)) {
+					certainty += 8;
+					//M3x5m7M9
+					if(c.contains(root+2)) {
+						//M3x5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if(c.contains(root+9)) {
+							name += "13";
+							name += nameTones(c,root,9,11);
+						//M3x5m7M9M11
+						} else if(c.contains(root+5)) {
+							name += "11";
+							name += nameTones(c,root,9);
+						//M3x5m7M9, no M11, no M13
+						} else {
+							name += "9";
+							name += nameTones(c,root,11,13);
+						}
+					// M3x5m7, no M9, no M11, no M13
+					} else {
+						name += "7";
+						name += nameTones(c,root,9,11,13);
+					}
+				//M3x5M6 (major 6/13 with no M7/m7 at all)
+				} else if(c.contains(root+9)){
+					//certainty += 6;
+					name = name + "6";
+					name += nameTones(c, root, 9, 11);
+				//M3x5 with no (non-flat)6 or any 7
+				} else {
+					//name += "M";
+
+					String colors = nameTones(c,root, -6, 9, 11);
+					if(colors.length() > 0  && (colors.startsWith("#")||colors.startsWith(flat)))
+						name += "M" + colors;
+					else
+						name += colors;
+					//name += nameTones(c,root, -6, 9, 11);
+				}
 			}
-			
-			Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
-			name = name + decorations.first;
-			certainty += decorations.second;
-			
 			
 		// m3 (and no M3 - if both are present we don't get here and it becomes a #9)
 		} else if (c.contains(root + 3)) {
-			Log.i(TAG,"m3 (no M3) is in the chord!");
+			Log.i(TAG,"m3 is in the chord!");
 			certainty += 10;
-			
-			// m3P5 - minor triad, name it
-			if (c.contains(root + 7)) {
-				Log.i(TAG,"m3P5 is in the chord!");
+			// m3P5 - major triad present
+			if(c.contains(root+7)) {
+				name += "-";
+				Log.i(TAG,"P5 is in the chord!");
 				certainty += 8;
-
-				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
-				name = name + "-" + decorations.first;
-				certainty += decorations.second;
 				
-			// m3#5 - minor augmented chord. unlikely, but name it
-			} else if (c.contains(root + 8)) {
-				Log.i(TAG,"m3#5 is in the chord!");
-				certainty -= 4;
-
-				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
-				name = name + "-" + decorations.first;
-				certainty += decorations.second;
-
-			// m3b5 - dim chord. FML
-			} else if (c.contains(root + 6)) {
-				Log.i(TAG,"m3b5 is in the chord!");
-				// avoid naming, for instance, an Ab7 a C-3b5b6
-				if(!c.contains(root + 8))
-					certainty += 7;
-				
-				// d7-dim7 chord needs to be caught first - name color tones specially here because this is probably an octatonic scale
-				if(c.contains(root + 9)) {
-					name = name + "o7";
-					certainty += 7;
-					
-					// b9
-					if (c.contains(root + 1)) {
-						name = name + "b9";
-					}
-					// add9
-					if (c.contains(root + 2)) {
-						name = name + "add9";
-					}
-					// b13(b6)
-					if (c.contains(root + 8)) {
-						name = name + "b13";
-					}
-					// add4
-					if(c.contains(root+5)) {
-						name = name + "add4";
+				//m3P5M7 (major 7 type chord)
+				if(c.contains(root+11)) {
+					certainty += 8;
+					//m3P5M7M9
+					if(c.contains(root+2)) {
+						//m3P5M7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if(c.contains(root+9)) {
+							name += "M13";
+							name += nameTones(c,root,9,11);
+						//m3P5M7M9M11
+						} else if(c.contains(root+5)) {
+							name += "M11";
+							name += nameTones(c,root,9);
+						//m3P5M7M9, no M11, no M13
+						} else {
+							name += "M9";
+							name += nameTones(c,root,11,13);
+						}
+					// m3P5M7, no M9, no M11, no M13
+					} else {
+						name += "M7";
+						name += nameTones(c,root,9,11,13);
 					}
 					
-					// #7 is very unlikely so make this less certain.
-					if (c.contains(root + 11)) {
-						name = name + "add#7";
-						certainty -= 4;
+				//m3P5m7 (minor 7)
+				} else if(c.contains(root+10)) {
+					certainty += 8;
+					//m3P5m7M9
+					if(c.contains(root+2)) {
+						//m3P5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if(c.contains(root+9)) {
+							name += "13";
+							name += nameTones(c,root,9,11);
+						//m3P5m7M9M11
+						} else if(c.contains(root+5)) {
+							name += "11";
+							name += nameTones(c,root,9);
+						//m3P5m7M9, no M11, no M13
+						} else {
+							name += "9";
+							name += nameTones(c,root,11,13);
+						}
+					// m3P5m7, no M9, no M11, no M13
+					} else {
+						name += "7";
+						name += nameTones(c,root,9,11,13);
 					}
-					// b7 is very unlikely so make this less certain.
-					if (c.contains(root + 10)) {
-						name = name + "addb7";
-						certainty -= 4;
-					}
-					
-					
-				// m3b5b7 (half-dim), name it
-				} else if( c.contains(root + 10 )){
-					// half-dim
-					certainty += 7;
-					
-					Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
-					name = name + "-" + decorations.first;
-					certainty += decorations.second;
-				
-				// m3b5M7 - dim major 7 chord
-				} else if( c.contains(root + 11 )){
-					// half-dim
-					certainty += 2;
-					
-					Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
-					name = name + "-" + decorations.first;
-					certainty += decorations.second;
+				//m3P5M6 (major 6 with no M7/m7 at all)
+				} else if(c.contains(root+9)){
+					name = name + "6";
+					name += nameTones(c, root, 9, 11);
+				// m3P5 with no (non-flat)6 or any 7
 				} else {
-					Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
-					name = name + "-" + decorations.first;
-					certainty += decorations.second;
+					name += nameTones(c, root, -6, 9, 11);
 				}
+			
+			// m3-5 - diminished chord/triad present
+			} else if (c.contains(root +6)) {
+				Log.i(TAG, "-5 is in the chord!");
+				certainty += 8;
+
+				// m3-5M7 (diminished major 7 type chord)
+				if (c.contains(root + 11)) {
+					certainty += 7;
+					name = name + diminished;
+					// m3-5M7M9
+					if (c.contains(root + 2)) {
+						// m3-5M7M9M13 (11 is optional to call it a 13 chord, as
+						// the 11 is an avoid note)
+						if (c.contains(root + 9)) {
+							name += "M13";
+							name += nameTones(c, root, 9, 11);
+						// m3-5M7M9M11
+						} else if (c.contains(root + 5)) {
+							name += "M11";
+							name += nameTones(c, root, 9);
+						// m3-5M7M9, no M11, no M13
+						} else {
+							name += "M9";
+							name += nameTones(c, root, 11, 13);
+						}
+						// m3-5M7, no M9, no M11, no M13
+					} else {
+						name += "M7";
+						name += nameTones(c, root, 9, 11, 13);
+					}
+
+				// m3-5m7 (minor 7 flat 5/half-dim)
+				} else if (c.contains(root + 10)) {
+					name += "-";
+					certainty += 8;
+					// m3-5m7M9
+					if (c.contains(root + 2)) {
+						// m3-5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if (c.contains(root + 9)) {
+							name += "13-5";
+							name += nameTones(c, root, 9, 11);
+							// M3-5m7M9M11
+						} else if (c.contains(root + 5)) {
+							name += "11-5";
+							name += nameTones(c, root, 9);
+							// M3-5m7M9, no M11, no M13
+						} else {
+							name += "9-5";
+							name += nameTones(c, root, 11, 13);
+						}
+						// M3-5m7, no M9, no M11, no M13
+					} else {
+						name += "7-5";
+						name += nameTones(c, root, 9, 11, 13);
+					}
+				// m3-5-7 (fully diminished with no M7/m7 at all)
+				} else if (c.contains(root + 9)) {
+					name += diminished + "7";
+					name += nameTones(c, root, -6, 9, 11);
+				//m3-5 with no (non-flat)6 or any 7 (dim chord)
+				} else {
+					name += diminished;
+					name += nameTones(c,root, -6, 9, 11);
+				}
+			// m3x5 No 5 present (name as if there's a major 5)
 			} else {
-				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
-				name = name + "-" + decorations.first;
-				certainty += decorations.second;
+				Log.i(TAG, "No5 is in the chord!");
+				if(c.contains(root))
+					certainty += 8;
+				name += "-";
+				//m3x5M7 (minor-major 7 type chord)
+				if(c.contains(root+11)) {
+					certainty += 8;
+					//m3x5M7M9
+					if(c.contains(root+2)) {
+						//m3x5M7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if(c.contains(root+9)) {
+							name += "M13";
+							name += nameTones(c,root,9,11);
+						//m3x5M7M9M11
+						} else if(c.contains(root+5)) {
+							name += "M11";
+							name += nameTones(c,root,9);
+						//m3x5M7M9, no M11, no M13
+						} else {
+							name += "M9";
+							name += nameTones(c,root,11,13);
+						}
+					// m3x5M7, no M9, no M11, no M13
+					} else {
+						name += "M7";
+						name += nameTones(c,root,9,11,13);
+					}
+					
+				//m3x5m7 (minor 7)
+				} else if(c.contains(root+10)) {
+					certainty += 8;
+					//m3x5m7M9
+					if(c.contains(root+2)) {
+						//m3x5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+						if(c.contains(root+9)) {
+							name += "13";
+							name += nameTones(c,root,9,11);
+						//m3x5m7M9M11
+						} else if(c.contains(root+5)) {
+							name += "11";
+							name += nameTones(c,root,9);
+						//m3x5m7M9, no M11, no M13
+						} else {
+							name += "9";
+							name += nameTones(c,root,11,13);
+						}
+					// m3x5m7, no M9, no M11, no M13
+					} else {
+						name += "7";
+						name += nameTones(c,root,9,11,13);
+					}
+				//m3x5M6 (major 6 with no M7/m7 at all)
+				} else if(c.contains(root+9)){
+					name += "6";
+					name += nameTones(c, root, 9, 11);
+				//m3x5b6x7 or m3x5x6x7.  Just need to name the 9, 11, and possibly b6.
+				} else {
+					name += nameTones(c,root,-6,9,11);
+				}
 			}
 
-		// No 3 present - There is no third in this chord, let's look at other possibilities
-		} else {
-			// sus4
-			if(c.contains(root+5)) {
-				certainty += 7;
+		// x3M2P4 - sus24 chord.  Only notes definable are the 13/6 and 7
+		} else if(c.contains(root+2) && c.contains(root+5)) {
+			certainty += 9;
+			String five = nameTones(c,root,5);
+			if( five == diminished ) {
 				
-				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
-				name = name + decorations.first + "sus";
-				certainty += decorations.second;
-			// sus2
-			} else if(c.contains(root + 2)) {
-				certainty += 7;
+			} else if( five == "+" ) {
 				
-				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
-				name = name + decorations.first + "sus2";
-				certainty += decorations.second;
-			// 5 chord
-			} else if(c.contains(root+7)) {
-				// P5b7 - enough to call it dominant in the absence of a third
-				if(c.contains(root+10)) {
-					//name = name + 
-				}
-				certainty += 8;
-				name = name + "5";
 			} else {
-				Pair<String, Integer> decorations = nameFiveSixSevensColors(c, root);
-				name = name + decorations.first;
-				certainty += decorations.second;
+				
 			}
+			name += nameTones(c,root,7);
+			name += "sus24";
+			name += nameTones(c, root, 13);
+		// x3P4
+		} else if(c.contains(root+5)) {
+			certainty += 9;
+			name += nameTones(c,root,7);
+			name += "sus4";
+			name += nameTones(c, root, -9, 13);
+		// x3M2
+		} else if(c.contains(root+2)) {
+			certainty += 9;
+			name += nameTones(c,root,7);
+			if(name == "")
+				name += "2";
+			else
+				name += "sus2";
+			name += nameTones(c, root, -11, 13);
+		// x3P5 - 5 chord, no M2, no M/m3, no P4
+		} else if(c.contains(root+7)) {
+			if(c.contains(root))
+				certainty += 8;
+			String seven = nameTones(c,root,7);
+			name += seven;
+			if(seven=="")
+				name += "5";
+			else
+				name += "(no3)";
+			name += nameTones(c, root, -9, -11, 13);
+		// x3+5 - +5 chord, no M2, no M/m3, no P4
+		} else if(c.contains(root+8)) {
+			if(c.contains(root))
+				certainty += 8;
+			name += "+";
+			name += nameTones(c,root,7);
+			name += "(no3)";
+			name += nameTones(c, root, -9, -11, 13);
+
+		// x3-5 - -5 chord, no M2, no M/m3, no P4
+		} else if(c.contains(root+6)) {
+			if(c.contains(root))
+				certainty += 8;
+			name += nameTones(c,root,-7);
+			name += "(no3)";
+			name += nameTones(c, root, -9, 13);
+		// x3 with no M/m3, M2, P4, or P/+/-5.  Just keep it major and
+		// name the remaining possible tones.
+		} else {
+			//name += "(no345)";
+			name += nameTones(c, root, 7, -9, -11, 13);
 		}
+		
+		//Adjust certainty for name complexity.
+		certainty -= name.length() + 2;
 		
 		return new Pair<String, Integer>(name, certainty);
 	}
@@ -467,6 +930,14 @@ public class Chord extends PitchSet {
 				
 			}
 		}
+		return result;
+	}
+	
+	public String getName(int root) {
+		String result = "";
+		
+		
+		
 		return result;
 	}
 }
