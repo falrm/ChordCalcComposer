@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="Keyboard">
+	    <item name="android:layout_height">290dp</item>
+    </style>
+    <style name="KeyboardSmall">
+	    <item name="android:layout_height">145dp</item>
+    </style>
     <!--              -->
     <!-- PHONE CONFIG -->
 	<!--              -->
 	<!-- Basic white and black key setups.  Black keys have to be a varying width to look good -->
-    <style name="WhiteKeySmall">
+    <style name="WhiteKeySmall" parent="KeyboardSmall">
     	<item name="android:layout_width">60dp</item>
-	    <item name="android:layout_height">145dp</item>
 	    <item name="android:layout_alignParentBottom">true</item>
 	    <item name="android:background">@drawable/whitekey</item>
 	</style>
@@ -60,9 +65,8 @@
     <!-- TABLET CONFIG -->
 	<!--               -->
     <!-- Basic white and black key setups.  Black keys have to be a varying width to look good -->
-    <style name="WhiteKey">
+    <style name="WhiteKey" parent="Keyboard">
     	<item name="android:layout_width">90dp</item>
-	    <item name="android:layout_height">290dp</item>
 	    <item name="android:layout_alignParentBottom">true</item>
 	    <item name="android:background">@drawable/whitekey</item>
 	</style>

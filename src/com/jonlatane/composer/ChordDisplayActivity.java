@@ -27,15 +27,15 @@ import android.widget.*;
  */
 public class ChordDisplayActivity extends Activity
 {
-	private KeyboardIOHandler _myKbdIO;
-	private KeyboardScroller _keyboardScroller;
-	private HorizontalScrollView _chordScroller;
+	private TwelthKeyboardFragment _myKeyboard;
+	//private KeyboardIOHandler _myKbdIO;
+	//private KeyboardScroller _keyboardScroller;
+	//private HorizontalScrollView _chordScroller;
 	private ManagedToneGenerator _tg;
 	
 	public int NUMFINGERSDOWN = 0;
 	
 	private static final String TAG = "ChordDisplayActivity";
-	private static final int[] _slots = {R.id.bestChord, R.id.second, R.id.third, R.id.fourth, R.id.fifth, R.id.sixth, R.id.seventh, R.id.eighth, R.id.ninth, R.id.tenth, R.id.eleventh};
 	
 	/** Called when the activity is first created. */
 	@Override
@@ -45,13 +45,14 @@ public class ChordDisplayActivity extends Activity
 		setContentView(R.layout.chorddisplayactivity);
 		
 		// Set up the keyboard
-		_myKbdIO = new KeyboardIOHandler(this);
-		_myKbdIO.harmonicModeOn();
+		_myKeyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.chordDisplayActivityKb);
+		//_myKbdIO = new KeyboardIOHandler(this);
+		//_myKbdIO.harmonicModeOn();
 		
-		_keyboardScroller = (KeyboardScroller)findViewById(R.id.kbScroller);
-		_keyboardScroller.setKeyboardIOHander(_myKbdIO);
+		//_keyboardScroller = (KeyboardScroller)findViewById(R.id.kbScroller);
+		//_keyboardScroller.setKeyboardIOHander(_myKbdIO);
 		
-		_chordScroller = (HorizontalScrollView)findViewById(R.id.chordDisplayScroller);
+		//_chordScroller = (HorizontalScrollView)findViewById(R.id.chordDisplayScroller);
 		
 		//RelativeLayout root= (RelativeLayout) findViewById(R.id.chordDisplayActivity);
 		
@@ -60,11 +61,34 @@ public class ChordDisplayActivity extends Activity
         listview.setAdapter(_adapter);  
 	}
 	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.chorddisplaymenu, menu);
+	    return true;
+	}
+	
+	@Override
+	  public boolean onOptionsItemSelected(MenuItem item) {
+	    switch (item.getItemId()) {
+	    case R.id.toggleRhythmAB:
+	    	_myKeyboard.toggleRhythmicMode();
+	    	break;
+	    case R.id.toggleChordsAB:
+	    	_myKeyboard.toggleHarmonicMode();
+	    	break;
+	    default:
+	      break;
+	    }
+
+	    return true;
+	  } 
+	
 	private static String[] _dataObjects = new String[]{ 
-		"CM7",  
-        "D-7",  
+		"      CM7      ",  
+        "      D-7      ",  
         "G7",
-        "CM7" };
+        "      CM7      " };
 	
 	private BaseAdapter _adapter = new BaseAdapter() {  
 		  
@@ -99,7 +123,7 @@ public class ChordDisplayActivity extends Activity
 	public void onPause()
 	{
 		super.onPause();
-	    //_myKbdIO.
+	    ManagedToneGenerator.Cache.releaseAll();
 	}
 
 	@Override
@@ -108,47 +132,5 @@ public class ChordDisplayActivity extends Activity
 	    super.onResume();
 	}
 	
-	// Keep track of when chord updates are started so only the most recent operation will update the views
-	private static long mostRecentUCDInitializationTime;
-	private class UpdateChordDisplay extends AsyncTask<Chord, Integer, List<String>> {
-		TreeMap<Integer,List<String>> data;
-		private long myInitializationTime;
-		
-		
-		public UpdateChordDisplay() {
-			myInitializationTime = System.currentTimeMillis();
-			mostRecentUCDInitializationTime = myInitializationTime;
-		}
-		
-		@Override
-		protected List<String> doInBackground(Chord... c) {
-			data = Key.getRootLikelihoodsAndNamesInC(Key.CChromatic, c[0]);
-			List<String> result = new LinkedList<String>();
-			for(Map.Entry<Integer,List<String>> e : data.descendingMap().entrySet() ) {
-				for( String s : e.getValue() ) {
-					result.add(s);
-				}
-			}
-			return result;
-		}
-
-		@Override
-		protected void onPostExecute(List<String> values) {
-			int idx = 0;
-			if(mostRecentUCDInitializationTime == myInitializationTime) {
-				for( String s : values ) {
-					if( idx >= _slots.length) break;
-					
-					TextView v = (TextView)findViewById(_slots[idx++]);
-					v.setText(s);
-				}
-				_chordScroller.smoothScrollBy(-1000000,0);
-			}
-		}
-
-
-	 }
-	public void updateChordDisplay() {
-		new UpdateChordDisplay().execute(_myKbdIO.getChord());
-	}
+	
 }

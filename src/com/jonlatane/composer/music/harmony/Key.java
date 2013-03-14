@@ -213,7 +213,7 @@ public final class Key extends Scale
 	}
 	
 	public static Pair<String,Integer> guessName(Chord c, Integer root, Key k) {
-		Pair<String,Integer> data = guessName(c, root);
+		Pair<String,Integer> data = guessCharacteristic(c, root);
 		String rootName = k.getNoteName(root);
 		return new Pair<String,Integer>(rootName+data.first, data.second);
 	}
@@ -287,7 +287,7 @@ public final class Key extends Scale
 		TreeMap<Integer,List<String>> result = new TreeMap<Integer,List<String>>();
 		
 		for( int n : inputRootCandidates) {
-			Pair<String,Integer> candidate = guessName(c, n);
+			Pair<String,Integer> candidate = guessCharacteristic(c, n);
 			if(c.getRoot() != null && n == c.getRoot()) {
 				candidate = new Pair<String,Integer>(candidate.first, candidate.second + 1000);
 			}

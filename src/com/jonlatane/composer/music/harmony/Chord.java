@@ -380,7 +380,7 @@ public class Chord extends PitchSet {
 	 * @param root
 	 * @return
 	 */
-	static Pair<String, Integer> guessName(Chord c, Integer root) {
+	static Pair<String, Integer> guessCharacteristic(Chord c, Integer root) {
 		String name = "";
 		int certainty = 0;
 		
@@ -407,6 +407,7 @@ public class Chord extends PitchSet {
 					certainty += 8;
 					//M3P5M7M9
 					if(c.contains(root+2)) {
+						certainty += 5;
 						//M3P5M7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if(c.contains(root+9)) {
 							name += "M13";
@@ -431,6 +432,7 @@ public class Chord extends PitchSet {
 					certainty += 8;
 					//M3P5m7M9
 					if(c.contains(root+2)) {
+						certainty += 5;
 						//M3P5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if(c.contains(root+9)) {
 							name += "13";
@@ -475,6 +477,7 @@ public class Chord extends PitchSet {
 					certainty += 8;
 					//M3+5M7M9
 					if(c.contains(root+2)) {
+						certainty += 5;
 						//M3+5M7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if(c.contains(root+9)) {
 							name += "M13";
@@ -499,6 +502,7 @@ public class Chord extends PitchSet {
 					certainty += 8;
 					//M3+5m7M9
 					if(c.contains(root+2)) {
+						certainty += 5;
 						//M3+5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if(c.contains(root+9)) {
 							name += "13";
@@ -597,6 +601,7 @@ public class Chord extends PitchSet {
 					certainty += 8;
 					//M3x5M7M9
 					if(c.contains(root+2)) {
+						certainty += 5;
 						//M3x5M7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if(c.contains(root+9)) {
 							name += "M13";
@@ -621,6 +626,7 @@ public class Chord extends PitchSet {
 					certainty += 8;
 					//M3x5m7M9
 					if(c.contains(root+2)) {
+						certainty += 5;
 						//M3x5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if(c.contains(root+9)) {
 							name += "13";
@@ -672,6 +678,7 @@ public class Chord extends PitchSet {
 					certainty += 8;
 					//m3P5M7M9
 					if(c.contains(root+2)) {
+						certainty += 5;
 						//m3P5M7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if(c.contains(root+9)) {
 							name += "M13";
@@ -696,6 +703,7 @@ public class Chord extends PitchSet {
 					certainty += 8;
 					//m3P5m7M9
 					if(c.contains(root+2)) {
+						certainty += 5;
 						//m3P5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if(c.contains(root+9)) {
 							name += "13";
@@ -798,6 +806,7 @@ public class Chord extends PitchSet {
 					certainty += 8;
 					//m3x5M7M9
 					if(c.contains(root+2)) {
+						certainty += 5;
 						//m3x5M7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if(c.contains(root+9)) {
 							name += "M13";
@@ -822,6 +831,7 @@ public class Chord extends PitchSet {
 					certainty += 8;
 					//m3x5m7M9
 					if(c.contains(root+2)) {
+						certainty += 5;
 						//m3x5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if(c.contains(root+9)) {
 							name += "13";

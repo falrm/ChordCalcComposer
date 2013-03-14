@@ -177,18 +177,25 @@ public class ManagedToneGenerator {
 		}
 	}
 	
-	private Double[] _overtones;
-	public ManagedToneGenerator(Double... defaultOvertones) {
-		_overtones = defaultOvertones;
+	private static Double[] _overtones;
+	private ManagedToneGenerator() {}
+	
+	public static void setDefaultOvertones(Double...overtones) {
+		_overtones = overtones;
 	}
 
-	public AudioTrack getAudioTrackForNote(int n) {
+	public static AudioTrack getAudioTrackForNote(int n) {
 		return Cache.getAudioTrackForNote(n, _overtones);
 	}
 	
-	public AudioTrack getAudioTrackForNote(int n, Double... overtones) {
+	public static AudioTrack getAudioTrackForNote(int n, Double... overtones) {
 		return Cache.getAudioTrackForNote(n, overtones);
 	}
 	
-	
+	public static void prioritizeNote(int n, Double... overtones) {
+		
+	}
+	public static void prioritizeNote(int n) {
+		prioritizeNote(n,_overtones);
+	}
 }

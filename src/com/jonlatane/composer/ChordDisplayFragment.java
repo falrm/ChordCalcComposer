@@ -13,7 +13,7 @@ public class ChordDisplayFragment extends Fragment {
                              Bundle savedInstanceState) {
 		super.onCreateView(inflater, container, savedInstanceState);
         // Inflate the layout for this fragment
-        View result = inflater.inflate(R.layout.chorddisplayfragment, container, false);
+        View result = inflater.inflate(R.layout.chord_scroller, container, false);
         
         //do stuff?
         

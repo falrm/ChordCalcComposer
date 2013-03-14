@@ -93,7 +93,7 @@ public class ScoreEditingActivity extends Activity implements SurfaceHolder.Call
 		//setContentView(view);
 		((SurfaceView)findViewById(R.id.editorSurfaceView)).getHolder().addCallback(this);
 		
-		_myKbdIO = new KeyboardIOHandler(this);
+		//_myKbdIO = new KeyboardIOHandler(this);
 		_myKbdIO.harmonicModeOn();
 	}
 

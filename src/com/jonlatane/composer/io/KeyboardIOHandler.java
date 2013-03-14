@@ -27,7 +27,6 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	
 	// References to other things in this package
 	private final KeyboardScroller _kbs;
-	private final ManagedToneGenerator _toneGenerator;
 	
 	private static int[] _keys = new int[] 
 			{ R.id.keyA0, R.id.keyAS0, R.id.keyB0,
@@ -59,12 +58,12 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	private Integer _harmonicRoot = null;
 	
 	private Set<Integer> _currentlyPressed = Collections.synchronizedSet(new HashSet<Integer>());
-	private Activity _myActivity;
+	private TwelthKeyboardFragment _myFragment;
 	
-	public KeyboardIOHandler(Activity a) {
-		_myActivity = a;
+	public KeyboardIOHandler(TwelthKeyboardFragment f, View v) {
+		_myFragment = f;
 		for(int k : _keys) {
-			Button b = (Button)(a.findViewById(k));
+			Button b = (Button)(v.findViewById(k));
 			b.setOnTouchListener(this);
 			b.setOnLongClickListener(this);
 			ViewTreeObserver o = b.getViewTreeObserver();
@@ -78,14 +77,14 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 				}
 			});
 		}
-		_kbs = ((KeyboardScroller)a.findViewById(R.id.kbScroller));
+		_kbs = ((KeyboardScroller)v.findViewById(R.id.kbScroller));
 		_kbs.setKeyboardIOHander(this);
 		
-		_toneGenerator = new ManagedToneGenerator(70., 30., 30., 10., 10., 20., 20., 1.);
+		ManagedToneGenerator.setDefaultOvertones(70., 30., 30., 10., 10., 20., 20., 1.);
 	}
 	
 	// The frequencies of C4-B4 (the middle octave)
-	private static final double[] freqs = {261.625625, 277.1825, 293.665, 311.1275, 329.6275, 349.22875, 369.995, 391.995, 415.305, 440, 466.16375, 493.88375};
+	/*private static final double[] freqs = {261.625625, 277.1825, 293.665, 311.1275, 329.6275, 349.22875, 369.995, 391.995, 415.305, 440, 466.16375, 493.88375};
 	private static final int sampleRate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC); //per second
 	private static HashMap<Integer,AudioTrack> _noteTracks = new HashMap<Integer, AudioTrack>();
 	private static LinkedList<Integer> _recentlyUsedNotes = new LinkedList<Integer>();
@@ -113,14 +112,14 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	
 	public static AudioTrack getAudioTrackForNote(int n) {
 		return getAudioTrackForNote(n, new double[] {70, 30, 30, 10, 10, 20, 20, 1});//, 23, 23, 43, 32, 43, 32, 34, 20, 29, 26  });
-	}
+	}*/
 	
 	/**
 	 * Because there's 88 notes and Android only lets us have 32 (<32?) AudioTracks, we must keep a cache of 
 	 * @param n the note (-39 to 48, with C4 = 0)
 	 * @return a looping AudioTrack that plays the given note
 	 */
-	public static AudioTrack getAudioTrackForNote(int n, double[] overtones) {
+	/*public static AudioTrack getAudioTrackForNote(int n, double[] overtones) {
 		// Update our recently used notes
 		_recentlyUsedNotes.remove((Integer)n);
 		_recentlyUsedNotes.addFirst(n);
@@ -200,7 +199,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		}
 		
 		return result;
-	}
+	}*/
 	
 	public void harmonicModeOn() {
 		_harmonicMode = true;
@@ -223,7 +222,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		float span = max - min;
 		
 		for(int n : _currentlyPressed) {
-			AudioTrack t = getAudioTrackForNote(n);
+			AudioTrack t = ManagedToneGenerator.getAudioTrackForNote(n);
 			
 			// Lower notes are amped up so turn them down a bit with this factor
 			float arctanCurveFactor = (float) (.05 * Math.atan((float)(n+5)/88.0) + .9);
@@ -253,8 +252,10 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		}
 		_currentlyPressed.remove(n);
 		normalizeVolume();
-		getAudioTrackForNote(n).pause();
-		getAudioTrackForNote(n).setPlaybackHeadPosition(0);
+		
+		AudioTrack t = ManagedToneGenerator.getAudioTrackForNote(n);
+		t.pause();
+		t.setPlaybackHeadPosition(0);
 	}
 	void pressNote(int n) {
 		if( _harmonicMode ) {
@@ -273,13 +274,13 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		}
 		_currentlyPressed.add(n);
 		normalizeVolume();
-		getAudioTrackForNote(n).play();
-		_recentlyUsedNotes.remove((Integer)n);
-		_recentlyUsedNotes.addFirst((Integer)n);
+		ManagedToneGenerator.getAudioTrackForNote(n).play();
+		//_recentlyUsedNotes.remove((Integer)n);
+		//_recentlyUsedNotes.addFirst((Integer)n);
 				
 		// The magic
-		if( _myActivity.getClass().equals(ChordDisplayActivity.class) ) {
-			((ChordDisplayActivity)_myActivity).updateChordDisplay();
+		if( _harmonicMode ) {
+			_myFragment.updateChordDisplay();
 		}
 	}
 	
@@ -300,18 +301,18 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		Log.i(TAG,"Setting Root to " + Key.CMajor.getNoteName(note) + "(" + note + ")");
 		_harmonicRoot = note;
 		if(blackKeys.contains(Chord.TWELVETONE.getPitchClass(_harmonicRoot)))
-			((Button)_myActivity.findViewById(_keys[_harmonicRoot+39])).setBackgroundResource(R.drawable.rootblackkey);
+			((Button)_myFragment.getView().findViewById(_keys[_harmonicRoot+39])).setBackgroundResource(R.drawable.rootblackkey);
 		else
-			((Button)_myActivity.findViewById(_keys[_harmonicRoot+39])).setBackgroundResource(R.drawable.rootwhitekey);
+			((Button)_myFragment.getView().findViewById(_keys[_harmonicRoot+39])).setBackgroundResource(R.drawable.rootwhitekey);
 	}
 	
 	public synchronized void clearHarmonicRoot() {
 		//Log.i(TAG,"Clearing Root");
 		if(_harmonicRoot != null) {
 			if(blackKeys.contains(Chord.TWELVETONE.getPitchClass(_harmonicRoot)))
-				((Button)_myActivity.findViewById(_keys[_harmonicRoot+39])).setBackgroundResource(R.drawable.blackkey);
+				((Button)_myFragment.getView().findViewById(_keys[_harmonicRoot+39])).setBackgroundResource(R.drawable.blackkey);
 			else
-				((Button)_myActivity.findViewById(_keys[_harmonicRoot+39])).setBackgroundResource(R.drawable.whitekey);
+				((Button)_myFragment.getView().findViewById(_keys[_harmonicRoot+39])).setBackgroundResource(R.drawable.whitekey);
 			
 			_harmonicRoot = null;
 		}
@@ -323,21 +324,22 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	
 	// Utility method in case the keyboard is scrolled when keys are pressed.
 	void catchRogues() {
-		if(getHarmonicRoot() != null) {
-			Button b = (Button)_myActivity.findViewById(_keys[getHarmonicRoot()+39]);
-			if(!b.isPressed()) {
-				Log.i(TAG,"Cleared Root");
-				clearHarmonicRoot();
+		if(_myFragment.getView() != null) {
+			if(getHarmonicRoot() != null) {
+				Button b = (Button)_myFragment.getView().findViewById(_keys[getHarmonicRoot()+39]);
+				if(!b.isPressed()) {
+					Log.i(TAG,"Cleared Root");
+					clearHarmonicRoot();
+				}
 			}
-		}
-		Iterator<Integer> iter = _currentlyPressed.iterator();
-		/*for( int i : _currentlyPressed ) {*/
-		while(iter.hasNext()) {
-			int n = iter.next();
-			Button b = (Button)_myActivity.findViewById(_keys[n+39]);
-			if(!b.isPressed()) {
-				iter.remove();
-				liftNote(n);
+			Iterator<Integer> iter = _currentlyPressed.iterator();
+			while(iter.hasNext()) {
+				int n = iter.next();
+				Button b = (Button)_myFragment.getView().findViewById(_keys[n+39]);
+				if(!b.isPressed()) {
+					iter.remove();
+					liftNote(n);
+				}
 			}
 		}
 	}

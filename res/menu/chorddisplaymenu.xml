@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/toggleRhythmAB"
+          android:title="Toggle Rhythm"
+          android:showAsAction="ifRoom" />
+    <item android:id="@+id/toggleChordsAB"
+          android:title="Toggle Chords"
+          android:showAsAction="ifRoom" />
+</menu>

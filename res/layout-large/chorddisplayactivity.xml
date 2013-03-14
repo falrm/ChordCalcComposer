@@ -2,29 +2,20 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:layout_height="fill_parent">
 
     <com.devsmart.android.ui.HorizontalListView 
         android:id="@+id/leadSheet" 
         android:layout_width="fill_parent" 
-        android:layout_height="wrap_content" />  
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"  />  
     
     <fragment
         android:id="@+id/chordDisplayActivityKb"
         android:name="com.jonlatane.composer.io.TwelthKeyboardFragment"
         android:layout_width="match_parent"
-        android:layout_height="290dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         tools:layout="@layout/twelthkeyboard" />
-    
-    <fragment
-        android:id="@+id/chordDisplay"
-        android:name="com.jonlatane.composer.ChordDisplayFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_alignParentTop="true"
-        android:layout_above="@id/chordDisplayActivityKb" />
 
 </RelativeLayout>
