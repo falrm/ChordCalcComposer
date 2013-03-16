@@ -46,7 +46,7 @@ public class StaffView extends HorizontalListView {
         @Override  
         public View getView(int position, View convertView, ViewGroup parent) {  
             View retval = LayoutInflater.from(parent.getContext()).inflate(R.layout.viewitem, null);  
-            TextView title = (TextView) retval.findViewById(R.id.leadSheetItemTV);  
+            TextView title = (TextView) retval.findViewById(R.id.leadSheetItemChord);  
             //title.setText(_dataObjects[position]);  
               
             return retval;  

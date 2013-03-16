@@ -1,7 +1,23 @@
 <!--?xml version="1.0" encoding="utf-8"?-->  
-  
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/leadSheetItemTV" 
-    style="@style/OtherChord1"
-    android:layout_width="wrap_content" 
-    android:layout_height="wrap_content" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/ScoreDisplayBlock"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+	<TextView
+	    android:id="@+id/leadSheetItemChord" 
+	    style="@style/ChordIndication"
+	    android:textIsSelectable="true"
+	    android:layout_width="wrap_content" 
+	    android:layout_height="wrap_content" />
+	<SurfaceView
+	    android:id="@+id/leadSheetItemStaff"
+	    style="@style/StaffDrawable"/>
+	<TextView
+	    android:id="@+id/leadSheetItemLyric"
+	    style="@style/LyricIndication"
+	    android:text="blah"
+	    android:textIsSelectable="true"
+	    android:layout_width="wrap_content" 
+	    android:layout_height="wrap_content" />
+</LinearLayout>

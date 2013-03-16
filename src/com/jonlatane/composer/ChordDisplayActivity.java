@@ -85,10 +85,16 @@ public class ChordDisplayActivity extends Activity
 	  } 
 	
 	private static String[] _dataObjects = new String[]{ 
-		"      CM7      ",  
-        "      D-7      ",  
-        "G7",
-        "      CM7      " };
+		"CM7", "D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7"};
 	
 	private BaseAdapter _adapter = new BaseAdapter() {  
 		  
@@ -110,7 +116,7 @@ public class ChordDisplayActivity extends Activity
         @Override  
         public View getView(int position, View convertView, ViewGroup parent) {  
             View retval = LayoutInflater.from(parent.getContext()).inflate(R.layout.viewitem, null);  
-            TextView title = (TextView) retval.findViewById(R.id.leadSheetItemTV);  
+            TextView title = (TextView) retval.findViewById(R.id.leadSheetItemChord);  
             title.setText(_dataObjects[position]);  
               
             return retval;  
