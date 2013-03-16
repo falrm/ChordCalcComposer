@@ -1,53 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
     <style name="Keyboard">
-	    <item name="android:layout_height">145dp</item>
+	    <item name="android:layout_height">290dp</item>
     </style>
     <style name="RhythmButtonArea">
-        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_width">120dp</item>
         <item name="android:background">#000000</item>
         <item name="android:layout_height">match_parent</item>
     </style>
-    <!--              -->
-    <!-- PHONE CONFIG -->
-	<!--              -->
-	<!-- Basic white and black key setups.  Black keys have to be a varying width to look good -->
+    <!--               -->
+    <!-- TABLET CONFIG -->
+	<!--               -->
+    <!-- Basic white and black key setups.  Black keys have to be a varying width to look good -->
     <style name="WhiteKey" parent="Keyboard">
-    	<item name="android:layout_width">60dp</item>
+    	<item name="android:layout_width">90dp</item>
 	    <item name="android:layout_alignParentBottom">true</item>
 	    <item name="android:background">@drawable/whitekey</item>
 	</style>
 	
     <style name = "BlackKey">
         <item name="android:background">@drawable/blackkey</item>
-        <item name="android:layout_height">75dp</item>
+        <item name="android:layout_height">150dp</item>
         <item name="android:layout_alignParentTop">true</item>
     </style>
     
     <!-- C#, D# -->
     <style name="CSharp" parent="BlackKey">
-        <item name="android:layout_width">36dp</item>
-        <item name="android:layout_marginLeft">36dp</item>
+        <item name="android:layout_width">54dp</item>
+        <item name="android:layout_marginLeft">54dp</item>
 	</style>
 	<style name="DSharp" parent="BlackKey">
-        <item name="android:layout_width">36dp</item>
-        <item name="android:layout_marginLeft">36dp</item>
-        <item name="android:layout_marginRight">36dp</item>
+        <item name="android:layout_width">54dp</item>
+        <item name="android:layout_marginLeft">54dp</item>
+        <item name="android:layout_marginRight">54dp</item>
 	</style>
 	
 	<!-- F#, G#, A# -->
     <style name="FSharp" parent="BlackKey">
-        <item name="android:layout_width">35dp</item>
-        <item name="android:layout_marginLeft">34dp</item>
+        <item name="android:layout_width">52dp</item>
+        <item name="android:layout_marginLeft">51dp</item>
 	</style>
     <style name="GSharp" parent="BlackKey">
-        <item name="android:layout_width">34dp</item>
-        <item name="android:layout_marginLeft">34dp</item>
+        <item name="android:layout_width">52dp</item>
+        <item name="android:layout_marginLeft">51dp</item>
 	</style>
 	<style name="ASharp" parent="BlackKey">
-        <item name="android:layout_width">34dp</item>
-        <item name="android:layout_marginLeft">34dp</item>
-        <item name="android:layout_marginRight">35dp</item>
+        <item name="android:layout_width">52dp</item>
+        <item name="android:layout_marginLeft">51dp</item>
+        <item name="android:layout_marginRight">51dp</item>
 	</style>
 	
 	<!-- A0, A#0 in specific require specifics that they are the leftmost key -->
@@ -57,11 +57,9 @@
 	
     <style name="AS0" parent="BlackKey">
         <!-- <item name="android:layout_marginLeft">78dp</item> -->
-        <item name="android:layout_width">36dp</item>
-        <item name="android:layout_marginLeft">48dp</item>
-        <item name="android:layout_marginRight">36dp</item>
+        <item name="android:layout_width">52dp</item>
+        <item name="android:layout_marginLeft">77dp</item>
+        <item name="android:layout_marginRight">51dp</item>
 	    <item name="android:layout_alignParentLeft">true</item>
 	</style>
-	
-    
 </resources>

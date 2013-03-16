@@ -9,58 +9,58 @@
  		android:layout_height="match_parent">
 		<TextView 
 		   	android:id="@+id/bestChord"
-		   	style="@style/BestChordSmall"
+		   	style="@style/BestChord"
 		    android:layout_width="wrap_content"
 		   	android:layout_height="match_parent" 
 		   	android:layout_alignParentBottom="true" />
  		<TextView 
  		    android:id="@+id/second"
- 		    style="@style/OtherChordSmall1"
+ 		    style="@style/OtherChord1"
          	android:layout_width="wrap_content"
  			android:layout_height="match_parent"/>
  		<TextView 
  		    android:id="@+id/third"
- 		    style="@style/OtherChordSmall2"
+ 		    style="@style/OtherChord2"
          	android:layout_width="wrap_content"
  			android:layout_height="match_parent"/>
  		<TextView 
  		    android:id="@+id/fourth"
- 		    style="@style/OtherChordSmall1"
+ 		    style="@style/OtherChord1"
          	android:layout_width="wrap_content"
  			android:layout_height="match_parent"/>
  		<TextView 
  		    android:id="@+id/fifth"
- 		    style="@style/OtherChordSmall2"
+ 		    style="@style/OtherChord2"
          	android:layout_width="wrap_content"
  			android:layout_height="match_parent"/>
  		<TextView 
  		    android:id="@+id/sixth"
- 		    style="@style/OtherChordSmall1"
+ 		    style="@style/OtherChord1"
          	android:layout_width="wrap_content"
  			android:layout_height="match_parent"/>
  		<TextView 
  		    android:id="@+id/seventh"
- 		    style="@style/OtherChordSmall2"
+ 		    style="@style/OtherChord2"
          	android:layout_width="wrap_content"
  			android:layout_height="match_parent"/>
  		<TextView 
  		    android:id="@+id/eighth"
- 		    style="@style/OtherChordSmall1"
+ 		    style="@style/OtherChord1"
          	android:layout_width="wrap_content"
  			android:layout_height="match_parent"/>
  		<TextView 
  		    android:id="@+id/ninth"
- 		    style="@style/OtherChordSmall2"
+ 		    style="@style/OtherChord2"
          	android:layout_width="wrap_content"
  			android:layout_height="match_parent"/>
  		<TextView 
  		    android:id="@+id/tenth"
- 		    style="@style/OtherChordSmall1"
+ 		    style="@style/OtherChord1"
          	android:layout_width="wrap_content"
  			android:layout_height="match_parent"/>
  		<TextView 
  		    android:id="@+id/eleventh"
- 		    style="@style/OtherChordSmall2"
+ 		    style="@style/OtherChord2"
          	android:layout_width="wrap_content"
  			android:layout_height="match_parent"/>
      </LinearLayout>
