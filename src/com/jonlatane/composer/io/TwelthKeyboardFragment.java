@@ -35,25 +35,60 @@ public class TwelthKeyboardFragment extends Fragment {
                              Bundle savedInstanceState) {
 		super.onCreateView(inflater, container, savedInstanceState);
         // Inflate the layout for this fragment
-        View result = inflater.inflate(R.layout.twelthkeyboard, container, false);
+        final View result = inflater.inflate(R.layout.twelthkeyboard, container, false);
         
-        //do stuff?
+        //Set up basic stuff from layout
         _initialRhythmAreaWidth = result.findViewById(R.id.rhythmButtonArea).getLayoutParams().width;
         _keyboardScroller = (KeyboardScroller)result.findViewById(R.id.kbScroller);
 		_myKbdIO = new KeyboardIOHandler(this, result);
 		_myKbdIO.harmonicModeOn();
 		_chordScroller = (HorizontalScrollView)result.findViewById(R.id.chordScroller);
         
-
+		//Set up the keyboardScroller itself
 		_keyboardScroller = (KeyboardScroller)result.findViewById(R.id.kbScroller);
 		_keyboardScroller.setKeyboardIOHander(_myKbdIO);
+		_keyboardScroller.scrollTo(250, 0);
+		_keyboardScroller.disableScrolling();
+		GestureDetector.OnGestureListener gl = new GestureDetector.SimpleOnGestureListener() {
+			@Override
+			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+		        int dx = (int) (e2.getX() - e1.getX());
+		        int dy = (int) (e2.getY() - e1.getY());
+		        
+		        // don't accept the fling if it's too short
+		        // as it may conflict with a button push
+		        if (Math.abs(dx) > 10 && Math.abs(velocityX) > Math.abs(velocityY)) {
+		        	_keyboardScroller.enableScrolling();
+		            _keyboardScroller.fling((int) velocityX);
+		            _keyboardScroller.disableScrolling();
+		            return true;
+		        } else {
+		            return false;
+		        }
+		    }
+		};
+		
+		final GestureDetector gestureDetector = new GestureDetector(gl);
+		
+		_keyboardScroller.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event);
+            }
+        });
+		
+		final KeyboardScroller s = _keyboardScroller;
+        s.post(new Runnable() { 
+            public void run() { 
+            	try {
+					Thread.sleep(700);
+				} catch (InterruptedException e) {
+				}
+                 s.smoothScrollTo(20 * result.findViewById(R.id.keyA0).getWidth(), 0);
+            } 
+        });
 		
         return result;
     }
-	//The system calls this when it's time for the fragment to draw its user interface for the first time. To draw a UI for your fragment, you must return a View from this method that is the root of your fragment's layout. You can return null if the fragment does not provide a UI.
-	public void onPause() {
-		super.onPause();
-	}
 	
 	// Keep track of when chord updates are started so only the most recent operation will update the views
 	private static long mostRecentUCDInitializationTime;
@@ -99,13 +134,6 @@ public class TwelthKeyboardFragment extends Fragment {
 		new UpdateChordDisplay().execute(_myKbdIO.getChord());
 	}
 	
-	public boolean rhythmicModeIsEnabled() {
-		LinearLayout l = (LinearLayout)getView().findViewById(R.id.rhythmButtonArea);
-		boolean result = l.getWidth() != 0;
-		Log.i(TAG,"rhythmicModeIsEnabled:"+result);
-		return result;
-	}
-	
 	private class WidthEvaluator extends IntEvaluator {
 
 	    private View v;
@@ -141,13 +169,32 @@ public class TwelthKeyboardFragment extends Fragment {
 	    }
 	}
 	
-	public void enableRhythmicMode() {
+
+	public boolean rhythmicModeIsEnabled() {
+		LinearLayout l = (LinearLayout)getView().findViewById(R.id.rhythmButtonArea);
+		boolean result = l.getWidth() != 0;
+		Log.i(TAG,"rhythmicModeIsEnabled:"+result);
+		return result;
+	}
+	
+	private void enableRhythmicMode(View v) {
 		final LinearLayout l = (LinearLayout)getView().findViewById(R.id.rhythmButtonArea);
 		ValueAnimator.ofObject(new WidthEvaluator(l), l.getWidth(), _initialRhythmAreaWidth).start();
 	}
-	public void disableRhythmicMode() {
-		final LinearLayout l = (LinearLayout)getView().findViewById(R.id.rhythmButtonArea);
+	
+	public void enableRhythmicMode() {
+		//final LinearLayout l = (LinearLayout)getView().findViewById(R.id.rhythmButtonArea);
+		//ValueAnimator.ofObject(new WidthEvaluator(l), l.getWidth(), _initialRhythmAreaWidth).start();
+		enableRhythmicMode(getView());
+	}
+	private void disableRhythmicMode(View v) {
+		final LinearLayout l = (LinearLayout)v.findViewById(R.id.rhythmButtonArea);
 		ValueAnimator.ofObject(new WidthEvaluator(l), l.getWidth(), 0).start();
+	}
+	public void disableRhythmicMode() {
+		//final LinearLayout l = (LinearLayout)getView().findViewById(R.id.rhythmButtonArea);
+		//ValueAnimator.ofObject(new WidthEvaluator(l), l.getWidth(), 0).start();
+		disableRhythmicMode(getView());
 	}
 	public boolean toggleRhythmicMode() {
 		if(rhythmicModeIsEnabled())
@@ -157,20 +204,28 @@ public class TwelthKeyboardFragment extends Fragment {
 		return rhythmicModeIsEnabled();
 	}
 	
-	
-	@SuppressLint("NewApi")
-	public void enableHarmonicMode() {
-		final View v = getView().findViewById(R.id.chordScroller);
-		//ValueAnimator.ofObject(new HeightEvaluator(v), v.getHeight(), _initialChordScrollerHeight).start();
-		v.animate().y(0);
+	private void enableHarmonicMode(View r) {
+		final View v = r.findViewById(R.id.chordScroller);
+		v.animate().translationY(0);
 		_myKbdIO.harmonicModeOn();
 	}
-	@SuppressLint("NewApi")
-	public void disableHarmonicMode() {
-		final View v = getView().findViewById(R.id.chordScroller);
-		//ValueAnimator.ofObject(new HeightEvaluator(v), v.getHeight(), 0).start();
-		v.animate().y(v.getHeight());
+	public void enableHarmonicMode() {
+		//final View v = getView().findViewById(R.id.chordScroller);
+		//v.animate().translationY(0);
+		//_myKbdIO.harmonicModeOn();
+		enableHarmonicMode(getView());
+	}
+	
+	private void disableHarmonicMode(View r) {
+		final View v = r.findViewById(R.id.chordScroller);
+		v.animate().translationY(v.getHeight());
 		_myKbdIO.harmonicModeOff();
+	}
+	public void disableHarmonicMode() {
+		//final View v = getView().findViewById(R.id.chordScroller);
+		//v.animate().translationY(v.getHeight());
+		//_myKbdIO.harmonicModeOff();
+		disableHarmonicMode(getView());
 	}
 	public boolean toggleHarmonicMode() {
 		//if(getView().findViewById(R.id.chordScroller).getHeight() != 0)
@@ -178,6 +233,24 @@ public class TwelthKeyboardFragment extends Fragment {
 			disableHarmonicMode();
 		else
 			enableHarmonicMode();
-		return true;
+		return _myKbdIO.isHarmonic();
+	}
+	
+	public boolean keyboardIsEnabled() {
+		return getView().getTranslationY() == 0;
+	}
+	public void hideKeyboardFragment() {
+		final View v = getView();
+		v.animate().translationY(v.getHeight());
+	}
+	public void showKeyboardFragment() {
+		final View v = getView();
+		v.animate().translationY(0);
+	}
+	public void toggleKeyboardFragment() {
+		if(!keyboardIsEnabled())
+			showKeyboardFragment();
+		else
+			hideKeyboardFragment();
 	}
 }

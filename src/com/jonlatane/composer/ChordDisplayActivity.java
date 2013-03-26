@@ -12,7 +12,9 @@ import com.jonlatane.composer.music.harmony.*;
 import com.jonlatane.composer.music.coverings.*;
 
 import android.app.*;
+import android.content.Context;
 import android.graphics.Canvas;
+import android.media.AudioManager;
 import android.os.*;
 import android.util.*;
 import android.view.*;
@@ -46,6 +48,7 @@ public class ChordDisplayActivity extends Activity
 		
 		// Set up the keyboard
 		_myKeyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.chordDisplayActivityKb);
+		//_myKeyboard.setRetainInstance(true);
 		//_myKbdIO = new KeyboardIOHandler(this);
 		//_myKbdIO.harmonicModeOn();
 		
@@ -58,7 +61,36 @@ public class ChordDisplayActivity extends Activity
 		
 		// Set up lead sheet display
 		HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
-        listview.setAdapter(_adapter);  
+        listview.setAdapter(_adapter);
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		AudioManager audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+	    switch (keyCode) {
+	    case KeyEvent.KEYCODE_VOLUME_UP:
+	        audio.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+	                AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
+	        return true;
+	    case KeyEvent.KEYCODE_VOLUME_DOWN:
+	        audio.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+	                AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
+	        return true;
+	    default:
+	    	return super.onKeyDown(keyCode, event);
+	    }
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		_myKeyboard.onSaveInstanceState(outState);
+	}
+	
+	@Override
+	public void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		//_myKeyboard.onRestoreInstanceState(savedInstanceState);
 	}
 	
 	@Override
@@ -68,6 +100,8 @@ public class ChordDisplayActivity extends Activity
 	    return true;
 	}
 	
+	
+	
 	@Override
 	  public boolean onOptionsItemSelected(MenuItem item) {
 	    switch (item.getItemId()) {
@@ -76,6 +110,9 @@ public class ChordDisplayActivity extends Activity
 	    	break;
 	    case R.id.toggleChordsAB:
 	    	_myKeyboard.toggleHarmonicMode();
+	    	break;
+	    case R.id.toggleKeyboardAB:
+	    	_myKeyboard.toggleKeyboardFragment();
 	    	break;
 	    default:
 	      break;
@@ -115,7 +152,7 @@ public class ChordDisplayActivity extends Activity
   
         @Override  
         public View getView(int position, View convertView, ViewGroup parent) {  
-            View retval = LayoutInflater.from(parent.getContext()).inflate(R.layout.viewitem, null);  
+            View retval = LayoutInflater.from(parent.getContext()).inflate(R.layout.staff_section_view, null);  
             TextView title = (TextView) retval.findViewById(R.id.leadSheetItemChord);  
             title.setText(_dataObjects[position]);  
               

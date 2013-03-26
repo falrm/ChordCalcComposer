@@ -140,7 +140,7 @@ public class Chord extends PitchSet {
 	 * @param root
 	 * @return
 	 */
-	private static Pair<String, Integer> nameFiveSixSevensColors(Chord c, Integer root) {
+	/*private static Pair<String, Integer> nameFiveSixSevensColors(Chord c, Integer root) {
 		String name = "";
 		int certainty = 0;
 		
@@ -279,7 +279,7 @@ public class Chord extends PitchSet {
 		}
 
 		return new Pair<String, Integer>(name, certainty);
-	}
+	}*/
 	
 	/**
 	 * Return a String naming the tones requested (
@@ -311,11 +311,12 @@ public class Chord extends PitchSet {
 				//color
 				case 11: if(c.contains(root+5) /*&& !c.contains(root+9)*/) {
 							result += "add11";
-						} else if(c.contains(root+6)  && c.contains(root+7)) {
+						} else if(c.contains(root+6)  && 
+								(c.contains(root+7) || c.contains(root + 8) && c.contains(root+4))) {
 							result += "#11";
 						} // flat 11s are impossible as they will be seen as M3s
 						break;
-				//only look for sharp 11 (in sus chords)
+				//only look for sharp 11
 				case -11: if(c.contains(root+6)) {
 							result += "#11";
 						}
@@ -328,7 +329,9 @@ public class Chord extends PitchSet {
 						}
 						break;
 				// only look for flat 6 (for dim chords)
-				case -6: if(c.contains(root+8)) {
+				case -6: if(c.contains(root+8) && c.contains(root+7)) {
+							result += "add"+flat+"6";
+						} else if(c.contains(root+8)) {
 							result += flat + "6";
 						}
 						break;
@@ -525,6 +528,10 @@ public class Chord extends PitchSet {
 				} else if(c.contains(root+9)){
 					certainty += 6;
 					name = name + "6";
+					name += nameTones(c, root, 9, 11);
+				//M3+5 No6or7
+				} else {
+					certainty += 7;
 					name += nameTones(c, root, 9, 11);
 				}
 			// M3-5P11 - major flat five chord. We require a P11 to be present

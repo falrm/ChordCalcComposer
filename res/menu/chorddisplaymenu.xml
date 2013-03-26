@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/toggleKeyboardAB"
+          android:title="KB"
+          android:showAsAction="ifRoom" />
     <item android:id="@+id/toggleRhythmAB"
-          android:title="Toggle Rhythm"
+          android:title="Rhythm"
           android:showAsAction="ifRoom" />
     <item android:id="@+id/toggleChordsAB"
-          android:title="Toggle Chords"
+          android:title="Chords"
           android:showAsAction="ifRoom" />
 </menu>

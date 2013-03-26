@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -34,22 +35,8 @@ public class KeyboardScroller extends HorizontalScrollView {
 	}
 	
 	void onCreate(Context c){
-		  //Observe for a layout change
-		  ViewTreeObserver viewTreeObserver = getViewTreeObserver();
-		  if (viewTreeObserver.isAlive()) {
-		    /*viewTreeObserver.addOnLayoutChangeListener(new OnLayoutChangeListener() {
-				@Override
-				public void onLayoutChange(View v, int left, int top,
-						int right, int bottom, int oldLeft, int oldTop,
-						int oldRight, int oldBottom) {
-					_io.catchRogues();
-					
-				}
-			});*/
-		  }
-	
-			    
-		}
+		
+	}
 	
 	@Override
 	public boolean shouldDelayChildPressedState() {
@@ -64,7 +51,7 @@ public class KeyboardScroller extends HorizontalScrollView {
 	//
 	private int _scrollPosition = 0;
 	private boolean _scrollingEnabled = true;
-	private void disableScrolling() {
+	public void disableScrolling() {
 		Log.i(TAG, "Disabled Scrolling");
 		_scrollPosition = getScrollX();
 		setOnTouchListener( new OnTouchListener(){ 
@@ -79,18 +66,17 @@ public class KeyboardScroller extends HorizontalScrollView {
     	scrollTo(_scrollPosition, 0);
 		_scrollingEnabled = false;
 	}
-	private void enableScrolling() {
+	public void enableScrolling() {
 		Log.i(TAG, "Enabled Scrolling");
 		setOnTouchListener(null);
     	scrollTo(_scrollPosition, 0);
 		_scrollingEnabled = true;
 	}
-		
 	boolean smartToggleScrolling() {
 		Log.d(TAG,"smartToggleScrolling");
 		if(!_scrollingEnabled) {
 			if( getUpDownFrequency(1000) < 6.0 ) {
-				enableScrolling();
+				//enableScrolling();
 			}
 		} else {
 			if( getUpDownFrequency(1000) > 0.25 ) {

@@ -1,4 +1,4 @@
-package com.jonlatane.composer.musicdisplay;
+package com.jonlatane.composer.scoredisplay;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.devsmart.android.ui.HorizontalListView;
@@ -18,13 +19,27 @@ import com.jonlatane.composer.music.*;
  *
  */
 public class StaffView extends HorizontalListView {
-	private Score _score;
-	private Staff _staff;
-	
+	private SuperScore _score;
+	private SuperScore.Staff _staff;
 	public StaffView(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		// TODO Auto-generated constructor stub
 	}
+	
+	public boolean setStaff(SuperScore.Staff s) {
+		boolean result = (s == _staff);
+		_staff = s;
+		return result;
+	}
+	
+	private class StaffSectionView extends LinearLayout {
+
+		public StaffSectionView(Context context) {
+			super(context);
+	        View.inflate(context, R.layout.staff_section_view, this);
+		}
+		
+	}
+	
 	
 	private BaseAdapter _adapter = new BaseAdapter() {  
 		  
@@ -45,7 +60,8 @@ public class StaffView extends HorizontalListView {
   
         @Override  
         public View getView(int position, View convertView, ViewGroup parent) {  
-            View retval = LayoutInflater.from(parent.getContext()).inflate(R.layout.viewitem, null);  
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.staff_section_view, null);  
+        	StaffSectionView retval = new StaffSectionView(parent.getContext());
             TextView title = (TextView) retval.findViewById(R.id.leadSheetItemChord);  
             //title.setText(_dataObjects[position]);  
               
@@ -53,5 +69,5 @@ public class StaffView extends HorizontalListView {
         }  
           
     };  
-
+    
 }
