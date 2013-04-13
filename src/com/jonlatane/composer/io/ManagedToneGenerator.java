@@ -48,7 +48,7 @@ public class ManagedToneGenerator {
 	}
 	
 	public static class Cache {
-		private static HashMap<Integer,HashMap<Integer,AudioTrack>> _data = new HashMap<Integer,HashMap<Integer,AudioTrack>>();
+		private static SparseArray<SparseArray<AudioTrack>> _data = new SparseArray<SparseArray<AudioTrack>>();
 		private static LinkedList<Pair<Integer,Integer>> _recentlyUsedNotes = new LinkedList<Pair<Integer,Integer>>();
 				
 		/**
@@ -72,16 +72,16 @@ public class ManagedToneGenerator {
 			
 			
 			// See if this note is in our cache
-			HashMap<Integer,AudioTrack> instrumentNotes = _data.get(cacheLocation.first);
+			SparseArray<AudioTrack> instrumentNotes = _data.get(cacheLocation.first);
 			if(instrumentNotes == null) {
-				instrumentNotes = new HashMap<Integer,AudioTrack>();
+				instrumentNotes = new SparseArray<AudioTrack>();
 				_data.put(cacheLocation.first, instrumentNotes);
 			}
 			AudioTrack result = instrumentNotes.get(n);
 			
 			// If not, generate it
 			if( result == null ) {
-				int pitchClass = Chord.TWELVETONE.getPitchClass(n);
+				int pitchClass = Chord.TWELVETONE.mod(n);
 				double octavesFromMiddle = ((double) (n - pitchClass)) / ((double) 12);
 				double freq = freqs[pitchClass] * Math.pow(2, octavesFromMiddle);
 				
@@ -174,6 +174,47 @@ public class ManagedToneGenerator {
 				result = false;
 			}
 			return result;
+		}
+		
+		public static void normalizeVolumes() {
+			float max = AudioTrack.getMaxVolume();
+			float min = AudioTrack.getMinVolume();
+			float span = max - min;
+			
+			//Set<AudioTrack> currentlyPlaying = new HashSet<AudioTrack>();
+			SparseArray<List<AudioTrack>> currentlyPlaying = new SparseArray<List<AudioTrack>>();
+			//for(Map.Entry<Integer,HashMap<Integer, AudioTrack>> e : _data.entrySet()) {
+			for(int i = 0; i < _data.size(); i++) {
+				SparseArray<AudioTrack> noteTracks = _data.valueAt(i);
+				//for(AudioTrack t : e.getValue().values()) {
+				for(int j = 0; j < noteTracks.size(); j++) {
+					AudioTrack t = noteTracks.valueAt(j); 
+					if(t.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
+						int n = _data.keyAt(i);
+						List<AudioTrack> l = currentlyPlaying.get(n);
+						if(l == null) {
+							l = new LinkedList<AudioTrack>();
+							currentlyPlaying.put(n,l);
+						}
+						l.add(t);
+					}
+				}
+			}
+			
+			for(int i = 0; i < currentlyPlaying.size(); i++) {
+				int n = currentlyPlaying.keyAt(i);
+				List<AudioTrack> l = currentlyPlaying.valueAt(i);
+				for(AudioTrack t : l) {
+					// Lower notes are amped up so turn them down a bit with this factor
+					float arctanCurveFactor = (float) (.05 * Math.atan((float)(n+5)/88.0) + .9);
+					// This number between 0 and 1 by which we will increase volume
+					float totalNumNotesRedFactor = (float)( 1 / (float)currentlyPlaying.size());
+					float adjusted = min 
+							+ (float)( span * arctanCurveFactor * totalNumNotesRedFactor );
+					Log.i(TAG,max + " " + min + "Normalizing volume to " + adjusted);
+					t.setStereoVolume(adjusted, adjusted);
+				}
+			}
 		}
 	}
 	

@@ -1,24 +1,15 @@
 package com.jonlatane.composer;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Arrays;
 
-import com.devsmart.android.ui.HorizontalListView;
 import com.jonlatane.composer.io.*;
-import com.jonlatane.composer.music.*;
 import com.jonlatane.composer.music.harmony.*;
-import com.jonlatane.composer.music.coverings.*;
-
 import android.app.*;
 import android.content.Context;
-import android.graphics.Canvas;
 import android.media.AudioManager;
 import android.os.*;
 import android.util.*;
 import android.view.*;
-import android.view.View.OnTouchListener;
 import android.widget.*;
 
 /**
@@ -44,24 +35,44 @@ public class ChordDisplayActivity extends Activity
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
+		//Debugging stuff - to be moved elsewhere
+		Log.d(TAG, Chord.getChordByName("C"+Chord.diminished+"7add11#13").toString());
+		Chord cA1 = Chord.getChordByName("Ab7");
+		Chord cA2 = Chord.getChordByName("G7");
+		Chord cA3 = Chord.getChordByName("C");
+		
+		cA3.NOTENAMES = new String[] {"C", "E", "G"};
+		VoiceLeading.fillEnharmonics(cA2, cA3);
+		VoiceLeading.fillEnharmonics(cA1, cA2);
+		
+		Log.d(TAG, Arrays.toString(cA1.NOTENAMES) + cA1.toString());
+		Log.d(TAG, Arrays.toString(cA2.NOTENAMES) + cA2.toString());
+		Log.d(TAG, Arrays.toString(cA3.NOTENAMES) + cA3.toString());
+		
+		Chord cB1 = Chord.getChordByName("Ab7");
+		Chord cB2 = Chord.getChordByName("C");
+		Chord cB3 = Chord.getChordByName("G7");
+		Chord cB4 = Chord.getChordByName("C");
+		
+		cB4.NOTENAMES = new String[] {"C", "E", "G"};
+		VoiceLeading.fillEnharmonics(cB3, cB4);
+		VoiceLeading.fillEnharmonics(cB2, cB3);
+		VoiceLeading.fillEnharmonics(cB1, cB2);
+		
+		Log.d(TAG, Arrays.toString(cB1.NOTENAMES) + cB1.toString());
+		Log.d(TAG, Arrays.toString(cB2.NOTENAMES) + cB2.toString());
+		Log.d(TAG, Arrays.toString(cB3.NOTENAMES) + cB3.toString());
+		Log.d(TAG, Arrays.toString(cB4.NOTENAMES) + cB4.toString());
+		
+		// Load layout
 		setContentView(R.layout.chorddisplayactivity);
 		
 		// Set up the keyboard
 		_myKeyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.chordDisplayActivityKb);
-		//_myKeyboard.setRetainInstance(true);
-		//_myKbdIO = new KeyboardIOHandler(this);
-		//_myKbdIO.harmonicModeOn();
-		
-		//_keyboardScroller = (KeyboardScroller)findViewById(R.id.kbScroller);
-		//_keyboardScroller.setKeyboardIOHander(_myKbdIO);
-		
-		//_chordScroller = (HorizontalScrollView)findViewById(R.id.chordDisplayScroller);
-		
-		//RelativeLayout root= (RelativeLayout) findViewById(R.id.chordDisplayActivity);
 		
 		// Set up lead sheet display
-		HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
-        listview.setAdapter(_adapter);
+		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
+        //listview.setAdapter(_adapter);
 	}
 	
 	@Override

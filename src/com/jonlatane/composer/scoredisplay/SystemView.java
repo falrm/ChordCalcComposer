@@ -1,13 +1,8 @@
 package com.jonlatane.composer.scoredisplay;
 
-import java.util.*;
-
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewTreeObserver.OnScrollChangedListener;
 import android.widget.LinearLayout;
 
 import com.jonlatane.composer.music.*;

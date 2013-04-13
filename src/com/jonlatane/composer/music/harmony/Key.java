@@ -122,7 +122,7 @@ public final class Key extends Scale
 	 */
 	public String getNoteName(Integer i) {
 		String result = "";
-		i = MODULUS.getPitchClass(i);
+		i = MODULUS.mod(i);
 		/*String scaleContents = "[";
 		for(Integer k : this) {
 			scaleContents += k+",";
@@ -207,6 +207,29 @@ public final class Key extends Scale
 		
 		return result;
 	}
+
+	/**
+	 * Given a letter A-G, returns a String with the needed (double)flats/sharps to make them equivalent.
+	 * Returns null if impossible.
+	 * 
+	 * @param heptatonicName a letter A-G
+	 * @param targetTwelveTonePitchClass any numer (treated as C4=0 and so on, only its pitch class matters)
+	 * @param doubleAccidentals true to enable double flats and sharps
+	 * @return
+	 */
+	public static String tryToName(char heptatonicName, int targetTwelveTonePitchClass, boolean doubleAccidentals) {
+		int s = twelveToneInverse.get(heptatonicName);
+		switch(TWELVETONE.mod(s - targetTwelveTonePitchClass)) {
+			case 0: return "" + heptatonicName;
+			case 11: return heptatonicName + "#";
+			case 10: if(!doubleAccidentals) return null; else return heptatonicName + "##";
+			case 1: return heptatonicName + flat;
+			case 2: if(!doubleAccidentals) return null; else return heptatonicName + flat + flat;
+			default: return null;
+		}
+	}
+	
+	
 	
 	public static PitchSet noteNameToPitchSet(String noteName) {
 		return new PitchSet(noteNameToInt(noteName));
@@ -299,6 +322,15 @@ public final class Key extends Scale
 			
 			String rootName = k.getNoteName(n);
 			bucket.add(rootName + candidate.first);
+		}
+		
+		return result;
+	}
+	
+	public int[] getRootLikelihoods(Chord c, Key k) {
+		int[] result = new int[12];
+		for(int i = 0; i < 12; i++) {
+			result[i] = guessCharacteristic(c, i).second;
 		}
 		
 		return result;

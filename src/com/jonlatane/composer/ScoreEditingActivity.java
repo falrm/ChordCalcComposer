@@ -4,15 +4,11 @@ import java.util.TreeMap;
 
 import com.jonlatane.composer.io.KeyboardIOHandler;
 import com.jonlatane.composer.music.*;
-import com.jonlatane.composer.music.harmony.*;
-import com.jonlatane.composer.music.coverings.*;
-
 import android.app.*;
 import android.graphics.Canvas;
 import android.os.*;
 import android.util.*;
 import android.view.*;
-import android.widget.*;
 
 /**
  * The ScoreEditingActivity allows interaction with a Score.  You can scroll horizontally at all times.  To make a
@@ -22,7 +18,7 @@ import android.widget.*;
  */
 public class ScoreEditingActivity extends Activity implements SurfaceHolder.Callback
 {
-	private Score _score;
+	//private Score _score;
 	private KeyboardIOHandler _myKbdIO;
 	
 	private static float XOFFSET = 20;
@@ -46,7 +42,7 @@ public class ScoreEditingActivity extends Activity implements SurfaceHolder.Call
 		private TreeMap<Integer,Rational> _touchCache;
 		
 		class PhysicalStaff {
-			Staff _staff;
+			//Staff _staff;
 			
 			// Drawing-related stuff
 			int NEEDED_UPPER_SPACE;

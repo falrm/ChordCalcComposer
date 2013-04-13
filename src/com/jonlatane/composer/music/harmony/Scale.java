@@ -152,12 +152,12 @@ public class Scale extends Chord {
 	 */
 	public Pair<Integer, Integer> degreeOf(int i) {
 
-		Integer upper = ceiling(MODULUS.getPitchClass(i));
+		Integer upper = ceiling(MODULUS.mod(i));
 		if( upper == null )
-			upper = ceiling((MODULUS.getPitchClass(i))-12);
-		Integer lower = floor(MODULUS.getPitchClass(i));
+			upper = ceiling((MODULUS.mod(i))-12);
+		Integer lower = floor(MODULUS.mod(i));
 		if( lower == null )
-			lower = floor((MODULUS.getPitchClass(i))+12);
+			lower = floor((MODULUS.mod(i))+12);
 		int chromatic = getRoot();
 		int degree = 0;
 		Integer lowerDegree = null;
@@ -178,7 +178,7 @@ public class Scale extends Chord {
 	//returns 0 if the chord is tonic, 2 if it is a ii/II, 4 for a iii/III, 5 for a iv/IV, etc.
 	// bounds are constrained by the modulus
 	public int rootFunction(Chord c) {
-		return MODULUS.getPitchClass(c.getRoot() - getRoot());
+		return MODULUS.mod(c.getRoot() - getRoot());
 	}
 
 	public boolean isMajor() {
@@ -188,4 +188,10 @@ public class Scale extends Chord {
 	public boolean isMinor() {
 		return false;
 	}
+	
+	public static Scale fromChord(Chord c) {
+		//TODO
+		return null;
+	}
+	
 }

@@ -1,25 +1,21 @@
 package com.jonlatane.composer.io;
 
-import java.util.Iterator;
-import java.util.LinkedList;
+import com.jonlatane.composer.R;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewTreeObserver;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
-import android.view.ViewTreeObserver.OnScrollChangedListener;
 import android.widget.HorizontalScrollView;
-import android.widget.ToggleButton;
 
 public class KeyboardScroller extends HorizontalScrollView {
 	private static String TAG = "KBScroller";
 	private KeyboardIOHandler _io = null;
+	private GestureDetector gd;
+	
+	
 	public KeyboardScroller(Context context) {
 		super(context);
 		onCreate(context);
@@ -35,7 +31,60 @@ public class KeyboardScroller extends HorizontalScrollView {
 	}
 	
 	void onCreate(Context c){
-		
+		final GestureDetector.OnGestureListener gl = new GestureDetector.SimpleOnGestureListener() {
+			private float accumVelocityX = 0;
+			@Override
+			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+				if( e1 == null || e2 == null) {
+					return true;
+				}
+				Log.i(TAG, "Fling found");
+		        int dx = (int) (e2.getX() - e1.getX());
+		        int dy = (int) (e2.getY() - e1.getY());
+		        
+		        // don't accept the fling if it's too short
+		        // as it may conflict with a button push
+		        if (Math.abs(dx) > findViewById(R.id.keyA0).getWidth() * 2 && Math.abs(velocityX) > Math.abs(velocityY)) {
+		        	//_keyboardScroller.enableScrolling();
+
+		        	enableScrolling();
+		            fling((int) -(velocityX));
+		            
+		            new AsyncTask<Integer, Integer, Integer>() {
+		                protected Integer doInBackground(Integer... urls) {
+		                    try {
+								Thread.sleep(700);
+							} catch (InterruptedException e) {}
+		                    return 0;
+		                }
+
+		                protected void onProgressUpdate(Integer... progress) {
+		                    
+		                }
+
+		                protected void onPostExecute(Integer result) {
+		                    disableScrolling();
+		                }
+		            }.execute(new Integer[]{0});
+		            
+		            //_keyboardScroller.disableScrolling();
+		            return true;
+		        } else {
+		        	//accumVelocityX += velocityX;
+		            return true;
+		        }
+		    }
+		};
+		gd = new GestureDetector(getContext(), gl);
+		post(new Runnable() {
+			public void run() {
+				try {
+					Thread.sleep(700);
+				} catch (InterruptedException e) {
+				}
+				smoothScrollTo(20 * findViewById(R.id.keyA0).getWidth(), 0);
+			}
+		});
 	}
 	
 	@Override
@@ -47,9 +96,33 @@ public class KeyboardScroller extends HorizontalScrollView {
 		_io = kio;
 	}
 
+	@Override public boolean onTouchEvent(MotionEvent event) {
+		if(!_enableScrolling) {
+			gd.onTouchEvent(event);
+			return true;
+		} else {
+			return super.onTouchEvent(event);
+		}
+	}
+	@Override public boolean onInterceptTouchEvent(MotionEvent ev) {
+		if(!_enableScrolling) {
+			return gd.onTouchEvent(ev); 
+		} else {
+			return super.onInterceptTouchEvent(ev);
+		}
+	}
+	
+	private boolean _enableScrolling = false;
+	public void enableScrolling() {
+		_enableScrolling = true;
+	}
+	public void disableScrolling() {
+		_enableScrolling = false;
+	}
+	
 	// Scrolling handling.  When the user is pressing lots of keys, we may want to disable scrolling
 	//
-	private int _scrollPosition = 0;
+	/*private int _scrollPosition = 0;
 	private boolean _scrollingEnabled = true;
 	public void disableScrolling() {
 		Log.i(TAG, "Disabled Scrolling");
@@ -116,5 +189,5 @@ public class KeyboardScroller extends HorizontalScrollView {
 			//logUpDown(e);
 			//smartToggleScrolling();
 			return result;
-		}
-	}
+	}*/
+}

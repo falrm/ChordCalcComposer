@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.jonlatane.composer.R;
-import com.jonlatane.composer.R.layout;
 import com.jonlatane.composer.music.harmony.Chord;
 import com.jonlatane.composer.music.harmony.Key;
 
@@ -17,8 +16,6 @@ import android.app.Fragment;
 import android.os.*;
 import android.util.Log;
 import android.view.*;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -47,45 +44,51 @@ public class TwelthKeyboardFragment extends Fragment {
 		//Set up the keyboardScroller itself
 		_keyboardScroller = (KeyboardScroller)result.findViewById(R.id.kbScroller);
 		_keyboardScroller.setKeyboardIOHander(_myKbdIO);
-		_keyboardScroller.scrollTo(250, 0);
-		_keyboardScroller.disableScrolling();
-		GestureDetector.OnGestureListener gl = new GestureDetector.SimpleOnGestureListener() {
+		
+		/*final GestureDetector.OnGestureListener gl = new GestureDetector.SimpleOnGestureListener() {
 			@Override
 			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+				if( e1 == null || e2 == null) {
+					return true;
+				}
+				Log.i(TAG, "Fling found");
 		        int dx = (int) (e2.getX() - e1.getX());
 		        int dy = (int) (e2.getY() - e1.getY());
 		        
 		        // don't accept the fling if it's too short
 		        // as it may conflict with a button push
 		        if (Math.abs(dx) > 10 && Math.abs(velocityX) > Math.abs(velocityY)) {
-		        	_keyboardScroller.enableScrolling();
+		        	//_keyboardScroller.enableScrolling();
 		            _keyboardScroller.fling((int) velocityX);
-		            _keyboardScroller.disableScrolling();
+		            //_keyboardScroller.disableScrolling();
 		            return true;
 		        } else {
-		            return false;
+		            return true;
 		        }
 		    }
 		};
-		
-		final GestureDetector gestureDetector = new GestureDetector(gl);
-		
-		_keyboardScroller.setOnTouchListener(new View.OnTouchListener() {
-            public boolean onTouch(View v, MotionEvent event) {
-                return gestureDetector.onTouchEvent(event);
-            }
-        });
-		
+				
 		final KeyboardScroller s = _keyboardScroller;
-        s.post(new Runnable() { 
-            public void run() { 
-            	try {
+		s.post(new Runnable() {
+			public void run() {
+				//s.disableScrolling();
+				s.setOnTouchListener(new View.OnTouchListener() {
+					private GestureDetector gd = new GestureDetector(getView().getContext(), gl);
+					public boolean onTouch(View v, MotionEvent event) {
+						gd.onTouchEvent(event);
+						return true;//gestureDetector.onTouchEvent(event);
+					}
+					@Override public boolean onInterceptTouchEvent(MotionEvent ev) { return gd.onTouchEvent(ev); }
+				});
+				
+				try {
 					Thread.sleep(700);
 				} catch (InterruptedException e) {
 				}
-                 s.smoothScrollTo(20 * result.findViewById(R.id.keyA0).getWidth(), 0);
-            } 
-        });
+				
+				s.smoothScrollTo(20 * result.findViewById(R.id.keyA0).getWidth(), 0);
+			}
+		});*/
 		
         return result;
     }
@@ -252,5 +255,12 @@ public class TwelthKeyboardFragment extends Fragment {
 			showKeyboardFragment();
 		else
 			hideKeyboardFragment();
+	}
+	
+	public void highlightChord(Chord c) {
+		
+	}
+	public void clearChordHighlights() {
+		
 	}
 }
