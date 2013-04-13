@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import android.util.Log;
 
 public class VoiceLeading extends LinkedList<LinkedList<Integer[]>>{
+	private static final long serialVersionUID = 5672524358L;
 	public static String TAG = "VoiceLeading";
 	private static VoiceLeading DominantSeven = new VoiceLeading();
 	
@@ -202,6 +203,12 @@ public class VoiceLeading extends LinkedList<LinkedList<Integer[]>>{
 		}
 	}
 	
+	/**
+	 * Fill in the enharmonics for a given chord using the given Key's way of naming notes.  Useful if
+	 * you know the Chord fits in the key (i.e., a cadence).
+	 * @param c
+	 * @param k
+	 */
 	public static void fillEnharmonics(Chord c, Key k) {
 		if(c.NOTENAMES == null) {
 			c.NOTENAMES = new String[c.size()];
