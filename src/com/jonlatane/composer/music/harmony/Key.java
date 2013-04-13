@@ -18,8 +18,8 @@ public final class Key extends Scale
 	private static final char[] heptatonicNotes = { 'C', 'D', 'E', 'F', 'G', 'A', 'B' };
 	private static final SparseArray<Character> twelveToneNames = new SparseArray<Character>();
 	private static final HashMap<Character,Integer> twelveToneInverse = new HashMap<Character,Integer>();
-	private static final String[] majorKeys = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
-	private static final String[] minorKeys = { "C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B" };
+	private static final String[] majorKeys = { "C", "D"+flat, "D", "E"+flat, "E", "F", "G"+flat, "G", "A"+flat, "A", "B"+flat, "B" };
+	private static final String[] minorKeys = { "C", "C#", "D", "E"+flat, "E", "F", "F#", "G", "G#", "A", "B"+flat, "B" };
 	public static Key CMajor = new Key(new MajorScale(0));
 	public static Key CChromatic = new Key(new ChromaticScale(0));
 	
@@ -106,13 +106,23 @@ public final class Key extends Scale
 	}
 	
 	/**
-	 * Gets the note name for the given note using its own root name.  Assumes this is a heptatonic key (i.e., major minor or modal)
+	 * Gets the note name for the given note using its own root name.  Assumes this is a 
+	 * heptatonic key (i.e., major, minor or modal) that can be represented with only sharps,
+	 * flats, double sharps and double flats.  Naturals will also be represented if the
+	 * key assumes a note is flat.
+	 * 
+	 * Depending on this key, results will change accidentals dynamically.  For instance:
+	 * 
+	 *  Key | A | Ab
+	 *  C   | A | Ab
+	 *  C-  | An| A
+	 * 
 	 * @param i
 	 * @return
 	 */
 	public String getNoteName(Integer i) {
 		String result = "";
-		i = MODULUS.getPitchClass(i);
+		i = MODULUS.mod(i);
 		/*String scaleContents = "[";
 		for(Integer k : this) {
 			scaleContents += k+",";
@@ -126,7 +136,7 @@ public final class Key extends Scale
 			char letterName = heptatonicNotes[(rootCharIndex + p.first-1) % 7];
 			result += letterName;
 			if( i < twelveToneInverse.get(letterName)) {
-				result += 'b';
+				result += flat;
 			}
 			if( i > twelveToneInverse.get(letterName)) {
 				result += '#';
@@ -138,13 +148,16 @@ public final class Key extends Scale
 				char letterName = heptatonicNotes[(rootCharIndex + p.first-1) % 7];
 				result += letterName;
 				
+				// Check for flats
 				if( i < twelveToneInverse.get(letterName)) {
-					result += 'b';
+					result += flat;
 				}
+				
+				// Check for sharps/double-sharps
 				if( i > twelveToneInverse.get(letterName)) {
 					result += '#';
 				}
-				if( i > (twelveToneInverse.get(letterName)-1)) {
+				if( i > (twelveToneInverse.get(letterName)+1)) {
 					result += '#';
 				}
 			//represent as a flat/double-flat/sharp
@@ -152,15 +165,17 @@ public final class Key extends Scale
 				char letterName = heptatonicNotes[(rootCharIndex + p.second - 1) % 12];
 				result += letterName;
 				
-				if( i < twelveToneInverse.get(letterName)) {
-					result += 'b';
-				}
-				// Double-flats and sharps are possible maybe?
-				if( i < twelveToneInverse.get(letterName)-1) {
-					result += 'b';
-				}
+				// Check for sharps
 				if( i > twelveToneInverse.get(letterName)) {
 					result += '#';
+				}
+				
+				// Check for flats/double flats
+				if( i < twelveToneInverse.get(letterName)) {
+					result += flat;
+				}
+				if( i < twelveToneInverse.get(letterName)-1) {
+					result += flat;
 				}
 			}
 			
@@ -181,7 +196,7 @@ public final class Key extends Scale
 		int  result = twelveToneInverse.get(chars[0]);
 		
 		for( int i = 1; i < chars.length; i = i+1) {
-			if( chars[i] == 'b' )
+			if( chars[i] == 'b' || chars[i] == flat.toCharArray()[0] )
 				result = result - 1;
 			else if( chars[i] == '#' )
 				result = result + 1;
@@ -192,13 +207,36 @@ public final class Key extends Scale
 		
 		return result;
 	}
+
+	/**
+	 * Given a letter A-G, returns a String with the needed (double)flats/sharps to make them equivalent.
+	 * Returns null if impossible.
+	 * 
+	 * @param heptatonicName a letter A-G
+	 * @param targetTwelveTonePitchClass any numer (treated as C4=0 and so on, only its pitch class matters)
+	 * @param doubleAccidentals true to enable double flats and sharps
+	 * @return
+	 */
+	public static String tryToName(char heptatonicName, int targetTwelveTonePitchClass, boolean doubleAccidentals) {
+		int s = twelveToneInverse.get(heptatonicName);
+		switch(TWELVETONE.mod(s - targetTwelveTonePitchClass)) {
+			case 0: return "" + heptatonicName;
+			case 11: return heptatonicName + "#";
+			case 10: if(!doubleAccidentals) return null; else return heptatonicName + "##";
+			case 1: return heptatonicName + flat;
+			case 2: if(!doubleAccidentals) return null; else return heptatonicName + flat + flat;
+			default: return null;
+		}
+	}
+	
+	
 	
 	public static PitchSet noteNameToPitchSet(String noteName) {
 		return new PitchSet(noteNameToInt(noteName));
 	}
 	
 	public static Pair<String,Integer> guessName(Chord c, Integer root, Key k) {
-		Pair<String,Integer> data = guessName(c, root);
+		Pair<String,Integer> data = guessCharacteristic(c, root);
 		String rootName = k.getNoteName(root);
 		return new Pair<String,Integer>(rootName+data.first, data.second);
 	}
@@ -272,7 +310,7 @@ public final class Key extends Scale
 		TreeMap<Integer,List<String>> result = new TreeMap<Integer,List<String>>();
 		
 		for( int n : inputRootCandidates) {
-			Pair<String,Integer> candidate = guessName(c, n);
+			Pair<String,Integer> candidate = guessCharacteristic(c, n);
 			if(c.getRoot() != null && n == c.getRoot()) {
 				candidate = new Pair<String,Integer>(candidate.first, candidate.second + 1000);
 			}
@@ -283,7 +321,16 @@ public final class Key extends Scale
 			}
 			
 			String rootName = k.getNoteName(n);
-			bucket.add("[" + rootName + "] "+ candidate.first + " | ");
+			bucket.add(rootName + candidate.first);
+		}
+		
+		return result;
+	}
+	
+	public int[] getRootLikelihoods(Chord c, Key k) {
+		int[] result = new int[12];
+		for(int i = 0; i < 12; i++) {
+			result[i] = guessCharacteristic(c, i).second;
 		}
 		
 		return result;

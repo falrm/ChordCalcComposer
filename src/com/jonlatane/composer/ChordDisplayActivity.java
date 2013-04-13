@@ -1,17 +1,12 @@
 package com.jonlatane.composer;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Arrays;
 
-import com.jonlatane.composer.input.*;
-import com.jonlatane.composer.music.*;
+import com.jonlatane.composer.io.*;
 import com.jonlatane.composer.music.harmony.*;
-import com.jonlatane.composer.music.coverings.*;
-
 import android.app.*;
-import android.graphics.Canvas;
+import android.content.Context;
+import android.media.AudioManager;
 import android.os.*;
 import android.util.*;
 import android.view.*;
@@ -25,73 +20,171 @@ import android.widget.*;
  */
 public class ChordDisplayActivity extends Activity
 {
-	private KeyboardIOHandler _myKbdIO;
+	private TwelthKeyboardFragment _myKeyboard;
+	//private KeyboardIOHandler _myKbdIO;
+	//private KeyboardScroller _keyboardScroller;
+	//private HorizontalScrollView _chordScroller;
 	private ManagedToneGenerator _tg;
+	
+	public int NUMFINGERSDOWN = 0;
+	
 	private static final String TAG = "ChordDisplayActivity";
-
-	private static final int[] _slots = {R.id.bestChord, R.id.second, R.id.third, R.id.fourth, R.id.fifth, R.id.sixth, R.id.seventh, R.id.eighth, R.id.ninth, R.id.tenth, R.id.eleventh};
 	
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
-		//SurfaceView view = new SurfaceView(this);
-		setContentView(R.layout.chorddisplayactivity);
-		//setContentView(view);
 		
-		_myKbdIO = new KeyboardIOHandler(this);
-		_myKbdIO.harmonicModeOn();
-		KeyboardScroller scroller = (KeyboardScroller)findViewById(R.id.kbScroller);
-		scroller.setKeyboardIOHander(_myKbdIO);
+		//Debugging stuff - to be moved elsewhere
+		Log.d(TAG, Chord.getChordByName("C"+Chord.diminished+"7add11#13").toString());
+		Chord cA1 = Chord.getChordByName("Ab7");
+		Chord cA2 = Chord.getChordByName("G7");
+		Chord cA3 = Chord.getChordByName("C");
+		
+		cA3.NOTENAMES = new String[] {"C", "E", "G"};
+		VoiceLeading.fillEnharmonics(cA2, cA3);
+		VoiceLeading.fillEnharmonics(cA1, cA2);
+		
+		Log.d(TAG, Arrays.toString(cA1.NOTENAMES) + cA1.toString());
+		Log.d(TAG, Arrays.toString(cA2.NOTENAMES) + cA2.toString());
+		Log.d(TAG, Arrays.toString(cA3.NOTENAMES) + cA3.toString());
+		
+		Chord cB1 = Chord.getChordByName("Ab7");
+		Chord cB2 = Chord.getChordByName("C");
+		Chord cB3 = Chord.getChordByName("G7");
+		Chord cB4 = Chord.getChordByName("C");
+		
+		cB4.NOTENAMES = new String[] {"C", "E", "G"};
+		VoiceLeading.fillEnharmonics(cB3, cB4);
+		VoiceLeading.fillEnharmonics(cB2, cB3);
+		VoiceLeading.fillEnharmonics(cB1, cB2);
+		
+		Log.d(TAG, Arrays.toString(cB1.NOTENAMES) + cB1.toString());
+		Log.d(TAG, Arrays.toString(cB2.NOTENAMES) + cB2.toString());
+		Log.d(TAG, Arrays.toString(cB3.NOTENAMES) + cB3.toString());
+		Log.d(TAG, Arrays.toString(cB4.NOTENAMES) + cB4.toString());
+		
+		// Load layout
+		setContentView(R.layout.chorddisplayactivity);
+		
+		// Set up the keyboard
+		_myKeyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.chordDisplayActivityKb);
+		
+		// Set up lead sheet display
+		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
+        //listview.setAdapter(_adapter);
 	}
 	
-	private class UpdateChordDisplay extends AsyncTask<Chord, Integer, List<String>> {
-		TreeMap<Integer,List<String>> data;
-		
-		@Override
-		protected List<String> doInBackground(Chord... c) {
-			data = Key.getRootLikelihoodsAndNamesInC(Key.CChromatic, c[0]);
-			List<String> result = new LinkedList<String>();
-			for(Map.Entry<Integer,List<String>> e : data.descendingMap().entrySet() ) {
-				for( String s : e.getValue() ) {
-					result.add(s);
-				}
-			}
-			return result;
-		}
-
-		@Override
-		protected void onPostExecute(List<String> values) {
-			int idx = 0;
-			for( String s : values ) {
-				if( idx >= _slots.length) break;
-				
-				TextView v = (TextView)findViewById(_slots[idx++]);
-				v.setText(s);
-			}
-		}
-
-
-	 }
-	public void updateChordDisplay() {
-		new UpdateChordDisplay().execute(_myKbdIO.getChord());
-		/*Thread t = new Thread() {
-			@Override
-			public void run() {
-				Chord c = new Chord(_myKbdIO.getPressedKeys());
-				TreeMap<Integer,List<String>> data = Key.getRootLikelihoodsAndNamesInC(Key.CChromatic, c);
-				int idx = 0;
-				for(Map.Entry<Integer,List<String>> e : data.descendingMap().entrySet() ) {
-					for( String s : e.getValue() ) {
-						if( idx > 11 ) break;
-						TextView v = (TextView)findViewById(_slots[idx++]);
-						
-						v.setText(s);
-					}
-				}
-			}
-		};
-		t.start();*/
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		AudioManager audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+	    switch (keyCode) {
+	    case KeyEvent.KEYCODE_VOLUME_UP:
+	        audio.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+	                AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
+	        return true;
+	    case KeyEvent.KEYCODE_VOLUME_DOWN:
+	        audio.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+	                AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
+	        return true;
+	    default:
+	    	return super.onKeyDown(keyCode, event);
+	    }
 	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		_myKeyboard.onSaveInstanceState(outState);
+	}
+	
+	@Override
+	public void onRestoreInstanceState(Bundle savedInstanceState) {
+		super.onRestoreInstanceState(savedInstanceState);
+		//_myKeyboard.onRestoreInstanceState(savedInstanceState);
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.chorddisplaymenu, menu);
+	    return true;
+	}
+	
+	
+	
+	@Override
+	  public boolean onOptionsItemSelected(MenuItem item) {
+	    switch (item.getItemId()) {
+	    case R.id.toggleRhythmAB:
+	    	_myKeyboard.toggleRhythmicMode();
+	    	break;
+	    case R.id.toggleChordsAB:
+	    	_myKeyboard.toggleHarmonicMode();
+	    	break;
+	    case R.id.toggleKeyboardAB:
+	    	_myKeyboard.toggleKeyboardFragment();
+	    	break;
+	    default:
+	      break;
+	    }
+
+	    return true;
+	  } 
+	
+	private static String[] _dataObjects = new String[]{ 
+		"CM7", "D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7",
+		"D-7", "G7", "CM7"};
+	
+	private BaseAdapter _adapter = new BaseAdapter() {  
+		  
+        @Override  
+        public int getCount() {  
+            return _dataObjects.length;  
+        }  
+  
+        @Override  
+        public Object getItem(int position) {  
+            return null;  
+        }  
+  
+        @Override  
+        public long getItemId(int position) {  
+            return 0;  
+        }  
+  
+        @Override  
+        public View getView(int position, View convertView, ViewGroup parent) {  
+            View retval = LayoutInflater.from(parent.getContext()).inflate(R.layout.staff_section_view, null);  
+            TextView title = (TextView) retval.findViewById(R.id.leadSheetItemChord);  
+            title.setText(_dataObjects[position]);  
+              
+            return retval;  
+        }  
+          
+    };  
+
+	
+	@Override
+	public void onPause()
+	{
+		super.onPause();
+	    ManagedToneGenerator.Cache.releaseAll();
+	}
+
+	@Override
+	public void onResume()
+	{
+	    super.onResume();
+	}
+	
+	
 }

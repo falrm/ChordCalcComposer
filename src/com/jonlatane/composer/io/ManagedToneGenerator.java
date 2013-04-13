@@ -1,4 +1,4 @@
-package com.jonlatane.composer.input;
+package com.jonlatane.composer.io;
 
 import java.util.*;
 
@@ -50,7 +50,7 @@ public class ManagedToneGenerator {
 	public static class Cache {
 		private static SparseArray<SparseArray<AudioTrack>> _data = new SparseArray<SparseArray<AudioTrack>>();
 		private static LinkedList<Pair<Integer,Integer>> _recentlyUsedNotes = new LinkedList<Pair<Integer,Integer>>();
-		
+				
 		/**
 		 * Get a looping AudioTrack exactly one period long for the given note
 		 * @param n the fundamental frequency
@@ -58,10 +58,14 @@ public class ManagedToneGenerator {
 		 * @return
 		 */
 		public static AudioTrack getAudioTrackForNote(int n, Double[] overtones) {
-			// Update our recently used notes
-			int tonesHashCode = Arrays.deepHashCode(overtones);
-			Pair<Integer,Integer> cacheLocation = new Pair<Integer,Integer>(n, tonesHashCode);
+			// Find the hashcode of the overtone series
+			int tonesHashCode = Arrays.hashCode(overtones);
 			
+			// cacheLocation.first tells us the instrument/overtone series (via the hash of the Double[])
+			// cacheLocation.second tells us the specific note
+			Pair<Integer,Integer> cacheLocation = new Pair<Integer,Integer>(tonesHashCode, n);
+			
+			// Update list of recently used notes with this first
 			_recentlyUsedNotes.remove(cacheLocation);
 			_recentlyUsedNotes.addFirst(cacheLocation);
 			
@@ -77,7 +81,7 @@ public class ManagedToneGenerator {
 			
 			// If not, generate it
 			if( result == null ) {
-				int pitchClass = Chord.TWELVETONE.getPitchClass(n);
+				int pitchClass = Chord.TWELVETONE.mod(n);
 				double octavesFromMiddle = ((double) (n - pitchClass)) / ((double) 12);
 				double freq = freqs[pitchClass] * Math.pow(2, octavesFromMiddle);
 				
@@ -90,21 +94,19 @@ public class ManagedToneGenerator {
 				double[] sample = new double[numFrames];
 				byte[] generatedSnd = new byte[2 * numFrames];
 				
+				// Normalize the overtone series given so we don't overload the speaker
 				double overtoneRatioSum = 0;
+				double[] overtonesNormalized = new double[overtones.length];
 				for(double d : overtones)
 					overtoneRatioSum += d;
-						
-				double[] overtonesNormalized = new double[overtones.length];
 				for(int i = 0; i < overtones.length; i++)
 					overtonesNormalized[i] = overtones[i]/overtoneRatioSum;
 				
-				
-				
+				// Generate our tone sample based on the normalized overtone series
 				for (int k = 0; k < numFrames; ++k) {
 					sample[k] = 0;
 					for(int i = 0; i < overtonesNormalized.length; i++)
 						sample[k] += overtonesNormalized[i] *  Math.sin(i * 2 * Math.PI * (k) / (sampleRate / freq));
-					
 				}
 				
 				// convert to 16 bit pcm sound array
@@ -152,7 +154,7 @@ public class ManagedToneGenerator {
 		 * 
 		 * @return
 		 */
-		public static boolean release() {
+		public static boolean releaseAll() {
 			boolean result = releaseOne();
 			boolean shouldLoopAgain = result;
 			while(shouldLoopAgain == true) {
@@ -173,16 +175,68 @@ public class ManagedToneGenerator {
 			}
 			return result;
 		}
+		
+		public static void normalizeVolumes() {
+			float max = AudioTrack.getMaxVolume();
+			float min = AudioTrack.getMinVolume();
+			float span = max - min;
+			
+			//Set<AudioTrack> currentlyPlaying = new HashSet<AudioTrack>();
+			SparseArray<List<AudioTrack>> currentlyPlaying = new SparseArray<List<AudioTrack>>();
+			//for(Map.Entry<Integer,HashMap<Integer, AudioTrack>> e : _data.entrySet()) {
+			for(int i = 0; i < _data.size(); i++) {
+				SparseArray<AudioTrack> noteTracks = _data.valueAt(i);
+				//for(AudioTrack t : e.getValue().values()) {
+				for(int j = 0; j < noteTracks.size(); j++) {
+					AudioTrack t = noteTracks.valueAt(j); 
+					if(t.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
+						int n = _data.keyAt(i);
+						List<AudioTrack> l = currentlyPlaying.get(n);
+						if(l == null) {
+							l = new LinkedList<AudioTrack>();
+							currentlyPlaying.put(n,l);
+						}
+						l.add(t);
+					}
+				}
+			}
+			
+			for(int i = 0; i < currentlyPlaying.size(); i++) {
+				int n = currentlyPlaying.keyAt(i);
+				List<AudioTrack> l = currentlyPlaying.valueAt(i);
+				for(AudioTrack t : l) {
+					// Lower notes are amped up so turn them down a bit with this factor
+					float arctanCurveFactor = (float) (.05 * Math.atan((float)(n+5)/88.0) + .9);
+					// This number between 0 and 1 by which we will increase volume
+					float totalNumNotesRedFactor = (float)( 1 / (float)currentlyPlaying.size());
+					float adjusted = min 
+							+ (float)( span * arctanCurveFactor * totalNumNotesRedFactor );
+					Log.i(TAG,max + " " + min + "Normalizing volume to " + adjusted);
+					t.setStereoVolume(adjusted, adjusted);
+				}
+			}
+		}
 	}
 	
-	private Double[] _overtones;
-	public ManagedToneGenerator(Double... overtones) {
+	private static Double[] _overtones;
+	private ManagedToneGenerator() {}
+	
+	public static void setDefaultOvertones(Double...overtones) {
 		_overtones = overtones;
 	}
 
-	public AudioTrack getAudioTrackForNote(int n) {
+	public static AudioTrack getAudioTrackForNote(int n) {
 		return Cache.getAudioTrackForNote(n, _overtones);
 	}
 	
+	public static AudioTrack getAudioTrackForNote(int n, Double... overtones) {
+		return Cache.getAudioTrackForNote(n, overtones);
+	}
 	
+	public static void prioritizeNote(int n, Double... overtones) {
+		
+	}
+	public static void prioritizeNote(int n) {
+		prioritizeNote(n,_overtones);
+	}
 }
