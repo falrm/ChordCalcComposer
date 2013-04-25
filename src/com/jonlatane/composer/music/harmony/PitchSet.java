@@ -2,8 +2,14 @@ package com.jonlatane.composer.music.harmony;
 
 import java.util.*;
 
+import com.jonlatane.composer.music.Rational;
+
 /**
 * A PitchSet represents a set of pitches.  In this model, middle C (C4) is 0.
+* 
+* Of important note are the fields NOTENAMES and DURATION.  These provide a caching layer - while a PitchSet
+* does not manage this information itself (as context is needed to fill in these fields) the rendering layer
+* may store it in these fields and invalidate them by setting them to null.
 */
 public class PitchSet extends TreeSet<Integer> {
 	private static final long serialVersionUID = -3127526528166358783L;
@@ -16,6 +22,10 @@ public class PitchSet extends TreeSet<Integer> {
 	 */
 	public String[] NOTENAMES = null;
 	
+	/**
+	 * DURATION may be thought of as the notehead/stem/dot combination the rendering layer is set
+	 */
+	public Rational DURATION = null;
 	public PitchSet() {
 		super();
 	}

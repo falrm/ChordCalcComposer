@@ -19,13 +19,13 @@ import com.jonlatane.composer.music.*;
  *
  */
 public class StaffView extends HorizontalListView {
-	private SuperScore _score;
-	private SuperScore.Staff _staff;
+	private Score _score;
+	private Score.Staff _staff;
 	public StaffView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 	}
 	
-	public boolean setStaff(SuperScore.Staff s) {
+	public boolean setStaff(Score.Staff s) {
 		boolean result = (s == _staff);
 		_staff = s;
 		return result;

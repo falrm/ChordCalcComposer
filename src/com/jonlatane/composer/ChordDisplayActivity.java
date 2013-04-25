@@ -10,7 +10,6 @@ import android.media.AudioManager;
 import android.os.*;
 import android.util.*;
 import android.view.*;
-import android.widget.*;
 
 /**
  * The ScoreEditingActivity allows interaction with a Score.  You can scroll horizontally at all times.  To make a
@@ -24,7 +23,6 @@ public class ChordDisplayActivity extends Activity
 	//private KeyboardIOHandler _myKbdIO;
 	//private KeyboardScroller _keyboardScroller;
 	//private HorizontalScrollView _chordScroller;
-	private ManagedToneGenerator _tg;
 	
 	public int NUMFINGERSDOWN = 0;
 	
@@ -131,46 +129,6 @@ public class ChordDisplayActivity extends Activity
 
 	    return true;
 	  } 
-	
-	private static String[] _dataObjects = new String[]{ 
-		"CM7", "D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7"};
-	
-	private BaseAdapter _adapter = new BaseAdapter() {  
-		  
-        @Override  
-        public int getCount() {  
-            return _dataObjects.length;  
-        }  
-  
-        @Override  
-        public Object getItem(int position) {  
-            return null;  
-        }  
-  
-        @Override  
-        public long getItemId(int position) {  
-            return 0;  
-        }  
-  
-        @Override  
-        public View getView(int position, View convertView, ViewGroup parent) {  
-            View retval = LayoutInflater.from(parent.getContext()).inflate(R.layout.staff_section_view, null);  
-            TextView title = (TextView) retval.findViewById(R.id.leadSheetItemChord);  
-            title.setText(_dataObjects[position]);  
-              
-            return retval;  
-        }  
-          
-    };  
 
 	
 	@Override

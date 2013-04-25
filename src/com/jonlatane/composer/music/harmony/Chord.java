@@ -241,6 +241,19 @@ public class Chord extends PitchSet {
 	}
 	
 	/**
+	 * "Completing" the chord means adding anything that is assumed by the chord's characteristic.  Essentially,
+	 * this means adding P5s to voicings of chords that are missing them although other results may be possible.
+	 * 
+	 * A chord must have a defined root to have a completion.
+	 * 
+	 * @return
+	 */
+	public Chord completion() {
+		Chord result = getChordByName(Key.CMajor.getNoteName(getRoot()) + getCharacteristic());
+		return result;
+	}
+	
+	/**
 	 * Return a String naming the tones requested.  Voodoo.
 	 * @param c
 	 * @param root
@@ -337,7 +350,9 @@ public class Chord extends PitchSet {
 	private String _myChar = null;
 	private Integer _myCharHC = null;
 	/**
-	 * A wrapper atop guessCharacteristic().  Returns the parser's best guess as to what kind of chord it is
+	 * Return a string like "" for a major chord, "-7" for a minor 7, "13" for a 13 chord, "-M7" for a minor-major
+	 * seven chord, and so on.  For more information, see guessCharacteristic(), as this acts as a sort of
+	 * wrapping layer atop it. This method returns the parser's best guess as to what kind of chord it is
 	 * given its set root.  Examples include "M7", "-13b5", "+11b9"  If no root is set, returns null.
 	 * 
 	 * @return a String representation of this Chord's characteristic
@@ -902,16 +917,72 @@ public class Chord extends PitchSet {
 
 		// x3-5 - -5 chord, no M2, no M/m3, no P4
 		} else if(c.contains(root+6)) {
-			if(c.contains(root))
+			Log.i(TAG, "-5 is in the chord!");
+			certainty += 7;
+
+			// x3-5M7 (diminished major 7 type chord)
+			if (c.contains(root + 11)) {
+				certainty += 7;
+				name = name + diminished + "(no3)";
+				// m3-5M7M9
+				if (c.contains(root + 2)) {
+					// m3-5M7M9M13 (11 is optional to call it a 13 chord, as
+					// the 11 is an avoid note)
+					if (c.contains(root + 9)) {
+						name += "M13";
+						name += nameTones(c, root, 9, 11);
+					// m3-5M7M9M11
+					} else if (c.contains(root + 5)) {
+						name += "M11";
+						name += nameTones(c, root, 9);
+					// m3-5M7M9, no M11, no M13
+					} else {
+						name += "M9";
+						name += nameTones(c, root, 11, 13);
+					}
+					// m3-5M7, no M9, no M11, no M13
+				} else {
+					name += "M7";
+					name += nameTones(c, root, 9, 11, 13);
+				}
+
+			// x3-5m7 (NOT minor 7 flat 5/half-dim; we "hear" the M3 to make a Dom7b5 chord)
+			} else if (c.contains(root + 10)) {
 				certainty += 8;
-			name += nameTones(c,root,-7);
-			name += "(no3)";
-			name += nameTones(c, root, -9, 13);
-		// x3 with no M/m3, M2, P4, or P/+/-5.  Just keep it major and
-		// name the remaining possible tones.
+				// m3-5m7M9
+				if (c.contains(root + 2)) {
+					// m3-5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
+					if (c.contains(root + 9)) {
+						name += "13-5";
+						name += nameTones(c, root, 9, 11);
+						// M3-5m7M9M11
+					} else if (c.contains(root + 5)) {
+						name += "11-5";
+						name += nameTones(c, root, 9);
+						// M3-5m7M9, no M11, no M13
+					} else {
+						name += "9-5";
+						name += nameTones(c, root, 11, 13);
+					}
+					// M3-5m7, no M9, no M11, no M13
+				} else {
+					name += "7-5";
+					name += nameTones(c, root, 9, 11, 13);
+				}
+				name += "(no3)";
+			// x3-5-7 (heard as fully diminished with no M7/m7 at all)
+			} else if (c.contains(root + 9)) {
+				name += diminished + "7";
+				name += nameTones(c, root, -6, 9, 11);
+			//m3-5 with no (non-flat)6 or any 7 (dim chord)
+			} else {
+				name += diminished + "(no3)";
+				name += nameTones(c,root, -6, 9, 11);
+			}
+		// x3 with no M/m3, M2, P4, or P/+/-5.  Harmonic series says we fill in the major chord
+		// within a few overtones so just name the 7, possible b9, and possible M6/b7/M7 remaining
 		} else {
-			//name += "(no345)";
-			name += nameTones(c, root, 7, -9, -11, 13);
+			name += nameTones(c, root, 7, -9, 13);
 		}
 		
 		//Adjust certainty for name complexity.
@@ -1214,5 +1285,9 @@ public class Chord extends PitchSet {
 		}
 		result += "]";
 		return result;
+	}
+	
+	public String getRootEnharmonic() {
+		return NOTENAMES[headSet(getRoot()).size()];
 	}
 }

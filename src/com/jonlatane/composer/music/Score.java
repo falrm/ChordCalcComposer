@@ -19,15 +19,32 @@ import com.jonlatane.composer.music.coverings.TimeSignature;
 import com.jonlatane.composer.music.harmony.*;
 
 /**
- * This is a fully self-managing Score object.  A Score consists of Staves, and a Staff
- * consists of Voices.
+ * A Score is an object that is most usefully accessed/rendered via ScoreDeltas through its iterator.  It
+ * represents a piece of music as a layered map from Rationals to PitchSets, Articulations, Dynamics,
+ * Chords, Scales, Keys, and Meters.  Some of this information is contained in Staves and some in Voices,
+ * however the most useful means of accessing it is through the @ScoreDelta class.
+ *   
  * @author Jon
  *
  */
-public class SuperScore {
+public class Score {
 	private Meter _meter;
 	private Staff[] _staves = new Staff[0];
 	
+	/**
+	 * A Staff is in every way like a Score in terms of its mapping behavior, but it does not store a Meter.
+	 * That is to say, everything but the time signatures in a piece of music are defined at the Staff level.
+	 * 
+	 * Moreover, a staff is the most "useful" chunk of information in a score.  It contains harmony.  A Voice
+	 * only contains a PitchSet (its NOTES), Articulation and Dynamics, while information such as the given
+	 * Chord and Scale is held to be constant within a single Staff.
+	 * 
+	 * Merging Voices into Staves requires resolution of conflicts that may arise as a result of differences
+	 * in Chords, Keys, or Clefs.
+	 * 
+	 * @author Jon Latane
+	 *
+	 */
 	public class Staff {
 		private RhythmMap<Chord> _chords;
 		private RhythmMap<Key> _keys;
@@ -37,10 +54,129 @@ public class SuperScore {
 		public String TITLE = "";
 		private Voice[] _voices = new Voice[0];
 		
+		/**
+		 * As stated in @Staff, a Voice only contains a PitchSet (its NOTES), Articulation and Dynamics, while 
+		 * information such as the given Chord, Key and Scale is held to be constant within a single Staff.
+		 * 
+		 * While a Voice does have VoiceDeltas and voiceDeltaAt(r) method, it is not iterable.  Iterating through
+		 * a Voice alone is not particularly useful to us and is identical to iterating through a single-voiced
+		 * @Staff.
+		 * 
+		 * @author Jon Latane
+		 *
+		 */
 		public class Voice {
 			private RhythmMap<PitchSet> _realization;
+			public class VoiceDelta {
+				public Rational LOCATION = null;
+				public Rational BEATNUMBER = null;
+				/**
+				 * A simple class for storing pointers to things in a Voice.
+				 * @author Jon Latane
+				 *
+				 */
+				public class Established {
+					public PitchSet NOTES = null;
+				}
+				public Established ESTABLISHED = new Established();
+				
+				/**
+				 * A simple class for storing pointers to things in a Voice.
+				 * @author Jon Latane
+				 *
+				 */
+				public class Changed {
+					public PitchSet NOTES = null;
+				}
+				public Changed CHANGED = new Changed();
+			}
+			
+			public VoiceDelta voiceDeltaAt(Rational r) {
+				VoiceDelta result = new VoiceDelta();
+				result.LOCATION = r;
+				result.BEATNUMBER = _meter.getBeatOf(r);
+				
+				result.ESTABLISHED.NOTES = _realization.getObjectAt(r);
+				
+				result.CHANGED.NOTES = _realization._data.get(r);
+				
+				return result;
+			}
 		}
 		
+		/**
+		 * A StaffDelta is a collection of information about what has changed and what has remained constant
+		 * at a given point in time.  It is most usefully accessed through StaffDelta iterators which allow
+		 * us to iterate through scores.
+		 * 
+		 * @author Jon
+		 */
+		public class StaffDelta {
+			public Rational LOCATION = null;
+			public Rational BEATNUMBER = null;
+			
+			/**
+			 * A simple class for storing pointers to things in a Staff.
+			 * @author Jon Latane
+			 *
+			 */
+			public class Established {
+				public TimeSignature TS = null;
+				public Key KEY = null;
+				public Chord CHORD = null;
+				public Scale SCALE = null;
+			}
+			
+			public Established ESTABLISHED = new Established();
+			
+			/**
+			 * A simple class for storing pointers to things in a Staff.
+			 * @author Jon Latane
+			 *
+			 */
+			public class Changed {
+				public TimeSignature TS = null;
+				public Key KEY = null;
+				public Chord CHORD = null;
+				public Scale SCALE = null;
+			}
+			public Changed CHANGED = new Changed();
+			
+			public Voice.VoiceDelta[] VOICES;
+		}
+		
+		/**
+		 * The most useful means of accessing a StaffDelta.
+		 * 
+		 * @param r
+		 * @return
+		 */
+		public StaffDelta staffDeltaAt(Rational r) {
+			StaffDelta result = new StaffDelta();
+			result.LOCATION = r;
+			result.BEATNUMBER = _meter.getBeatOf(r);
+			
+			result.ESTABLISHED.TS = _meter.getObjectAt(r);
+			result.ESTABLISHED.KEY = _keys.getObjectAt(r);
+			result.ESTABLISHED.CHORD = _chords.getObjectAt(r);
+			result.ESTABLISHED.SCALE = _scales.getObjectAt(r);
+			
+			result.CHANGED.TS = _meter._data.get(r);
+			result.CHANGED.KEY = _keys._data.get(r);
+			result.CHANGED.CHORD = _chords._data.get(r);
+			result.CHANGED.SCALE = _scales._data.get(r);
+			
+			result.VOICES = new Voice.VoiceDelta[_voices.length];
+			for(int i = 0; i < _voices.length; i++) {
+				Voice v = _voices[i];
+				Voice.VoiceDelta vd = v.new VoiceDelta();
+				result.VOICES[i] = v.voiceDeltaAt(r);
+			}
+			
+			//TODO finish this guys up
+			return result;
+		}
+
 		public Voice[] getVoices() {
 			return _voices;
 		}
@@ -62,8 +198,8 @@ public class SuperScore {
 				StaffDelta sd = itr.next();
 				if(sd.LOCATION.compareTo(end) > 0)
 					break;
-				for(PitchSet ps : sd.ESTABLISHEDNOTES) {
-					for(int n : ps) {
+				for(Voice.VoiceDelta vd : sd.VOICES) {
+					for(int n : vd.ESTABLISHED.NOTES) {
 						int nClass = Chord.TWELVETONE.mod(n);
 						int occurences = noteOccurences.get(nClass);
 						noteOccurences.put(nClass, ++occurences);
@@ -86,7 +222,7 @@ public class SuperScore {
 			}
 			
 			// Analyze by all notes, then remove those less frequently used.  Choose the modal name
-			// for the best root found
+			// for the best root found.  This is the "heart" of the method - everything before is setup.
 			while(noteOccurences.size() > 0) {
 				Chord c = new Chord();
 				
@@ -121,6 +257,7 @@ public class SuperScore {
 			
 			return result;
 		}
+
 		
 		private Iterator<StaffDelta> staffDeltaIterator(final Iterator<Rational> rhythm) {
 			return new Iterator<StaffDelta>() {
@@ -131,15 +268,8 @@ public class SuperScore {
 
 				@Override
 				public StaffDelta next() {
-					StaffDelta result = new StaffDelta();
 					Rational r = rhythm.next();
-					result.LOCATION = r;
-					result.BEATNUMBER = _meter.getBeatOf(r);
-					
-					//result.CHANGED.KEY = _keys._data.get(r);
-					//result.CHANGED.TS = _meter._data.get(r);
-					//TODO finish this guys up
-					return result;
+					return staffDeltaAt(r);
 				}
 
 				@Override
@@ -148,14 +278,40 @@ public class SuperScore {
 			};
 		}
 		
+		/**
+		 * Return a StaffDelta iterator that goes forewards from the supplied point
+		 * 
+		 * @param start the point to iterate  from
+		 * @return
+		 */
 		public Iterator<StaffDelta> staffIterator(final Rational start) {
 			return staffDeltaIterator(getOverallRhythm().tailSet(start).iterator());
 		}
 		
+		/**
+		 * Return a StaffDelta iterator that goes backwards from the supplied point
+		 * 
+		 * @param startEndSayWhat the point to iterate backwards from
+		 * @return
+		 */
 		public Iterator<StaffDelta> reverseStaffIterator(final Rational startEndSayWhat) {
 			return staffDeltaIterator(getOverallRhythm().headSet(startEndSayWhat,true).descendingIterator());
 		}
 
+		/**
+		 * Fill end the NOTENAMES field for every Chord, PitchSet and Scale in the given interval using the Keys
+		 * present, or C Major if no key is provided.
+		 * 
+		 * @param start
+		 * @param end
+		 */
+		public void realizeEnharmonics(Rational start, Rational end) {
+			Iterator<StaffDelta> backwards = reverseStaffIterator(end);
+			//
+			while(backwards.hasNext()) {
+				StaffDelta d = backwards.next();
+			}
+		}
 		
 		public void fillNoteNames(Rational start, Rational end) {
 			
@@ -170,6 +326,45 @@ public class SuperScore {
 			_voices = newVoices;
 			return v;
 		}
+	}
+
+	
+	public class ScoreDelta {
+		public Rational LOCATION = null;
+		public Rational BEATNUMBER = null;
+		
+		/**
+		 * A simple class for storing pointers to things in a Score.
+		 * @author Jon Latane
+		 *
+		 */
+		public class Established {
+			public TimeSignature TS = null;
+		}
+		public Established ESTABLISHED = new Established();
+		
+		/**
+		 * A simple class for storing pointers to things in a Score.
+		 * @author Jon Latane
+		 *
+		 */
+		public class Changed {
+			public TimeSignature TS = null;
+		}
+		public Changed CHANGED = new Changed();
+		
+		public Staff.StaffDelta[] STAVES;
+	}
+	
+	public ScoreDelta scoreDeltaAt(Rational r) {
+		ScoreDelta result = new ScoreDelta();
+		result.LOCATION = r;
+		result.BEATNUMBER = _meter.getBeatOf(r);
+		
+		result.ESTABLISHED.TS = _meter.getObjectAt(r);
+		result.CHANGED.TS = _meter._data.get(r);
+		
+		return result;
 	}
 	
 	/**
@@ -312,7 +507,12 @@ public class SuperScore {
 		return _staves;
 	}
 	
-	public Staff newStaff() {
+	/**
+	 * Create a new Staff in this Score with its own harmonic information
+	 * 
+	 * @return the created Staff
+	 */
+	public Staff newIndependentStaff() {
 		Staff[] newStaves = new Staff[_staves.length+1];
 		for(int i = 0; i < _staves.length; i++)
 			newStaves[i] = _staves[i];
@@ -320,6 +520,22 @@ public class SuperScore {
 		newStaves[_staves.length] = s;
 		_staves = newStaves;
 		return s;
+	}
+	
+	/**
+	 * If this Score has no Staves, create a blank one.  Otherwise, create a new staff with identical chords, keys
+	 * and scales to the first one in the Score.
+	 * 
+	 * @return the created Staff
+	 */
+	public Staff newStaff() {
+		Staff result = newIndependentStaff();
+		if(_staves.length > 1) {
+			result._chords = _staves[0]._chords;
+			result._keys = _staves[0]._keys;
+			result._scales = _staves[0]._scales;
+		}
+		return result;
 	}
 	
 	public Staff getStaff(int n) {
@@ -344,73 +560,9 @@ public class SuperScore {
 		_staves[a] = _staves[b];
 		_staves[b] = staffA;
 	}
-
-	/**
-	 * The StaffDelta is the most useful means of reading through a Score.  A StaffDelta is
-	 * essentially designed to encapsulate everything we need to know to draw a specific rhythmic
-	 * moment (i.e., a Rational number) to the screen.  It uses null values not to signify lack of
-	 * something, but lack of a *change* in something.  The Boolean StaffDelta.NoteHead.TIED is to be used
-	 * to tie notes, so a note represented as a length of 5/4 (i.e., quarter tied to a sixteenth note) may
-	 * be split into the two separate rhythmic locations that must be drawn to do this.  How this split will
-	 * happen is up to the Iterator<StaffDelta[]> which is available below.
-	 * 
-	 * @author Jon
-	 */
-	public static class StaffDelta {
-		public Rational LOCATION = null;
-		public Rational BEATNUMBER = null;
-		
-		public static class Established {
-			public TimeSignature TS = null;
-			public Key KEY = null;
-			public Chord CHORD = null;
-			public Scale SCALE = null;
-		}
-		
-		public Established ESTABLISHED = new Established();
-		
-		public static class Changed {
-			public TimeSignature TS = null;
-			public Key KEY = null;
-			public Chord CHORD = null;
-			public Scale SCALE = null;
-		}
-		public Changed CHANGED = new Changed();
-		
-		public static class NoteHead {
-			public PitchSet NOTES = null;
-		}
-		
-		public PitchSet[] ESTABLISHEDNOTES;
-		public NoteHead[] NOTEHEADS;
-	}
 	
-	public Iterator<StaffDelta[]> scoreIterator() {
-		return new Iterator<StaffDelta[]>() {
-
-			@Override
-			public boolean hasNext() {
-				// TODO Auto-generated method stub
-				return false;
-			}
-
-			@Override
-			public StaffDelta[] next() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public void remove() {
-				// TODO Auto-generated method stub
-				
-			}
-			
-		};
-	}
-	
-	public static SuperScore twinkleTwinkle() {
-		SuperScore result = new SuperScore();
+	public static Score twinkleTwinkle() {
+		Score result = new Score();
 		
 		Staff s1 = result.newStaff();
 		Staff s2 = result.newStaff();

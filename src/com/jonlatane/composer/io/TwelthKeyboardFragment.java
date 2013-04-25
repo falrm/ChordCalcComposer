@@ -20,6 +20,13 @@ import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+/**
+ * This is the widget for the keyboard input system.  This is a Fragment that can be added to the bottom of any layout to provide
+ * a hideable keyboard overlay.  Some of its features include melodic (single-note) input, chord-guessing harmonic input (associating,
+ * essentially, combinations of keys with -/M7 "characteristics" to guess "names" of chords.
+ * @author Jon Latane
+ *
+ */
 public class TwelthKeyboardFragment extends Fragment {
 	private static final int[] _slots = {R.id.bestChord, R.id.second, R.id.third, R.id.fourth, R.id.fifth, R.id.sixth, R.id.seventh, R.id.eighth, R.id.ninth, R.id.tenth, R.id.eleventh};
 	private static final String TAG = "TwelthKeyboardFragment";
@@ -44,51 +51,6 @@ public class TwelthKeyboardFragment extends Fragment {
 		//Set up the keyboardScroller itself
 		_keyboardScroller = (KeyboardScroller)result.findViewById(R.id.kbScroller);
 		_keyboardScroller.setKeyboardIOHander(_myKbdIO);
-		
-		/*final GestureDetector.OnGestureListener gl = new GestureDetector.SimpleOnGestureListener() {
-			@Override
-			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-				if( e1 == null || e2 == null) {
-					return true;
-				}
-				Log.i(TAG, "Fling found");
-		        int dx = (int) (e2.getX() - e1.getX());
-		        int dy = (int) (e2.getY() - e1.getY());
-		        
-		        // don't accept the fling if it's too short
-		        // as it may conflict with a button push
-		        if (Math.abs(dx) > 10 && Math.abs(velocityX) > Math.abs(velocityY)) {
-		        	//_keyboardScroller.enableScrolling();
-		            _keyboardScroller.fling((int) velocityX);
-		            //_keyboardScroller.disableScrolling();
-		            return true;
-		        } else {
-		            return true;
-		        }
-		    }
-		};
-				
-		final KeyboardScroller s = _keyboardScroller;
-		s.post(new Runnable() {
-			public void run() {
-				//s.disableScrolling();
-				s.setOnTouchListener(new View.OnTouchListener() {
-					private GestureDetector gd = new GestureDetector(getView().getContext(), gl);
-					public boolean onTouch(View v, MotionEvent event) {
-						gd.onTouchEvent(event);
-						return true;//gestureDetector.onTouchEvent(event);
-					}
-					@Override public boolean onInterceptTouchEvent(MotionEvent ev) { return gd.onTouchEvent(ev); }
-				});
-				
-				try {
-					Thread.sleep(700);
-				} catch (InterruptedException e) {
-				}
-				
-				s.smoothScrollTo(20 * result.findViewById(R.id.keyA0).getWidth(), 0);
-			}
-		});*/
 		
         return result;
     }
@@ -150,23 +112,6 @@ public class TwelthKeyboardFragment extends Fragment {
 	        int num = (Integer)super.evaluate(fraction, startValue, endValue);
 	        ViewGroup.LayoutParams params = v.getLayoutParams();
 	        params.width = num;
-	        v.setLayoutParams(params);
-	        return num;
-	    }
-	}
-	private class HeightEvaluator extends IntEvaluator {
-
-	    private View v;
-	    public HeightEvaluator(View v) {
-	        this.v = v;
-	    }
-
-	    @SuppressLint("NewApi")
-		@Override
-	    public Integer evaluate(float fraction, Integer startValue, Integer endValue) {
-	        int num = (Integer)super.evaluate(fraction, startValue, endValue);
-	        ViewGroup.LayoutParams params = v.getLayoutParams();
-	        params.height = num;
 	        v.setLayoutParams(params);
 	        return num;
 	    }
