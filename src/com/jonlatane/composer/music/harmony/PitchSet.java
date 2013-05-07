@@ -18,14 +18,40 @@ public class PitchSet extends TreeSet<Integer> {
 	 * NOTENAMES is a field to be filled in by the rendering layer.  It determines whether a C chord
 	 * is rendered as CEG or B#FbG, essentially.  NOTENAMES should be filled to match the notes of
 	 * the PitchSet/Chord/Scale in ascending order.  This means, in Chords, the note names are essentially
-	 * listed from C on up for each note in the chord.
+	 * listed from C on up for each note in the Chord, regardless of its root.
 	 */
 	public String[] NOTENAMES = null;
 	
 	/**
-	 * DURATION may be thought of as the notehead/stem/dot combination the rendering layer is set
+	 * This is used for deciding whether to render something of duration 1 and 1/4 as a quarter
+	 * tied to a sixteenth or a sixteenth tied to a quarter.  It can be determined at runtime
+	 * in the rendering layer and cached here in the model.  The rendering layer uses the time
+	 * the PitchSet had its onset/attack/initiation and this to render the noteheads where they
+	 * need to go.  For no ties, this is just an array of size 1.
 	 */
-	public Rational DURATION = null;
+	public Rational[] TIEDVALUES = null;
+	public Rational runtimeDuration() {
+		Rational result = Rational.ZERO;
+		for(Rational r : TIEDVALUES)
+			result = result.plus(r);
+		return result;
+	}
+	
+	/**
+	 * Stem height may be positive or negative to make the stem up or down respectively.
+	 * 
+	 * The beam angle is from the x axis (orthogonal to the stem); 0 is a right-facing horizontal beam,
+	 * 90 is a useless vertical beam, 180 is a left-facing beam.  To accomodate bidirectional beams,
+	 * the following divisions of our available range of angles are divided into dimensions:
+	 * 
+	 * 
+	 * (-90, 270) : Single-directional beams at the given angle
+	 * (270,450): Bi-directional beam 
+	 * 
+	 * Beams are drawn from the left only for angles (-360,0)
+	 */
+	public Double STEMHEIGHT = null, BEAMANGLE = null;
+	
 	public PitchSet() {
 		super();
 	}

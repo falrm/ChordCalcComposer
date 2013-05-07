@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import android.provider.ContactsContract.CommonDataKinds.Note;
+import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 
@@ -28,8 +30,74 @@ import com.jonlatane.composer.music.harmony.*;
  *
  */
 public class Score {
-	private Meter _meter;
+	private static final String TAG = "Score";
+	private Meter _meter = new Meter();
+	private Rational _end = new Rational(16,1);
 	private Staff[] _staves = new Staff[0];
+	
+	/**
+	 * Create a 4-bar score for the given TimeSignature.  The Time Signature is added at Rational point 1,
+	 * so the downbeat of the first measure is at Rational.ONE.
+	 * 
+	 * @param ts
+	 */
+	public Score(TimeSignature ts) {
+		this(ts, 4);
+	}
+	
+	/**
+	 * Create a Score containing the requested number of bars for the given time signature. The Time Signature
+	 * is added at Rational point 1, so the downbeat of the first measure is at Rational.ONE.
+	 * 
+	 * @param ts
+	 * @param numBars
+	 */
+	public Score(TimeSignature ts, Integer numBars) {
+		this(ts, numBars, Rational.ZERO);
+	}
+	
+	/**
+	 * This is not particularly useful except as a boundary case for the model for pickup != 0.  However,
+	 * a dotted-sixteenth pickup can be handled by the meter pretty elegantly, though all your downbeats
+	 * end up occurring at r = i + 3/8 in the model the Meter finds them at 1, 2, 3, 4 properly.
+	 * 
+	 * The downbeat of the first measure is at Rational.ONE + pickup, the location of the TimeSignature
+	 * within the Meter.
+	 * 
+	 * @param ts
+	 * @param numBars
+	 * @param pickup
+	 */
+	public Score(TimeSignature ts, Integer numBars, Rational pickup) {
+		assert(numBars > 0);
+		_end = new Rational(numBars * ts.TOP, 1);
+		_meter.put(pickup.plus(Rational.ONE), ts);
+	}
+	
+	/**
+	 * Lengthen or shorten your Score in the "best possible" way.
+	 * 
+	 * @param r
+	 */
+	public void setEnd(Rational r) {
+		// Put rests and No Chord if we're increasing the length and nothing is defined there.
+		// This way if you accidentally shorten it, you can re-lengthen it to restore data lost,
+		// but if you lengthen it you don't get annoying tied whole notes everywhere (though they're
+		// still only one PitchSet).
+		if(r.compareTo(_end) > 0) {
+			for(Staff s : _staves) {
+				if(s._chords._data.navigableKeySet().tailSet(_end, false).size() == 0) {
+					s._chords._data.put(_end, Chord.NO_CHORD);
+				}
+				for(Staff.Voice v : s._voices) {
+					if(v._notes._data.navigableKeySet().tailSet(_end, false).size() == 0) {
+						v._notes._data.put(_end, PitchSet.REST);
+					}
+				}
+			}
+		}
+		_end = r;
+	}
 	
 	/**
 	 * A Staff is in every way like a Score in terms of its mapping behavior, but it does not store a Meter.
@@ -46,13 +114,18 @@ public class Score {
 	 *
 	 */
 	public class Staff {
-		private RhythmMap<Chord> _chords;
-		private RhythmMap<Key> _keys;
-		private RhythmMap<Clef> _clefs;
-		private RhythmMap<Scale> _scales;
+		private RhythmMap<Chord> _chords = new RhythmMap<Chord>();
+		private RhythmMap<Key> _keys = new RhythmMap<Key>();
+		private RhythmMap<Clef> _clefs = new RhythmMap<Clef>();
+		private RhythmMap<Scale> _scales = new RhythmMap<Scale>();
 		public int TRANSPOSITION = 0;
 		public String TITLE = "";
 		private Voice[] _voices = new Voice[0];
+		
+		/**
+		 * Access Staves through the newStaff method of Score.
+		 */
+		private Staff() {}
 		
 		/**
 		 * As stated in @Staff, a Voice only contains a PitchSet (its NOTES), Articulation and Dynamics, while 
@@ -66,39 +139,35 @@ public class Score {
 		 *
 		 */
 		public class Voice {
-			private RhythmMap<PitchSet> _realization;
+			private RhythmMap<PitchSet> _notes = new RhythmMap<PitchSet>();
+			
+			/**
+			 * Access Voices through the newVoice method of Staff.
+			 */
+			private Voice() {}
+			
 			public class VoiceDelta {
 				public Rational LOCATION = null;
-				public Rational BEATNUMBER = null;
-				/**
-				 * A simple class for storing pointers to things in a Voice.
-				 * @author Jon Latane
-				 *
-				 */
-				public class Established {
-					public PitchSet NOTES = null;
-				}
-				public Established ESTABLISHED = new Established();
 				
 				/**
 				 * A simple class for storing pointers to things in a Voice.
 				 * @author Jon Latane
 				 *
 				 */
-				public class Changed {
+				public class VoiceStuff {
 					public PitchSet NOTES = null;
 				}
-				public Changed CHANGED = new Changed();
+				
+				public VoiceStuff ESTABLISHED = new VoiceStuff();
+				public VoiceStuff CHANGED = new VoiceStuff();
 			}
 			
 			public VoiceDelta voiceDeltaAt(Rational r) {
 				VoiceDelta result = new VoiceDelta();
 				result.LOCATION = r;
-				result.BEATNUMBER = _meter.getBeatOf(r);
+				result.ESTABLISHED.NOTES = _notes.getObjectAt(r);
 				
-				result.ESTABLISHED.NOTES = _realization.getObjectAt(r);
-				
-				result.CHANGED.NOTES = _realization._data.get(r);
+				result.CHANGED.NOTES = _notes._data.get(r);
 				
 				return result;
 			}
@@ -113,7 +182,6 @@ public class Score {
 		 */
 		public class StaffDelta {
 			public Rational LOCATION = null;
-			public Rational BEATNUMBER = null;
 			
 			/**
 			 * A simple class for storing pointers to things in a Staff.
@@ -121,10 +189,8 @@ public class Score {
 			 *
 			 */
 			public class Established {
-				public TimeSignature TS = null;
 				public Key KEY = null;
 				public Chord CHORD = null;
-				public Scale SCALE = null;
 			}
 			
 			public Established ESTABLISHED = new Established();
@@ -135,10 +201,8 @@ public class Score {
 			 *
 			 */
 			public class Changed {
-				public TimeSignature TS = null;
 				public Key KEY = null;
 				public Chord CHORD = null;
-				public Scale SCALE = null;
 			}
 			public Changed CHANGED = new Changed();
 			
@@ -153,32 +217,33 @@ public class Score {
 		 */
 		public StaffDelta staffDeltaAt(Rational r) {
 			StaffDelta result = new StaffDelta();
-			result.LOCATION = r;
-			result.BEATNUMBER = _meter.getBeatOf(r);
 			
-			result.ESTABLISHED.TS = _meter.getObjectAt(r);
 			result.ESTABLISHED.KEY = _keys.getObjectAt(r);
 			result.ESTABLISHED.CHORD = _chords.getObjectAt(r);
-			result.ESTABLISHED.SCALE = _scales.getObjectAt(r);
 			
-			result.CHANGED.TS = _meter._data.get(r);
 			result.CHANGED.KEY = _keys._data.get(r);
 			result.CHANGED.CHORD = _chords._data.get(r);
-			result.CHANGED.SCALE = _scales._data.get(r);
 			
 			result.VOICES = new Voice.VoiceDelta[_voices.length];
 			for(int i = 0; i < _voices.length; i++) {
 				Voice v = _voices[i];
-				Voice.VoiceDelta vd = v.new VoiceDelta();
 				result.VOICES[i] = v.voiceDeltaAt(r);
 			}
 			
-			//TODO finish this guys up
 			return result;
 		}
 
 		public Voice[] getVoices() {
 			return _voices;
+		}
+		
+
+		public Voice getVoice(int n) {
+			return _voices[n];
+		}
+		
+		public int getNumVoices() {
+			return _voices.length;
 		}
 		
 		/**
@@ -258,7 +323,6 @@ public class Score {
 			return result;
 		}
 
-		
 		private Iterator<StaffDelta> staffDeltaIterator(final Iterator<Rational> rhythm) {
 			return new Iterator<StaffDelta>() {
 				@Override
@@ -307,14 +371,45 @@ public class Score {
 		 */
 		public void realizeEnharmonics(Rational start, Rational end) {
 			Iterator<StaffDelta> backwards = reverseStaffIterator(end);
-			//
+			
+			// This is set when we should define the notes based on the key rather than working backwards.
+			// This is set to true to start, and then again whenever we have a key change (so the last notes
+			// in a modulation from one key to another are named according to the previous key and we can have,
+			// for instance D# to Eb ties).
+			boolean isFirst = true;
+			
+			// We declare these variables here because we're working backwards
+			PitchSet ps2 = null;
+			Chord c2 = null;
+			
+			// Iterate backwards from our end point
 			while(backwards.hasNext()) {
-				StaffDelta d = backwards.next();
+				StaffDelta sd = backwards.next();
+				
+				// Terminate when we've done what was asked
+				if(sd.LOCATION.compareTo(start) < 0)
+					break;
+				
+				// Fill in information from the Key
+				if(isFirst) {
+					
+					isFirst = false;
+				// Fill in information based on preceding Chords and PitchSets (ps2, c2)
+				} else {
+					Chord c1 = sd.ESTABLISHED.CHORD;
+					for(Voice.VoiceDelta vd : sd.VOICES) {
+						
+						if(vd.CHANGED.NOTES != null) {
+							Enharmonics.fillEnharmonics(vd.CHANGED.NOTES, c1, ps2, c2);
+							ps2 = vd.CHANGED.NOTES;
+						}
+					}
+				}
 			}
 		}
 		
 		public void fillNoteNames(Rational start, Rational end) {
-			
+			//TODO use the Enharmonics class for this
 		}
 		
 		public Voice newVoice() {
@@ -328,7 +423,6 @@ public class Score {
 		}
 	}
 
-	
 	public class ScoreDelta {
 		public Rational LOCATION = null;
 		public Rational BEATNUMBER = null;
@@ -364,7 +458,56 @@ public class Score {
 		result.ESTABLISHED.TS = _meter.getObjectAt(r);
 		result.CHANGED.TS = _meter._data.get(r);
 		
+		result.STAVES = new Staff.StaffDelta[_staves.length];
+		for(int i = 0; i < _staves.length; i++) {
+			Staff s = _staves[i];
+			result.STAVES[i] = s.staffDeltaAt(r);
+		}
+		
 		return result;
+	}
+	
+	private Iterator<ScoreDelta> scoreDeltaIterator(final Iterator<Rational> rhythm) {
+		return new Iterator<ScoreDelta>() {
+			@Override
+			public boolean hasNext() {
+				return rhythm.hasNext();
+			}
+
+			@Override
+			public ScoreDelta next() {
+				Rational r = rhythm.next();
+				return scoreDeltaAt(r);
+			}
+
+			@Override
+			public void remove() { }
+			
+		};
+	}
+	
+	/**
+	 * Return a ScoreDelta iterator that goes forewards from the supplied point
+	 * 
+	 * @param start the point to iterate  from
+	 * @return
+	 */
+	public Iterator<ScoreDelta> scoreIterator(final Rational start) {
+		return scoreDeltaIterator(getOverallRhythm().tailSet(start).iterator());
+	}
+	
+	/**
+	 * Return a ScoreDelta iterator that goes backwards from the supplied point
+	 * 
+	 * @param startEndSayWhat the point to iterate backwards from
+	 * @return
+	 */
+	public Iterator<ScoreDelta> reverseScoreIterator(final Rational startEndSayWhat) {
+		return scoreDeltaIterator(getOverallRhythm().headSet(startEndSayWhat,true).descendingIterator());
+	}
+	
+	public Rational getBeatOf(Rational r) {
+		return _meter.getBeatOf(r);
 	}
 	
 	/**
@@ -372,7 +515,7 @@ public class Score {
 	 * Chord at that point, while putting puts the object in all staves.
 	 * @return
 	 */
-	public Map<Rational,Chord> getMonotonalChords() {
+	/*public Map<Rational,Chord> getMonotonalChords() {
 		return new Map<Rational, Chord>() {
 
 			@Override
@@ -486,7 +629,7 @@ public class Score {
 			}
 			
 		};
-	}
+	}*/
 	
 	public NavigableSet<Rational> getOverallRhythm() {
 		TreeSet<Rational> result = new TreeSet<Rational>();
@@ -497,14 +640,10 @@ public class Score {
 			result.addAll(s._keys.getRhythm());
 			result.addAll(s._clefs.getRhythm());
 			for(Staff.Voice v : s._voices) {
-				result.addAll(v._realization.getRhythm());
+				result.addAll(v._notes.getRhythm());
 			}
 		}
 		return result;
-	}
-	
-	public Staff[] getStaves() {
-		return _staves;
 	}
 	
 	/**
@@ -537,9 +676,18 @@ public class Score {
 		}
 		return result;
 	}
+
+	
+	public Staff[] getStaves() {
+		return _staves;
+	}
 	
 	public Staff getStaff(int n) {
 		return _staves[n];
+	}
+	
+	public int getNumStaves() {
+		return _staves.length;
 	}
 	
 	public Staff removeStaff(int n) {
@@ -562,7 +710,7 @@ public class Score {
 	}
 	
 	public static Score twinkleTwinkle() {
-		Score result = new Score();
+		Score result = new Score(new TimeSignature(2, 4));
 		
 		Staff s1 = result.newStaff();
 		Staff s2 = result.newStaff();
@@ -570,31 +718,109 @@ public class Score {
 		Staff.Voice melody = s1.newVoice();
 		Staff.Voice harmony = s2.newVoice();
 		
-		melody._realization.put(new Rational(1,1), PitchSet.toPitchSet("C4"));
-		melody._realization.put(new Rational(2,1), PitchSet.toPitchSet("C4"));
-		melody._realization.put(new Rational(3,1), PitchSet.toPitchSet("G4"));
-		melody._realization.put(new Rational(4,1), PitchSet.toPitchSet("G4"));
-		melody._realization.put(new Rational(5,1), PitchSet.toPitchSet("A4"));
-		melody._realization.put(new Rational(6,1), PitchSet.toPitchSet("A4"));
-		melody._realization.put(new Rational(7,1), PitchSet.toPitchSet("G4"));
-		melody._realization.put(new Rational(9,1), PitchSet.toPitchSet("F4"));
-		melody._realization.put(new Rational(10,1), PitchSet.toPitchSet("F4"));
-		melody._realization.put(new Rational(11,1), PitchSet.toPitchSet("E4"));
-		melody._realization.put(new Rational(12,1), PitchSet.toPitchSet("E4"));
-		melody._realization.put(new Rational(13,1), PitchSet.toPitchSet("D4"));
-		melody._realization.put(new Rational(14,1), PitchSet.toPitchSet("D4"));
-		melody._realization.put(new Rational(15,1), PitchSet.toPitchSet("C4"));
-		melody._realization.put(new Rational(17,1), null);
+		melody._notes.put(new Rational(1,1), PitchSet.toPitchSet("C4"));
+		melody._notes.put(new Rational(2,1), PitchSet.toPitchSet("C4"));
+		melody._notes.put(new Rational(3,1), PitchSet.toPitchSet("G4"));
+		melody._notes.put(new Rational(4,1), PitchSet.toPitchSet("G4"));
+		melody._notes.put(new Rational(5,1), PitchSet.toPitchSet("A4"));
+		melody._notes.put(new Rational(6,1), PitchSet.toPitchSet("A4"));
+		melody._notes.put(new Rational(7,1), PitchSet.toPitchSet("G4"));
+		melody._notes.put(new Rational(9,1), PitchSet.toPitchSet("F4"));
+		melody._notes.put(new Rational(10,1), PitchSet.toPitchSet("F4"));
+		melody._notes.put(new Rational(11,1), PitchSet.toPitchSet("E4"));
+		melody._notes.put(new Rational(12,1), PitchSet.toPitchSet("E4"));
+		melody._notes.put(new Rational(13,1), PitchSet.toPitchSet("D4"));
+		melody._notes.put(new Rational(14,1), PitchSet.toPitchSet("D4"));
+		melody._notes.put(new Rational(15,1), PitchSet.toPitchSet("C4"));
+		melody._notes.put(new Rational(17,1), null);
 		
-		harmony._realization.put(new Rational(1,1), PitchSet.toPitchSet(new String[]{"C3", "E3", "G3"}));
-		harmony._realization.put(new Rational(5,1), PitchSet.toPitchSet(new String[]{"C3", "F3", "A3"}));
-		harmony._realization.put(new Rational(7,1), PitchSet.toPitchSet(new String[]{"C3", "E3", "G3"}));
-		harmony._realization.put(new Rational(9,1), PitchSet.toPitchSet(new String[]{"C3", "F3", "A3"}));
-		harmony._realization.put(new Rational(11,1), PitchSet.toPitchSet(new String[]{"C3", "E3", "G3"}));
-		harmony._realization.put(new Rational(13,1), PitchSet.toPitchSet(new String[]{"B3", "F3", "G3"}));
-		harmony._realization.put(new Rational(15,1), PitchSet.toPitchSet(new String[]{"C3", "E3", "G3"}));
-		melody._realization.put(new Rational(17,1), null);
+		harmony._notes.put(new Rational(1,1), PitchSet.toPitchSet(new String[]{"C3", "E3", "G3"}));
+		harmony._notes.put(new Rational(5,1), PitchSet.toPitchSet(new String[]{"C3", "F3", "A3"}));
+		harmony._notes.put(new Rational(7,1), PitchSet.toPitchSet(new String[]{"C3", "E3", "G3"}));
+		harmony._notes.put(new Rational(9,1), PitchSet.toPitchSet(new String[]{"C3", "F3", "A3"}));
+		harmony._notes.put(new Rational(11,1), PitchSet.toPitchSet(new String[]{"C3", "E3", "G3"}));
+		harmony._notes.put(new Rational(13,1), PitchSet.toPitchSet(new String[]{"B2", "F3", "G3"}));
+		harmony._notes.put(new Rational(15,1), PitchSet.toPitchSet(new String[]{"C3", "E3", "G3"}));
+		melody._notes.put(new Rational(17,1), null);
 		
 		return result;
+	}
+	
+	public static void testTwinkleTwinkle() {
+		testScore(twinkleTwinkle());
+	}
+	
+	/**
+	 * Run a gamut of tests to make sure the given Score is consistent.
+	 * 
+	 * @param s
+	 */
+	public static void testScore(Score s) {
+		Iterator<ScoreDelta> itr = s.scoreIterator(Rational.ZERO);
+		
+		// Iterate through the Score to read its contents
+		while(itr.hasNext()) {
+			ScoreDelta scd = itr.next();
+			assert(scd.STAVES.length == s.getNumStaves());
+			
+			Rational r = scd.LOCATION;
+			Rational beat = scd.BEATNUMBER;
+			
+			String[] staffRepr = new String[s.getNumStaves()];
+			
+			for(int i = 0; i < scd.STAVES.length; i++) { //Staff.StaffDelta sd : scd.STAVES ) {
+				Staff.StaffDelta sd = scd.STAVES[i];
+				assert(r.compareTo(sd.LOCATION) == 0);
+				assert(sd.VOICES.length == s.getStaff(i).getNumVoices());
+				
+				if( sd.CHANGED.CHORD != null ) {
+					assert(sd.CHANGED.CHORD.equals(Chord.NO_CHORD) || sd.CHANGED.CHORD.getRoot() != null);
+					if( sd.CHANGED.CHORD.equals(Chord.NO_CHORD) ) {
+						staffRepr[i] = "N.C.";
+					} else {
+						staffRepr[i] = "[" + sd.CHANGED.CHORD.getRoot() + "]" + sd.CHANGED.CHORD.getCharacteristic();
+					}
+				} else {
+					staffRepr[i] = "_";
+				}
+				
+				//Add the Voice contents to the staffRepr
+				String[] voiceRepr = new String[sd.VOICES.length];
+				for(int j = 0; j < sd.VOICES.length; j++) { //Staff.Voice.VoiceDelta vd : sd.VOICES ) {
+					Staff.Voice.VoiceDelta vd = sd.VOICES[j];
+					if(vd.CHANGED.NOTES != null) {
+						voiceRepr[j] = " ";
+						for(int n : vd.CHANGED.NOTES) {
+							voiceRepr[j] += n + " ";
+						}
+						if(vd.CHANGED.NOTES.equals(PitchSet.REST)) {
+							voiceRepr[j] += "- ";
+						}
+					} else {
+						if(vd.ESTABLISHED.NOTES != null && !vd.ESTABLISHED.NOTES.equals(PitchSet.REST)) {
+							voiceRepr[j] = "_";
+						} else {
+							voiceRepr[j] = "-";
+						}
+					}
+				}
+				for(String str : voiceRepr) {
+					staffRepr[i] += "|" + str;
+				}
+				staffRepr[i] += "|";
+			}
+			
+			// Our String representation of the "line of music" (i.e, a vertical line through
+			// the Score as on a page) to be spat out
+			String lineRepr = r.toMixedString() + ": ";
+			
+			// Staff and voice information
+			for(int i = 0; i < staffRepr.length; i++ ) {
+				lineRepr += "|| " + staffRepr[i] + " ";
+			}
+			lineRepr += "||";
+			
+			Log.d(TAG, lineRepr);
+		}
 	}
 }
