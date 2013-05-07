@@ -18,6 +18,7 @@ package com.jonlatane.composer.music;
 
 public class Rational implements Comparable<Rational> {
     public static Rational ZERO = new Rational(0, 1);
+    public static Rational ONE = new Rational(1, 1);
 	
     private int num;   // the numerator
     private int den;   // the denominator
@@ -52,6 +53,31 @@ public class Rational implements Comparable<Rational> {
     public String toString() { 
         if (den == 1) return num + "";
         else          return num + "/" + den;
+    }
+    
+    public String toMixedString() {
+    	int wholePart;
+    	double d = toDouble();
+    	if( d >= 0) {
+    		wholePart = (int)toDouble();
+    	} else {
+    		wholePart = (int)Math.ceil(toDouble());
+    	}
+
+    	Rational fracPart = minus(new Rational(wholePart, 1));
+    	
+    	// Construct the result String
+    	String result = "";
+    	if(wholePart != 0) {
+    		result += wholePart;
+    	}
+    	if(fracPart.num != 0) {
+    		if(wholePart != 0)
+    			result += " ";
+    		result += fracPart.toString();
+    	}
+    	
+    	return result;
     }
 	
     // return { -1, 0, +1 } if a < b, a = b, or a > b

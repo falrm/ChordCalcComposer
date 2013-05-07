@@ -40,7 +40,7 @@ public class SystemSurfaceView extends SurfaceView implements SurfaceHolder.Call
 		SELECTEDPAINT.setStrokeWidth(2);
 	}
 	
-	private SuperScore _score = null;
+	private Score _score = null;
 	
 	private Rational _start = Rational.ZERO;
 	private float _offset = 0;
@@ -87,7 +87,7 @@ public class SystemSurfaceView extends SurfaceView implements SurfaceHolder.Call
 		getHolder().addCallback(this);
 	}
 	
-	public void initializeToScore(SuperScore s) {
+	public void initializeToScore(Score s) {
 		_score = s;
 		_staffTops = new Integer[s.getStaves().length];
 		_staffCenters = new Integer[s.getStaves().length];

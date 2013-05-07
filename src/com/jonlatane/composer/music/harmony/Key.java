@@ -209,8 +209,13 @@ public final class Key extends Scale
 	}
 
 	/**
-	 * Given a letter A-G, returns a String with the needed (double)flats/sharps to make them equivalent.
+	 * Given a letter A-G/a-g, returns a String with the needed (double)flats/sharps to make them equivalent, with
+	 * C = 0, D = 2, E = 4, F = 5, G = 7, A = 9, B = 11 (i.e., traditional twelve-tone system at C = 0).
+	 * 
 	 * Returns null if impossible.
+	 * 
+	 * i.e., tryToName('C', 0, true/false) = "C", tryToName('B', 0, true/false) = "B#", tryToName('A', -1, true) = "A##",
+	 * and tryToName('A', -1, false) = null
 	 * 
 	 * @param heptatonicName a letter A-G
 	 * @param targetTwelveTonePitchClass any numer (treated as C4=0 and so on, only its pitch class matters)

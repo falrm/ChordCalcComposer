@@ -34,9 +34,9 @@ public class RhythmMap<K> {
 		return _data.get(l);
 	}
 	
-	public Rational getLastAttack(Rational r) {
+	/*public Rational getLastAttack(Rational r) {
 		return _data.lowerKey(r);
-	}
+	}*/
 	
 	public K put(Rational r, K obj) {
 		return _data.put(r, obj);

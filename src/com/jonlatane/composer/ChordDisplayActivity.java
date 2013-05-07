@@ -3,6 +3,7 @@ package com.jonlatane.composer;
 import java.util.Arrays;
 
 import com.jonlatane.composer.io.*;
+import com.jonlatane.composer.music.Score;
 import com.jonlatane.composer.music.harmony.*;
 import android.app.*;
 import android.content.Context;
@@ -10,7 +11,6 @@ import android.media.AudioManager;
 import android.os.*;
 import android.util.*;
 import android.view.*;
-import android.widget.*;
 
 /**
  * The ScoreEditingActivity allows interaction with a Score.  You can scroll horizontally at all times.  To make a
@@ -24,7 +24,6 @@ public class ChordDisplayActivity extends Activity
 	//private KeyboardIOHandler _myKbdIO;
 	//private KeyboardScroller _keyboardScroller;
 	//private HorizontalScrollView _chordScroller;
-	private ManagedToneGenerator _tg;
 	
 	public int NUMFINGERSDOWN = 0;
 	
@@ -36,14 +35,16 @@ public class ChordDisplayActivity extends Activity
 		super.onCreate(savedInstanceState);
 		
 		//Debugging stuff - to be moved elsewhere
+		Score.testTwinkleTwinkle();
+		
 		Log.d(TAG, Chord.getChordByName("C"+Chord.diminished+"7add11#13").toString());
 		Chord cA1 = Chord.getChordByName("Ab7");
 		Chord cA2 = Chord.getChordByName("G7");
 		Chord cA3 = Chord.getChordByName("C");
 		
 		cA3.NOTENAMES = new String[] {"C", "E", "G"};
-		VoiceLeading.fillEnharmonics(cA2, cA3);
-		VoiceLeading.fillEnharmonics(cA1, cA2);
+		Enharmonics.fillEnharmonics(cA2, cA3);
+		Enharmonics.fillEnharmonics(cA1, cA2);
 		
 		Log.d(TAG, Arrays.toString(cA1.NOTENAMES) + cA1.toString());
 		Log.d(TAG, Arrays.toString(cA2.NOTENAMES) + cA2.toString());
@@ -55,9 +56,9 @@ public class ChordDisplayActivity extends Activity
 		Chord cB4 = Chord.getChordByName("C");
 		
 		cB4.NOTENAMES = new String[] {"C", "E", "G"};
-		VoiceLeading.fillEnharmonics(cB3, cB4);
-		VoiceLeading.fillEnharmonics(cB2, cB3);
-		VoiceLeading.fillEnharmonics(cB1, cB2);
+		Enharmonics.fillEnharmonics(cB3, cB4);
+		Enharmonics.fillEnharmonics(cB2, cB3);
+		Enharmonics.fillEnharmonics(cB1, cB2);
 		
 		Log.d(TAG, Arrays.toString(cB1.NOTENAMES) + cB1.toString());
 		Log.d(TAG, Arrays.toString(cB2.NOTENAMES) + cB2.toString());
@@ -131,46 +132,6 @@ public class ChordDisplayActivity extends Activity
 
 	    return true;
 	  } 
-	
-	private static String[] _dataObjects = new String[]{ 
-		"CM7", "D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7",
-		"D-7", "G7", "CM7"};
-	
-	private BaseAdapter _adapter = new BaseAdapter() {  
-		  
-        @Override  
-        public int getCount() {  
-            return _dataObjects.length;  
-        }  
-  
-        @Override  
-        public Object getItem(int position) {  
-            return null;  
-        }  
-  
-        @Override  
-        public long getItemId(int position) {  
-            return 0;  
-        }  
-  
-        @Override  
-        public View getView(int position, View convertView, ViewGroup parent) {  
-            View retval = LayoutInflater.from(parent.getContext()).inflate(R.layout.staff_section_view, null);  
-            TextView title = (TextView) retval.findViewById(R.id.leadSheetItemChord);  
-            title.setText(_dataObjects[position]);  
-              
-            return retval;  
-        }  
-          
-    };  
 
 	
 	@Override

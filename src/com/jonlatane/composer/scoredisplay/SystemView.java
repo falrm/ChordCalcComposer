@@ -16,7 +16,7 @@ import com.jonlatane.composer.R;
  *
  */
 public class SystemView extends LinearLayout {
-	private SuperScore _score;
+	private Score _score;
 	private Rational _startingPoint;
 	private StaffView[] _staves;
 	
@@ -26,7 +26,7 @@ public class SystemView extends LinearLayout {
 	}
 
 	public StaffView newStaff() {
-		SuperScore.Staff s = _score.newStaff();
+		Score.Staff s = _score.newStaff();
 		StaffView result = (StaffView)LayoutInflater.from(getContext()).inflate(R.layout.staffview, null);
 		//StaffView result = new StaffView(getContext());
 		result.setStaff(s);

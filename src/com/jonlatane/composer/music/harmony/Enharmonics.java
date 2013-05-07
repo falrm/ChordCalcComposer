@@ -5,9 +5,10 @@ import java.util.LinkedList;
 
 import android.util.Log;
 
-public class VoiceLeading extends LinkedList<LinkedList<Integer[]>>{
+public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
+	private static final long serialVersionUID = 5672524358L;
 	public static String TAG = "VoiceLeading";
-	private static VoiceLeading DominantSeven = new VoiceLeading();
+	private static Enharmonics DominantSeven = new Enharmonics();
 	
 	static {
 		LinkedList<Integer[]> domSevenOnes = new LinkedList<Integer[]>();
@@ -28,11 +29,11 @@ public class VoiceLeading extends LinkedList<LinkedList<Integer[]>>{
 		DominantSeven.add(domSevenSevens);
 
 	}
-	public VoiceLeading() {
+	public Enharmonics() {
 	}
 
-	public static VoiceLeading from(PitchSet ps1, Chord c1, PitchSet ps2, Chord c2) {
-		VoiceLeading result = new VoiceLeading();
+	public static Enharmonics from(PitchSet ps1, Chord c1, PitchSet ps2, Chord c2) {
+		Enharmonics result = new Enharmonics();
 		//TODO
 		int[] initialNoteMap = new int[ps1.size()];
 		for(int i = 0; i < initialNoteMap.length; i++)
@@ -202,6 +203,12 @@ public class VoiceLeading extends LinkedList<LinkedList<Integer[]>>{
 		}
 	}
 	
+	/**
+	 * Fill in the enharmonics for a given chord using the given Key's way of naming notes.  Useful if
+	 * you know the Chord fits in the key (i.e., a cadence).
+	 * @param c
+	 * @param k
+	 */
 	public static void fillEnharmonics(Chord c, Key k) {
 		if(c.NOTENAMES == null) {
 			c.NOTENAMES = new String[c.size()];
