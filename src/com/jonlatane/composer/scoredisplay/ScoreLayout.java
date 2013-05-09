@@ -32,16 +32,38 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 
 /**
- * A layout that arranges its children in a grid.  The size of the
- * cells is set by the {@link #setCellSize} method and the
- * android:cell_width and android:cell_height attributes in XML.
- * The number of rows and columns is determined at runtime.  Each
- * cell contains exactly one view, and they flow in the natural
- * child order (the order in which they were added, or the index
- * in {@link #addViewAt}.  Views can not span multiple cells.
- *
- * <p>This class was copied from the FixedGridLayout Api demo; see that demo for
- * more information on using the layout.</p>
+ * A ScoreLayout is a self-managing ViewGroup that renders {@link SystemSliceView}s
+ * containing {@link SystemSliceView.ScoreDeltaView}s which in turn interact with
+ * the underlying Score when touched by the user.
+ * 
+ * The first child view in a ScoreLayout is a SurfaceView that is responsible for
+ * rendering a background layer.  This layer predetermines the positions of staff lines
+ * before the ScoreLayout lays out its contents and passes them to the ScoreLayout.  The
+ * ScoreLayout then places its tiles atop the background.
+ * 
+ * During layout, the ScoreLayout notes where the noteheads of the Score are and where slurs,
+ * stems, and beams should go.  This information is passed to the SurfaceView to draw these.
+ * It should also tell the SurfaceView which lines we need to draw a KeySignature or TimeSignature
+ * on (i.e., it changed somewhere in the previous line or at the beginning of this line)
+ * and which just need the Clef to be drawn.
+ * 
+ * After everything is laid out, when onDraw is called in the SurfaceView (and the rest),
+ * a pretty looking Score comes out.
+ * 
+ * The Caveat:
+ *  
+ * Because the ScoreLayout chooses these positions based on the position of the staff provided
+ * by the SurfaceView in advance (without knowing what the notes are), it may render very 
+ * high/low notes on the next staff down if we are not careful.
+ * 
+ * "Being careful:"
+ * 
+ * During layout, the ScoreLayout notes if tiles do not have enough space to render the note.
+ * When this happens, this is communicated to the SurfaceView *by letting it know which system
+ * it is on and nothing else*.  This would also be the time to let the SurfaceView know about
+ * slurs but that's not done yet.
+ * 
+ * If this is the case, these changes
  */
 public class ScoreLayout extends ViewGroup {
     int mCellWidth;
