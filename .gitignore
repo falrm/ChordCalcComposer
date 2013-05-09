@@ -31,3 +31,6 @@ proguard/
 # Log files
 .log
 
+
+#Eclipse settings
+.settings/

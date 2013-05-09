@@ -60,6 +60,22 @@ public class ScoreLayout extends ViewGroup {
     	private int butHeight = 50;
     	int rand;
     	
+    	public class ScoreDeltaView extends LinearLayout {
+    		public ScoreDeltaView(Context context) {
+    			super(context);
+    		}
+    		
+    		public ScoreDeltaView(Context context, AttributeSet attrs) {
+    			super(context, attrs);
+    		}
+    		
+			public ScoreDeltaView(Context context, AttributeSet attrs, int defStyle) {
+				super(context, attrs, defStyle);
+				// TODO Auto-generated constructor stub
+			}
+    		
+    	}
+    	
     	public SystemSliceView(Context context ) {
     		super(context);
     		init();
@@ -81,6 +97,12 @@ public class ScoreLayout extends ViewGroup {
 			}
 		}
     	
+		@Override
+		public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+			setMeasuredDimension(resolveSize(rand*widthMult,widthMeasureSpec), 
+					resolveSize(butHeight * 3, heightMeasureSpec));
+		}
+		
 		@Override
 		public void onLayout(boolean changed, int l, int t, int r, int b) {
 			super.onLayout(changed, l, t, r, b);
@@ -146,15 +168,16 @@ public class ScoreLayout extends ViewGroup {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int cellWidthSpec = MeasureSpec.makeMeasureSpec(mCellWidth,
-                MeasureSpec.AT_MOST);
-        int cellHeightSpec = MeasureSpec.makeMeasureSpec(mCellHeight,
-                MeasureSpec.AT_MOST);
+        //int cellWidthSpec = MeasureSpec.makeMeasureSpec(mCellWidth,
+        //        MeasureSpec.AT_MOST);
+        //int cellHeightSpec = MeasureSpec.makeMeasureSpec(mCellHeight,
+        //        MeasureSpec.AT_MOST);
 
         int count = getChildCount();
         for (int index=0; index<count; index++) {
             final View child = getChildAt(index);
-            child.measure(cellWidthSpec, cellHeightSpec);
+            //child.measure(cellWidthSpec, cellHeightSpec);
+            child.measure(widthMeasureSpec, heightMeasureSpec);
         }
         // Use the size our parents gave us, but default to a minimum size to avoid
         // clipping transitioning children
