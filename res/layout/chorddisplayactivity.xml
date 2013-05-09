@@ -9,7 +9,13 @@
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true" />   -->
-    
+    <com.jonlatane.composer.scoredisplay.ScoreLayout 
+        android:id="@+id/scoreLayout"
+        android:layout_alignParentTop="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        
+    </com.jonlatane.composer.scoredisplay.ScoreLayout>
     <fragment
         android:id="@+id/chordDisplayActivityKb"
         android:name="com.jonlatane.composer.io.TwelthKeyboardFragment"
