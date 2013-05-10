@@ -9,4 +9,7 @@
     <item android:id="@+id/toggleChordsAB"
           android:title="Chords"
           android:showAsAction="ifRoom" />
+    <item android:id="@+id/debugFunction1"
+        	android:title="Debug1"
+        	android:showAsAction="ifRoom" />
 </menu>

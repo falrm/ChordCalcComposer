@@ -26,6 +26,7 @@ import android.animation.LayoutTransition;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -78,7 +79,7 @@ public class ScoreLayout extends ViewGroup {
     
     private class SystemSliceView extends LinearLayout {
     	private Rational R;
-    	private int widthMult = 150;
+    	private int widthMult = 30;
     	private int butHeight = 50;
     	int rand;
     	
@@ -113,7 +114,7 @@ public class ScoreLayout extends ViewGroup {
 		}*/
 		
 		private void init() {
-			rand = Math.max(1, new Random().nextInt(3));
+			rand = Math.max(1, new Random().nextInt(7));
 			for(int i = 0; i < 2; i ++) {
 				Button b = new Button(getContext());
 			}
@@ -121,8 +122,9 @@ public class ScoreLayout extends ViewGroup {
     	
 		@Override
 		public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-			setMeasuredDimension(resolveSize(rand*widthMult,widthMeasureSpec), 
-					resolveSize(butHeight * 3, heightMeasureSpec));
+			//setMeasuredDimension(resolveSize(rand*widthMult,widthMeasureSpec), 
+			//		resolveSize(butHeight * 3, heightMeasureSpec));
+			setMeasuredDimension(rand*widthMult, butHeight);
 		}
 		
 		@Override
@@ -173,8 +175,11 @@ public class ScoreLayout extends ViewGroup {
 	    transitioner.setAnimator(LayoutTransition.CHANGE_APPEARING, defaultChangingAppearingAnim);
 	    transitioner.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, defaultChangingDisappearingAnim);
 	    
-	    for(int i = 0; i < 15; i++) {
-	    	addElementToBeginning();
+	    SurfaceView sv = new SurfaceView(getContext());
+	    addView(sv);
+	    
+	    for(int i = 0; i < 150; i++) {
+	    		addElementToBeginning();
 	    }
     }
     
@@ -210,48 +215,68 @@ public class ScoreLayout extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        int cellWidth = mCellWidth;
-        int cellHeight = mCellHeight;
-        int columns = (r - l) / cellWidth;
-        if (columns < 0) {
-            columns = 1;
-        }
         int x = 0;
         int y = 0;
-        int i = 0;
+
+        getChildAt(0).layout(l, t, r, b);
+        
         int count = getChildCount();
-        for (int index=0; index<count; index++) {
+        for (int index=1; index<count; index++) {
             final View child = getChildAt(index);
 
             int w = child.getMeasuredWidth();
             int h = child.getMeasuredHeight();
 
-            int left = x + ((cellWidth-w)/2);
-            int top = y + ((cellHeight-h)/2);
-
-            child.layout(left, top, left+w, top+h);
-            if (i >= (columns-1)) {
-                // advance to next row
-                i = 0;
-                x = 0;
-                y += cellHeight;
-            } else {
-                i++;
-                x += cellWidth;
+            //int left = x + ((cellWidth-w)/2);
+            //int top = y + ((cellHeight-h)/2);
+            
+            int left = x;// + w;
+            int top = y;// + h;
+            
+            // This View won't be visible to the user, remove this and all subsequent Views.
+            if(top > getMeasuredHeight()) {
+            	for(int j = index; j < count; j++) {
+            		removeViewAt(j);
+            	}
+            	break;
             }
+            
+            // There is room for this View horizontally, place it normally
+            int myWidth = getMeasuredWidth();
+            if(left + w < myWidth) {
+            	child.layout(left, top, left+w, top+h);
+            	x += w;
+            	
+            } else if(left < myWidth) {
+            	// This ratio represents "proximity" to where the View should be drawn.
+            	// 0 represents perfectly on the next line, 1 perfectly here.  Anywhere
+            	// in between should correspond to positions in between for a transition
+            	double d = (myWidth - left) / (double)w; 
+            	left = (int)(left * d);
+            	top = (int)(top + (h * (1d-d)));
+            	child.layout(left, top, left+w, top+h);
+            	x = (int)(w * (1 - d));
+            	y += h;
+            // The row ends perfectly.  Draw this view where it would normally go.
+            } else {
+            	child.layout(0, top+h, h, top + h + h);
+            	x = w;
+            	y += h;
+            }
+            
         }
     }
     
     public void addElementToBeginning() {
     	SystemSliceView slice = new SystemSliceView(getContext());
-    	addView(slice, 0);
+    	addView(slice, 1);
     }
     public void addElementToEnd() {
     	SystemSliceView slice = new SystemSliceView(getContext());
     	addView(slice,getChildCount());
     }
     public void removeFirstElement() {
-    	removeViewAt(0);
+    	removeViewAt(1);
     }
     public void removeLastElement() {
     	removeViewAt(getChildCount());

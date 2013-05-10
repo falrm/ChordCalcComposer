@@ -5,6 +5,8 @@ import java.util.Arrays;
 import com.jonlatane.composer.io.*;
 import com.jonlatane.composer.music.Score;
 import com.jonlatane.composer.music.harmony.*;
+import com.jonlatane.composer.scoredisplay.ScoreLayout;
+
 import android.app.*;
 import android.content.Context;
 import android.media.AudioManager;
@@ -125,6 +127,9 @@ public class ChordDisplayActivity extends Activity
 	    	break;
 	    case R.id.toggleKeyboardAB:
 	    	_myKeyboard.toggleKeyboardFragment();
+	    	break;
+	    case R.id.debugFunction1:
+	    	((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
 	    	break;
 	    default:
 	      break;
