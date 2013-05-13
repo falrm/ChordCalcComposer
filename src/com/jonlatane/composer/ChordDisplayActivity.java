@@ -131,6 +131,9 @@ public class ChordDisplayActivity extends Activity
 	    case R.id.debugFunction1:
 	    	((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
 	    	break;
+	    case R.id.debugFunction2:
+	    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayoutWidths();
+	    	break;
 	    default:
 	      break;
 	    }

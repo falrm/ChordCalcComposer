@@ -16,25 +16,35 @@
 
 package com.jonlatane.composer.scoredisplay;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Random;
 
 import com.jonlatane.composer.music.Rational;
 import com.jonlatane.composer.music.Score;
 
 import android.animation.Animator;
+import android.animation.FloatEvaluator;
 import android.animation.LayoutTransition;
+import android.animation.TypeEvaluator;
+import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 /**
- * A ScoreLayout is a self-managing ViewGroup that renders {@link SystemSliceView}s
- * containing {@link SystemSliceView.ScoreDeltaView}s which in turn interact with
+ * A ScoreLayout is a self-managing ViewGroup that renders {@link ScoreDeltaView}s
+ * containing {@link ScoreDeltaView.StaffDeltaView}s which in turn interact with
  * the underlying Score when touched by the user.
  * 
  * The first child view in a ScoreLayout is a SurfaceView that is responsible for
@@ -67,78 +77,121 @@ import android.widget.LinearLayout;
  * If this is the case, these changes
  */
 public class ScoreLayout extends ViewGroup {
-    int mCellWidth;
-    int mCellHeight;
+	private static final String TAG = "ScoreLayout";
     
     private Score _score;
+    private SheetMusicSurfaceView _surface;
     private Rational _topLeft;
     private double _animationOffset = 0;
+    
+    private double _scalingFactor = 1d;
     
     Animator defaultAppearingAnim, defaultDisappearingAnim;
     Animator defaultChangingAppearingAnim, defaultChangingDisappearingAnim;
     
-    private class SystemSliceView extends LinearLayout {
-    	private Rational R;
-    	private int widthMult = 30;
-    	private int butHeight = 50;
-    	int rand;
+    public static class StaffSpec {
+    	public StaffSpec(int top, int middle, int bottom) {
+    		TOP = top;
+    		MIDDLE_STAFF = middle;
+    		BOTTOM = bottom;
+    	}
+    	public final int TOP;
+    	public final int MIDDLE_STAFF;
+    	public final int BOTTOM;
+    }
+    
+    public static int DEFAULTSTAFFHEIGHT = 60;
+    public static final StaffSpec DEFAULTSTAFFSPEC = new StaffSpec(0, 40, 80); 
+    
+    private class ScoreDeltaView extends LinearLayout {
+    	private Score.ScoreDelta _scoreDelta;
+    	private int _perfectWidth;
+    	private int _actualWidth;
     	
-    	public class ScoreDeltaView extends LinearLayout {
-    		public ScoreDeltaView(Context context) {
+    	
+    	private class WidthEvaluator implements TypeEvaluator<Integer> {
+    	    @SuppressLint("NewApi")
+        	@Override
+        	public Integer evaluate(float fraction, Integer startValue, Integer endValue) {
+    	    	Integer result = startValue + (int)((endValue - startValue) * fraction);
+    	    	Log.i(TAG,"Scaling to " + result + " for " + fraction + " " + startValue + " " + endValue);
+        		//Float num = (Float)super.evaluate(fraction, startValue, endValue);
+        		setActualWidth(result);
+        		requestLayout();
+        		return result;
+        	}
+        }
+    	
+    	public final WidthEvaluator EVALUATOR = new WidthEvaluator();
+    	
+    	public class StaffDeltaView extends LinearLayout {
+    		private Score.Staff.StaffDelta _staffDelta;
+    		public StaffDeltaView(Context context) {
     			super(context);
+    			setOrientation(VERTICAL);
+    			TextView upperLyricView = new TextView(getContext());
+    			TextView lowerLyricView = new TextView(getContext());
+    			upperLyricView.setText("upper");
+    			lowerLyricView.setText("lower");
+    			
+    			Button b = new Button(getContext());
+    			LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(_actualWidth, DEFAULTSTAFFSPEC.BOTTOM - DEFAULTSTAFFSPEC.TOP);
+    			
+    			addView(upperLyricView);
+    			addView(b);
+    			addView(lowerLyricView);
     		}
     		
-    		public ScoreDeltaView(Context context, AttributeSet attrs) {
-    			super(context, attrs);
+    		public void setStaffDelta(Score.Staff.StaffDelta d) {
+        		_staffDelta = d;    			
     		}
-    		
-			public ScoreDeltaView(Context context, AttributeSet attrs, int defStyle) {
-				super(context, attrs, defStyle);
-				// TODO Auto-generated constructor stub
-			}
     		
     	}
     	
-    	public SystemSliceView(Context context ) {
+    	public ScoreDeltaView(Context context ) {
     		super(context);
-    		init();
+    		setOrientation(VERTICAL);
+			_perfectWidth = 30 * Math.max(1, new Random().nextInt(5));
+			_actualWidth = _perfectWidth;
     	}
     	
-    	/*public SystemSliceView(Context context, AttributeSet attrs) {
-    		super(context, attrs);
+    	public void setScoreDelta(Score.ScoreDelta d) {
+    		_scoreDelta = d;
+    		for(int i = 0; i < getChildCount(); i++) {
+    			removeViewAt(i);
+    		}
+    		for(Score.Staff.StaffDelta sd : d.STAVES) {
+    			StaffDeltaView sdv = new StaffDeltaView(getContext());
+    			sdv.setStaffDelta(sd);
+    			addView(sdv);
+    		}
     	}
-    	
-		public SystemSliceView(Context context, AttributeSet attrs, int defStyle) {
-			super(context, attrs, defStyle);
-			// TODO Auto-generated constructor stub
-		}*/
-		
-		private void init() {
-			rand = Math.max(1, new Random().nextInt(7));
-			for(int i = 0; i < 2; i ++) {
-				Button b = new Button(getContext());
-			}
-		}
     	
 		@Override
 		public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-			//setMeasuredDimension(resolveSize(rand*widthMult,widthMeasureSpec), 
-			//		resolveSize(butHeight * 3, heightMeasureSpec));
-			setMeasuredDimension(rand*widthMult, butHeight);
+			int totalHeight = 0;
+			for(int i=0; i < getChildCount(); i++) {
+				View v = getChildAt(i);
+				v.measure(widthMeasureSpec, heightMeasureSpec);
+				totalHeight += v.getMeasuredHeight();
+			}
+			setMeasuredDimension(_actualWidth, totalHeight);
 		}
 		
 		@Override
 		public void onLayout(boolean changed, int l, int t, int r, int b) {
 			super.onLayout(changed, l, t, r, b);
-			/*for(int i = 0; i < getChildCount(); i++) {
-				Button button = (Button)getChildAt(i);
-				ViewGroup.LayoutParams p = button.getLayoutParams();
-				p.height = butHeight;
-				p.width = r * widthMult;
-				button.setLayoutParams(p);
-			}*/
 		}
 		
+		public int getPerfectWidth() {
+			return _perfectWidth;
+		}
+		public int getActualWidth() {
+			return _actualWidth;
+		}
+		public void setActualWidth(int i) {
+			_actualWidth = i;
+		}
     }
 
     public ScoreLayout(Context context) {
@@ -157,8 +210,6 @@ public class ScoreLayout extends ViewGroup {
     
 
     public void init() {
-    	setCellWidth(100);
-    	setCellHeight(50);
     	
 	    final LayoutTransition transitioner = new LayoutTransition();
 	    setLayoutTransition(transitioner);
@@ -170,109 +221,165 @@ public class ScoreLayout extends ViewGroup {
 	    defaultChangingDisappearingAnim =
 	            transitioner.getAnimator(LayoutTransition.CHANGE_DISAPPEARING);
 	    
-	    transitioner.setAnimator(LayoutTransition.APPEARING,  defaultAppearingAnim);
+	    /*transitioner.setAnimator(LayoutTransition.APPEARING,  defaultAppearingAnim);
 	    transitioner.setAnimator(LayoutTransition.DISAPPEARING, defaultDisappearingAnim);
 	    transitioner.setAnimator(LayoutTransition.CHANGE_APPEARING, defaultChangingAppearingAnim);
-	    transitioner.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, defaultChangingDisappearingAnim);
+	    transitioner.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, defaultChangingDisappearingAnim);*/
 	    
-	    SurfaceView sv = new SurfaceView(getContext());
-	    addView(sv);
+	    //SurfaceView sv = new SurfaceView(getContext());
+	    //addView(sv);
 	    
-	    for(int i = 0; i < 150; i++) {
-	    		addElementToBeginning();
+	    _surface = new SheetMusicSurfaceView(getContext());
+	    addView(_surface);
+	    
+	    Score s = Score.twinkleTwinkle();
+	    Score.ScoreDelta d = s.scoreDeltaAt(new Rational(1,1));
+	    for(int i = 0; i < 100; i++) {
+	    	ScoreDeltaView sdv = new ScoreDeltaView(getContext());
+	    	sdv.setScoreDelta(d);
+	    	addView(sdv,1);
 	    }
-    }
-    
-    public void setCellWidth(int px) {
-        mCellWidth = px;
-        requestLayout();
-    }
-
-    public void setCellHeight(int px) {
-        mCellHeight = px;
-        requestLayout();
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        //int cellWidthSpec = MeasureSpec.makeMeasureSpec(mCellWidth,
-        //        MeasureSpec.AT_MOST);
-        //int cellHeightSpec = MeasureSpec.makeMeasureSpec(mCellHeight,
-        //        MeasureSpec.AT_MOST);
-
         int count = getChildCount();
         for (int index=0; index<count; index++) {
             final View child = getChildAt(index);
-            //child.measure(cellWidthSpec, cellHeightSpec);
             child.measure(widthMeasureSpec, heightMeasureSpec);
         }
-        // Use the size our parents gave us, but default to a minimum size to avoid
-        // clipping transitioning children
-        int minCount =  count > 3 ? count : 3;
-        setMeasuredDimension(resolveSize(mCellWidth * minCount, widthMeasureSpec),
-                resolveSize(mCellHeight * minCount, heightMeasureSpec));
+
+        setMeasuredDimension(resolveSize(Integer.MAX_VALUE, widthMeasureSpec),
+                resolveSize(Integer.MAX_VALUE, heightMeasureSpec));
     }
 
+    private boolean _needsMoreViews = false;
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+	    /*getLayoutTransition().setAnimator(LayoutTransition.APPEARING,  null);
+	    getLayoutTransition().setAnimator(LayoutTransition.DISAPPEARING, null);
+	    getLayoutTransition().setAnimator(LayoutTransition.CHANGE_APPEARING, null);
+	    getLayoutTransition().setAnimator(LayoutTransition.CHANGE_DISAPPEARING, null);*/
+
+        int myWidth = getMeasuredWidth();
+        
         int x = 0;
         int y = 0;
 
         getChildAt(0).layout(l, t, r, b);
         
+        // Lay out everything AS MEASURED as best as we can.
         int count = getChildCount();
         for (int index=1; index<count; index++) {
             final View child = getChildAt(index);
 
             int w = child.getMeasuredWidth();
             int h = child.getMeasuredHeight();
-
-            //int left = x + ((cellWidth-w)/2);
-            //int top = y + ((cellHeight-h)/2);
             
-            int left = x;// + w;
-            int top = y;// + h;
+            int left = x;
+            int top = y;
             
             // This View won't be visible to the user, remove this and all subsequent Views.
             if(top > getMeasuredHeight()) {
-            	for(int j = index; j < count; j++) {
-            		removeViewAt(j);
-            	}
+            	//for(int j = index; j < count; j++) {
+            	//	removeViewAt(j);
+            	//}
+            	while(index < getChildCount())
+            		removeViewAt(index );
             	break;
             }
             
             // There is room for this View horizontally, place it normally
-            int myWidth = getMeasuredWidth();
             if(left + w < myWidth) {
             	child.layout(left, top, left+w, top+h);
             	x += w;
-            	
-            } else if(left < myWidth) {
+            
+            // There is going to be a gap, we must place this view approximately
+            // and scale views (up only) so this one will fit with an animation.
+            } else {
             	// This ratio represents "proximity" to where the View should be drawn.
             	// 0 represents perfectly on the next line, 1 perfectly here.  Anywhere
             	// in between should correspond to positions in between for a transition
-            	double d = (myWidth - left) / (double)w; 
+            	double d = (myWidth - left) / (double)w;
             	left = (int)(left * d);
             	top = (int)(top + (h * (1d-d)));
+            	
             	child.layout(left, top, left+w, top+h);
+            	
             	x = (int)(w * (1 - d));
-            	y += h;
-            // The row ends perfectly.  Draw this view where it would normally go.
-            } else {
-            	child.layout(0, top+h, h, top + h + h);
-            	x = w;
             	y += h;
             }
             
+            Log.i(TAG,"x=" + x);
         }
+        
+        if(y < getMeasuredHeight()) {
+        	_needsMoreViews = true;
+        }
+        
+	    /*getLayoutTransition().setAnimator(LayoutTransition.APPEARING,  defaultAppearingAnim);
+	    getLayoutTransition().setAnimator(LayoutTransition.DISAPPEARING, defaultDisappearingAnim);
+	    getLayoutTransition().setAnimator(LayoutTransition.CHANGE_APPEARING, defaultChangingAppearingAnim);
+	    getLayoutTransition().setAnimator(LayoutTransition.CHANGE_DISAPPEARING, defaultChangingDisappearingAnim);*/
+    }
+    
+    public void fixLayoutWidths() {
+    	int myWidth = getMeasuredWidth();
+    	int totalPerfectWidth = 0;
+
+    	int rowStartIndex = 1;
+    	
+        LinkedHashMap<LinkedList<ScoreDeltaView>,Double> rows = new LinkedHashMap<LinkedList<ScoreDeltaView>,Double>();
+    	LinkedList<ScoreDeltaView> row = new LinkedList<ScoreDeltaView>();
+    	for(int i = rowStartIndex; i < getChildCount(); i++) {
+    		ScoreDeltaView potentialRowMember = (ScoreDeltaView)getChildAt(i);
+    		if(potentialRowMember == null)
+    			break;
+    		// Add element to the row
+    		if(totalPerfectWidth + potentialRowMember.getPerfectWidth() < myWidth) {
+    			row.add(potentialRowMember);
+    			totalPerfectWidth += potentialRowMember.getPerfectWidth();
+    		// End of row, figure out width
+    		} else {
+            	double perfectWidthFactor = (double)myWidth/(double)totalPerfectWidth;
+            	rows.put(row,perfectWidthFactor);
+            	row = new LinkedList<ScoreDeltaView>();
+            	row.add(potentialRowMember);
+            	totalPerfectWidth = potentialRowMember.getPerfectWidth();
+    		}
+    		Log.i(TAG,"Laid out " + i + " children");
+    	}
+    	
+    	// Scale the last row to its perfect width
+    	if(!row.isEmpty()) {
+    		rows.put(row,1d);
+    	}
+    	
+    	for(Map.Entry<LinkedList<ScoreDeltaView>,Double> e : rows.entrySet()) {
+    		int rowWidth = 0;
+    		for(ScoreDeltaView sdv : e.getKey()) {
+    			int targetItemWidth = (int)(e.getValue() * sdv.getPerfectWidth());
+    			// Because computer precision sucks, this kludge will extend the last element slightly.
+    			if(sdv == e.getKey().getLast()) {
+    				Log.i(TAG,"Adjusting last element");
+    				targetItemWidth = myWidth - rowWidth;
+    			}
+    			rowWidth += targetItemWidth;
+
+	        	ValueAnimator.ofObject(sdv.EVALUATOR,
+	        			sdv.getActualWidth(), targetItemWidth).start();
+
+    		}
+    		Log.i(TAG,"Made row of width " + rowWidth);
+    	}
     }
     
     public void addElementToBeginning() {
-    	SystemSliceView slice = new SystemSliceView(getContext());
+    	ScoreDeltaView slice = new ScoreDeltaView(getContext());
     	addView(slice, 1);
     }
     public void addElementToEnd() {
-    	SystemSliceView slice = new SystemSliceView(getContext());
+    	ScoreDeltaView slice = new ScoreDeltaView(getContext());
     	addView(slice,getChildCount());
     }
     public void removeFirstElement() {

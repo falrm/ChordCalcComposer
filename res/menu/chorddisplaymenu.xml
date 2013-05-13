@@ -10,6 +10,9 @@
           android:title="Chords"
           android:showAsAction="ifRoom" />
     <item android:id="@+id/debugFunction1"
-        	android:title="Debug1"
+        	android:title="Delete"
+        	android:showAsAction="ifRoom" />
+    <item android:id="@+id/debugFunction2"
+        	android:title="Widths"
         	android:showAsAction="ifRoom" />
 </menu>
