@@ -25,6 +25,7 @@ import android.view.SurfaceView;
  *
  */
 public class SheetMusicSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
+	private ScoreLayout _parent;
 	private static final int STAFFHEIGHT = 80;
 	private static final int MARGIN = 20;
 	private static final Paint NORMALPAINT = new Paint();
@@ -71,6 +72,10 @@ public class SheetMusicSurfaceView extends SurfaceView implements SurfaceHolder.
 
 	private void init() {
 		getHolder().addCallback(this);
+	}
+	
+	public void setParent(ScoreLayout s) {
+		_parent = s;
 	}
 	
 	@Override

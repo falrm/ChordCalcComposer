@@ -230,6 +230,7 @@ public class ScoreLayout extends ViewGroup {
 	    //addView(sv);
 	    
 	    _surface = new SheetMusicSurfaceView(getContext());
+	    _surface.setParent(this);
 	    addView(_surface);
 	    
 	    Score s = Score.twinkleTwinkle();
