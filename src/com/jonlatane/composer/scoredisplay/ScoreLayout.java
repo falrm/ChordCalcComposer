@@ -17,11 +17,13 @@
 package com.jonlatane.composer.scoredisplay;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Random;
 
+import com.jonlatane.composer.R;
 import com.jonlatane.composer.music.Rational;
 import com.jonlatane.composer.music.Score;
 
@@ -33,8 +35,12 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.Pair;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -78,9 +84,12 @@ import android.widget.TextView;
  */
 public class ScoreLayout extends ViewGroup {
 	private static final String TAG = "ScoreLayout";
+	
+	private GestureDetector _gestureDetector;
+	
+    private SheetMusicSurfaceView _surface;
     
     private Score _score;
-    private SheetMusicSurfaceView _surface;
     private Rational _topLeft;
     private double _animationOffset = 0;
     
@@ -89,24 +98,50 @@ public class ScoreLayout extends ViewGroup {
     Animator defaultAppearingAnim, defaultDisappearingAnim;
     Animator defaultChangingAppearingAnim, defaultChangingDisappearingAnim;
     
-    public static class StaffSpec {
-    	public StaffSpec(int top, int middle, int bottom) {
+    public static class VerticalStaffSpec {
+		public static final VerticalStaffSpec DEFAULT = new VerticalStaffSpec(0, 40, 80);
+		public static int DEFAULTSTAFFHEIGHT = 60;
+		
+		public final int TOP, MIDDLE_STAFF, BOTTOM;
+    	public VerticalStaffSpec(int top, int middle, int bottom) {
     		TOP = top;
     		MIDDLE_STAFF = middle;
     		BOTTOM = bottom;
     	}
-    	public final int TOP;
-    	public final int MIDDLE_STAFF;
-    	public final int BOTTOM;
+    	
+		public static VerticalStaffSpec best(VerticalStaffSpec ss1, VerticalStaffSpec ss2) {
+			int top, middle, bottom;
+			assert(ss1.TOP == 0 && ss2.TOP == 0);
+			top = 0;
+			middle = Math.max(ss1.MIDDLE_STAFF, ss2.MIDDLE_STAFF);
+			bottom = middle + Math.max(ss1.BOTTOM - ss1.MIDDLE_STAFF, ss2.BOTTOM - ss2.MIDDLE_STAFF);
+			return new ScoreLayout.VerticalStaffSpec(top, middle, bottom);
+		}
     }
     
-    public static int DEFAULTSTAFFHEIGHT = 60;
-    public static final StaffSpec DEFAULTSTAFFSPEC = new StaffSpec(0, 40, 80); 
+    public static class HorizontalStaffSpec {
+		public static final HorizontalStaffSpec DEFAULT = new HorizontalStaffSpec(0, 20, 40);
+		
+		public final int LEFT, CENTER_NOTEHEAD, RIGHT;
+    	public HorizontalStaffSpec(int top, int middle, int bottom) {
+    		LEFT = top;
+    		CENTER_NOTEHEAD = middle;
+    		RIGHT = bottom;
+    	}
+    	
+		public static HorizontalStaffSpec best(HorizontalStaffSpec ss1, HorizontalStaffSpec ss2) {
+			int top, middle, bottom;
+			assert(ss1.LEFT == 0 && ss2.LEFT == 0);
+			top = 0;
+			middle = Math.max(ss1.CENTER_NOTEHEAD, ss2.CENTER_NOTEHEAD);
+			bottom = middle + Math.max(ss1.RIGHT - ss1.CENTER_NOTEHEAD, ss2.RIGHT - ss2.CENTER_NOTEHEAD);
+			return new HorizontalStaffSpec(top, middle, bottom);
+		}
+    }
     
     private class ScoreDeltaView extends LinearLayout {
     	private Score.ScoreDelta _scoreDelta;
-    	private int _perfectWidth;
-    	private int _actualWidth;
+    	private int _perfectWidth, _actualWidth;
     	
     	
     	private class WidthEvaluator implements TypeEvaluator<Integer> {
@@ -117,7 +152,6 @@ public class ScoreLayout extends ViewGroup {
     	    	Log.i(TAG,"Scaling to " + result + " for " + fraction + " " + startValue + " " + endValue);
         		//Float num = (Float)super.evaluate(fraction, startValue, endValue);
         		setActualWidth(result);
-        		requestLayout();
         		return result;
         	}
         }
@@ -126,26 +160,99 @@ public class ScoreLayout extends ViewGroup {
     	
     	public class StaffDeltaView extends LinearLayout {
     		private Score.Staff.StaffDelta _staffDelta;
+    		private TextView _upperLyricView, _lowerLyricView;
+    		private VerticalStaffSpec _perfectVerticalStaffSpec, _actualVerticalStaffSpec;
+    		private HorizontalStaffSpec _perfectHorizontalStaffSpec, _actualHorizontalStaffSpec;
+    		
+			private class VerticalStaffSpecEvaluator implements TypeEvaluator<VerticalStaffSpec> {
+				@Override
+	        	public VerticalStaffSpec evaluate(float fraction, VerticalStaffSpec startValue, VerticalStaffSpec endValue) {
+					int top, middle, bottom;
+					
+					top = (int)(startValue.TOP + (fraction * endValue.TOP));
+					middle = (int)(startValue.MIDDLE_STAFF + (fraction * endValue.MIDDLE_STAFF));
+					bottom = (int)(startValue.BOTTOM + (fraction * endValue.BOTTOM));
+
+					VerticalStaffSpec result = new VerticalStaffSpec(top,middle,bottom);
+	    	    	
+	        		requestLayout();
+	        		return result;
+	        	}
+			}
+			
+			private class HorizontalStaffSpecEvaluator implements TypeEvaluator<HorizontalStaffSpec> {
+				@Override
+	        	public HorizontalStaffSpec evaluate(float fraction, HorizontalStaffSpec startValue, HorizontalStaffSpec endValue) {
+					int left, center, right;
+					
+					left = (int)(startValue.LEFT + (fraction * endValue.LEFT));
+					center = (int)(startValue.CENTER_NOTEHEAD + (fraction * endValue.CENTER_NOTEHEAD));
+					right = (int)(startValue.RIGHT + (fraction * endValue.RIGHT));
+
+					HorizontalStaffSpec result = new HorizontalStaffSpec(left,center,right);
+	    	    	
+	        		requestLayout();
+	        		return result;
+	        	}
+			}
+    		
     		public StaffDeltaView(Context context) {
     			super(context);
     			setOrientation(VERTICAL);
-    			TextView upperLyricView = new TextView(getContext());
-    			TextView lowerLyricView = new TextView(getContext());
-    			upperLyricView.setText("upper");
-    			lowerLyricView.setText("lower");
+    			_perfectVerticalStaffSpec = VerticalStaffSpec.DEFAULT;
+    			_actualVerticalStaffSpec = VerticalStaffSpec.DEFAULT;
+    			_perfectHorizontalStaffSpec = HorizontalStaffSpec.DEFAULT;
+    			_actualHorizontalStaffSpec = HorizontalStaffSpec.DEFAULT;
+    			
+    			_upperLyricView = new TextView(getContext());
+    			_lowerLyricView = new TextView(getContext());
+    			_upperLyricView.setText("upper");
+    			_lowerLyricView.setText("lower");
+    			
     			
     			Button b = new Button(getContext());
-    			LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(_actualWidth, DEFAULTSTAFFSPEC.BOTTOM - DEFAULTSTAFFSPEC.TOP);
+    			LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(_actualWidth, VerticalStaffSpec.DEFAULT.BOTTOM - VerticalStaffSpec.DEFAULT.TOP);
     			
-    			addView(upperLyricView);
+    			addView(_upperLyricView);
     			addView(b);
-    			addView(lowerLyricView);
+    			addView(_lowerLyricView);
     		}
     		
     		public void setStaffDelta(Score.Staff.StaffDelta d) {
-        		_staffDelta = d;    			
+        		_staffDelta = d;
+        		
+        		//Debugging stuff
+        		_upperLyricView.setText(d.LOCATION.toMixedString() + 
+        				(d.LOCATION.equals(_score.getFine()) ? " (Fine)" : ""));
     		}
     		
+    		public VerticalStaffSpec getPerfectVerticalStaffSpec() {
+    			return _perfectVerticalStaffSpec;
+    		}
+    		public VerticalStaffSpec getActualVerticalStaffSpec() {
+    			return _actualVerticalStaffSpec;
+    		}
+    		public void setActualVerticalStaffSpec(VerticalStaffSpec ss) {
+    			_actualVerticalStaffSpec = ss;
+    			requestLayout();
+    		}
+    		public void animateToActualVerticalStaffSpec(VerticalStaffSpec ss) {
+    			ValueAnimator.ofObject(new VerticalStaffSpecEvaluator(), _actualVerticalStaffSpec, ss).start();
+    		}
+    		
+    		public HorizontalStaffSpec getPerfectHorizontalStaffSpec() {
+    			return _perfectHorizontalStaffSpec;
+    		}
+    		public HorizontalStaffSpec getActualHorizontalStaffSpec() {
+    			return _actualHorizontalStaffSpec;
+    		}
+    		public void setActualHorizontalStaffSpec(HorizontalStaffSpec ss) {
+    			_actualHorizontalStaffSpec = ss;
+    			requestLayout();
+    		}
+    		public void animateToActualHorizontalStaffSpec(HorizontalStaffSpec ss) {
+    			ValueAnimator.ofObject(new HorizontalStaffSpecEvaluator(), _actualHorizontalStaffSpec, ss).start();
+    		}
     	}
     	
     	public ScoreDeltaView(Context context ) {
@@ -191,25 +298,26 @@ public class ScoreLayout extends ViewGroup {
 		}
 		public void setActualWidth(int i) {
 			_actualWidth = i;
+			requestLayout();
 		}
     }
 
     public ScoreLayout(Context context) {
         super(context);
-        init();
+        onCreate();
     }
     
     public ScoreLayout(Context c, AttributeSet a) {
     	super(c,a);
-    	init();
+    	onCreate();
     }
     public ScoreLayout(Context c, AttributeSet a, int d) {
     	super(c,a,d);
-    	init();
+    	onCreate();
     }
     
 
-    public void init() {
+    public void onCreate() {
     	
 	    final LayoutTransition transitioner = new LayoutTransition();
 	    setLayoutTransition(transitioner);
@@ -233,13 +341,26 @@ public class ScoreLayout extends ViewGroup {
 	    _surface.setParent(this);
 	    addView(_surface);
 	    
-	    Score s = Score.twinkleTwinkle();
+	    /*Score s = Score.twinkleTwinkle();
 	    Score.ScoreDelta d = s.scoreDeltaAt(new Rational(1,1));
 	    for(int i = 0; i < 100; i++) {
 	    	ScoreDeltaView sdv = new ScoreDeltaView(getContext());
 	    	sdv.setScoreDelta(d);
 	    	addView(sdv,1);
-	    }
+	    }*/
+	    openScore(Score.twinkleTwinkle());
+    }
+    
+    public void openScore(Score s) {
+    	_score = s;
+    	Iterator<Score.ScoreDelta> itr = s.scoreIterator(Rational.ZERO);
+    	int startIndex = 1;
+    	while(itr.hasNext()) {
+    		Score.ScoreDelta scd = itr.next();
+    		ScoreDeltaView sdv = new ScoreDeltaView(getContext());
+    		sdv.setScoreDelta(scd);
+    		addView(sdv, startIndex++);
+    	}
     }
 
     @Override
@@ -257,11 +378,6 @@ public class ScoreLayout extends ViewGroup {
     private boolean _needsMoreViews = false;
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-	    /*getLayoutTransition().setAnimator(LayoutTransition.APPEARING,  null);
-	    getLayoutTransition().setAnimator(LayoutTransition.DISAPPEARING, null);
-	    getLayoutTransition().setAnimator(LayoutTransition.CHANGE_APPEARING, null);
-	    getLayoutTransition().setAnimator(LayoutTransition.CHANGE_DISAPPEARING, null);*/
-
         int myWidth = getMeasuredWidth();
         
         int x = 0;
@@ -310,28 +426,147 @@ public class ScoreLayout extends ViewGroup {
             	x = (int)(w * (1 - d));
             	y += h;
             }
-            
-            Log.i(TAG,"x=" + x);
         }
         
         if(y < getMeasuredHeight()) {
         	_needsMoreViews = true;
         }
         
-	    /*getLayoutTransition().setAnimator(LayoutTransition.APPEARING,  defaultAppearingAnim);
-	    getLayoutTransition().setAnimator(LayoutTransition.DISAPPEARING, defaultDisappearingAnim);
-	    getLayoutTransition().setAnimator(LayoutTransition.CHANGE_APPEARING, defaultChangingAppearingAnim);
-	    getLayoutTransition().setAnimator(LayoutTransition.CHANGE_DISAPPEARING, defaultChangingDisappearingAnim);*/
+	    /**/
     }
+
+	void enableTransitions() {
+		getLayoutTransition().setAnimator(LayoutTransition.APPEARING,
+				defaultAppearingAnim);
+		getLayoutTransition().setAnimator(LayoutTransition.DISAPPEARING,
+				defaultDisappearingAnim);
+		getLayoutTransition().setAnimator(LayoutTransition.CHANGE_APPEARING,
+				defaultChangingAppearingAnim);
+		getLayoutTransition().setAnimator(LayoutTransition.CHANGE_DISAPPEARING,
+				defaultChangingDisappearingAnim);
+
+	}
+
+	void disableTransitions() {
+		getLayoutTransition().setAnimator(LayoutTransition.APPEARING, null);
+		getLayoutTransition().setAnimator(LayoutTransition.DISAPPEARING, null);
+		getLayoutTransition().setAnimator(LayoutTransition.CHANGE_APPEARING,
+				null);
+		getLayoutTransition().setAnimator(LayoutTransition.CHANGE_DISAPPEARING,
+				null);
+	}
     
-    public void fixLayoutWidths() {
+    Float __prevMotionX = null;
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+    	Log.i(TAG,"onTouchEvent");
+    	if(event.getPointerCount() > 1) {
+    		return false;
+    	}
+    	if(event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+    		__prevMotionX = event.getX();
+    		return true;
+    	} else if(event.getActionMasked() == MotionEvent.ACTION_MOVE && event.getPointerCount() == 1) {
+    		disableTransitions();
+    		if(__prevMotionX != null) {
+    			int dx = (int) (event.getX() - __prevMotionX);
+
+    			Log.i(TAG,"Move of x" + event.getX() + "," + __prevMotionX + " dx="+dx);
+    			
+    			//Scroll forwards (right to left swipe)
+		        if (dx < 0) {
+		            int removedWidth = 0;
+		            while(true) {
+		            	ScoreDeltaView sdv = (ScoreDeltaView)getChildAt(1);
+		            	if(sdv == null || sdv._scoreDelta.LOCATION.compareTo(_score.getFine()) >= 0)
+		            		break;
+		            	if(removedWidth + sdv.getActualWidth() <= -dx) {
+		            		removedWidth += sdv.getActualWidth();
+		            		Log.i(TAG,"removing view");
+		            		removeViewAt(1);
+		            	} else {
+		            		Log.i(TAG,"Breaking with removedWidth="+removedWidth);
+		            		break;
+		            	}
+		            }
+		            
+		            
+		            int leftToRemove = -dx - removedWidth;
+		            Log.i(TAG,"leftToRemove=" + leftToRemove + " removedWidth=" + removedWidth);
+		            ScoreDeltaView first = (ScoreDeltaView)getChildAt(1);
+		            Log.i(TAG,"Shortening first view to " + (first.getActualWidth() - leftToRemove));
+		            first.setActualWidth(first.getActualWidth() - leftToRemove);
+		            
+		        // Scroll backwards (left to right swipe)
+		        } else if(dx > 0) {
+		        	ScoreDeltaView first = (ScoreDeltaView)getChildAt(1);
+		        	Rational startingPoint;
+		        	if(first == null)
+		        		startingPoint = _score.getFine();
+		        	else
+		        		startingPoint = first._scoreDelta.LOCATION;
+		        	
+		        	Iterator<Score.ScoreDelta> itr = _score.reverseScoreIterator(startingPoint, false);
+		        	
+		        	int leftToAdd = dx;
+		        	
+		        	while(true) {
+		        		if(first.getActualWidth() < first.getPerfectWidth()) {
+		        			int addable = first.getPerfectWidth() - first.getActualWidth();
+		        			if(leftToAdd <= addable) {
+		        				first.setActualWidth(first.getActualWidth() + leftToAdd);
+		        				break;
+		        			} else {
+		        				first.setActualWidth(first.getActualWidth() + addable);
+		        				leftToAdd -= addable;
+		        			}
+		        		} else {
+		        			if(!itr.hasNext())
+		        				break;
+		        			Score.ScoreDelta scd = itr.next();
+		        			ScoreDeltaView sdv = new ScoreDeltaView(getContext());
+		        			sdv.setScoreDelta(scd);
+		        			addView(sdv, 1);
+		        			
+		        			int addable = sdv.getPerfectWidth();
+		        			if(leftToAdd <= addable) {
+		        				sdv.setActualWidth(leftToAdd);
+		        				break;
+		        			} else {
+		        				sdv.setActualWidth(addable);
+		        				leftToAdd -= addable;
+		        			}
+		        		}
+		        	}
+		        }
+    		}
+    		requestLayout();
+    		enableTransitions();
+    		__prevMotionX = event.getX();
+	        return true;
+    	} else if(event.getActionMasked() == MotionEvent.ACTION_UP && event.getPointerCount() == 1) {
+    		fixLayout();
+    	}
+		return false;
+	}
+    
+    /**
+     * This map is useful for quite a few things.
+     * @return
+     */
+    private LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,VerticalStaffSpec[]>> deriveRows() {
     	int myWidth = getMeasuredWidth();
     	int totalPerfectWidth = 0;
 
     	int rowStartIndex = 1;
     	
-        LinkedHashMap<LinkedList<ScoreDeltaView>,Double> rows = new LinkedHashMap<LinkedList<ScoreDeltaView>,Double>();
+    	LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,VerticalStaffSpec[]>> result = new LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,VerticalStaffSpec[]>>();
     	LinkedList<ScoreDeltaView> row = new LinkedList<ScoreDeltaView>();
+    	
+    	VerticalStaffSpec[] bestStaffSpecs = new VerticalStaffSpec[((ScoreDeltaView)getChildAt(1))._scoreDelta.STAVES.length];
+    	for(int j = 0; j < bestStaffSpecs.length; j++)
+    		bestStaffSpecs[j] = VerticalStaffSpec.DEFAULT;
+    	
     	for(int i = rowStartIndex; i < getChildCount(); i++) {
     		ScoreDeltaView potentialRowMember = (ScoreDeltaView)getChildAt(i);
     		if(potentialRowMember == null)
@@ -340,11 +575,18 @@ public class ScoreLayout extends ViewGroup {
     		if(totalPerfectWidth + potentialRowMember.getPerfectWidth() < myWidth) {
     			row.add(potentialRowMember);
     			totalPerfectWidth += potentialRowMember.getPerfectWidth();
+    			for(int j = 0; j < potentialRowMember.getChildCount(); j++) {
+    				ScoreDeltaView.StaffDeltaView staffDV = (ScoreDeltaView.StaffDeltaView) potentialRowMember.getChildAt(j);
+    				bestStaffSpecs[j] = VerticalStaffSpec.best(staffDV.getPerfectVerticalStaffSpec(),bestStaffSpecs[j]);
+    			}
     		// End of row, figure out width
     		} else {
             	double perfectWidthFactor = (double)myWidth/(double)totalPerfectWidth;
-            	rows.put(row,perfectWidthFactor);
+            	Pair<Double,VerticalStaffSpec[]> p = new Pair<Double,VerticalStaffSpec[]>(perfectWidthFactor,bestStaffSpecs);
+            	result.put(row,p);
             	row = new LinkedList<ScoreDeltaView>();
+            	for(int j = 0; j < bestStaffSpecs.length; j++)
+            		bestStaffSpecs[j] = VerticalStaffSpec.DEFAULT;
             	row.add(potentialRowMember);
             	totalPerfectWidth = potentialRowMember.getPerfectWidth();
     		}
@@ -353,22 +595,53 @@ public class ScoreLayout extends ViewGroup {
     	
     	// Scale the last row to its perfect width
     	if(!row.isEmpty()) {
-    		rows.put(row,1d);
+    		result.put(row,new Pair<Double,VerticalStaffSpec[]>(1d, bestStaffSpecs));
     	}
     	
-    	for(Map.Entry<LinkedList<ScoreDeltaView>,Double> e : rows.entrySet()) {
+    	return result;
+    }
+    
+    public void fixLayout() {
+    	int myWidth = getMeasuredWidth();
+    	
+    	if(getChildAt(1) == null)
+    		return;
+    	
+        LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,VerticalStaffSpec[]>> rows = deriveRows();
+    	
+    	for(Map.Entry<LinkedList<ScoreDeltaView>,Pair<Double,VerticalStaffSpec[]>> e : rows.entrySet()) {
     		int rowWidth = 0;
-    		for(ScoreDeltaView sdv : e.getKey()) {
-    			int targetItemWidth = (int)(e.getValue() * sdv.getPerfectWidth());
+    		
+    		boolean[] hasUpperLyrics = new boolean[e.getKey().getFirst()._scoreDelta.STAVES.length];
+    		boolean[] hasLowerLyrics = new boolean[hasUpperLyrics.length];
+    		
+    		for(int i = 0; i < hasUpperLyrics.length;i++) {
+    			hasUpperLyrics[i] = false;
+    			hasLowerLyrics[i] = false;
+    		}
+    		for(ScoreDeltaView scoreDV : e.getKey()) {
+    			int targetItemWidth = (int)(e.getValue().first * scoreDV.getPerfectWidth());
+    			
+    			// FIRST.  Make sure the width of the ScoreDelta is set.
     			// Because computer precision sucks, this kludge will extend the last element slightly.
-    			if(sdv == e.getKey().getLast()) {
+    			if(scoreDV == e.getKey().getLast() && !scoreDV._scoreDelta.LOCATION.equals(_score.getFine())) {
     				Log.i(TAG,"Adjusting last element");
     				targetItemWidth = myWidth - rowWidth;
     			}
     			rowWidth += targetItemWidth;
-
-	        	ValueAnimator.ofObject(sdv.EVALUATOR,
-	        			sdv.getActualWidth(), targetItemWidth).start();
+    			
+    			for(int i = 0; i < scoreDV.getChildCount(); i++) {
+    				ScoreDeltaView.StaffDeltaView staffDV = (ScoreDeltaView.StaffDeltaView)scoreDV.getChildAt(i);
+    				if(!staffDV._upperLyricView.getText().toString().trim().equals(""))
+    					hasUpperLyrics[i] = true;
+        			if(!staffDV._lowerLyricView.getText().toString().trim().equals(""))
+    					hasLowerLyrics[i] = true;
+    			}
+    			
+	        	ValueAnimator.ofObject(scoreDV.EVALUATOR,
+	        			scoreDV.getActualWidth(), targetItemWidth).start();
+	        	
+	        	//
 
     		}
     		Log.i(TAG,"Made row of width " + rowWidth);

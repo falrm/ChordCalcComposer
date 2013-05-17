@@ -3,6 +3,9 @@ package com.jonlatane.composer.music.harmony;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+import com.jonlatane.composer.music.Score;
+import com.jonlatane.composer.music.Score.Staff;
+
 import android.util.Log;
 
 public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
@@ -218,4 +221,5 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 			}
 		}
 	}
+
 }

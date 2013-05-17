@@ -63,9 +63,9 @@ public final class Key extends Scale
 		blah += "] Root:" + c.getRoot();
 		Log.i(TAG,blah);
 		
-		if(c.getClass().equals(Key.class)) {
+		if(c.getClass().equals(Key.class) && ((Key)c).getRootName() != null) {
 			setRootName(((Key)c).getRootName());
-		} else if( c instanceof Scale ) {
+		} else if( c instanceof Scale ) {//c.getClass().(Scale.class) || c.getClass().equals(Scale.MajorScale.class)) {
 			Scale s = (Scale)c;
 			if(s.isMajor()) {
 				//Log.i(TAG,"Key is major" + (majorKeys.length));
@@ -79,14 +79,14 @@ public final class Key extends Scale
 	// Override these to be sure root and root name are consistent
 	@Override
 	public Integer getRoot() {
-		int rootName = noteNameToInt(_rootName);
-		assert(rootName == super.getRoot());
+		int rootFromName = noteNameToInt(_rootName);
+		assert(rootFromName == super.getRoot());
 		return super.getRoot();
 	}
 	
 	public String getRootName() {
-		int rootName = noteNameToInt(_rootName);
-		assert(rootName == super.getRoot());
+		int rootFromName = noteNameToInt(_rootName);
+		assert(rootFromName == super.getRoot());
 		return _rootName;
 	}
 	

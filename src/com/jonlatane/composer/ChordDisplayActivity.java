@@ -130,9 +130,10 @@ public class ChordDisplayActivity extends Activity
 	    	break;
 	    case R.id.debugFunction1:
 	    	((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
+	    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
 	    	break;
 	    case R.id.debugFunction2:
-	    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayoutWidths();
+	    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
 	    	break;
 	    default:
 	      break;

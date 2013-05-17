@@ -32,7 +32,6 @@ public class KeyboardScroller extends HorizontalScrollView {
 	
 	void onCreate(Context c){
 		final GestureDetector.OnGestureListener gl = new GestureDetector.SimpleOnGestureListener() {
-			private float accumVelocityX = 0;
 			@Override
 			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
 				if( e1 == null || e2 == null) {
@@ -45,8 +44,6 @@ public class KeyboardScroller extends HorizontalScrollView {
 		        // don't accept the fling if it's too short
 		        // as it may conflict with a button push
 		        if (Math.abs(dx) > findViewById(R.id.keyA0).getWidth() * 2 && Math.abs(velocityX) > Math.abs(velocityY)) {
-		        	//_keyboardScroller.enableScrolling();
-
 		        	enableScrolling();
 		            fling((int) -(velocityX));
 		            
@@ -66,11 +63,8 @@ public class KeyboardScroller extends HorizontalScrollView {
 		                    disableScrolling();
 		                }
 		            }.execute(new Integer[]{0});
-		            
-		            //_keyboardScroller.disableScrolling();
 		            return true;
 		        } else {
-		        	//accumVelocityX += velocityX;
 		            return true;
 		        }
 		    }
