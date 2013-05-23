@@ -1,5 +1,6 @@
 package com.jonlatane.composer.io;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 import android.media.AudioFormat;
@@ -47,7 +48,7 @@ public class ManagedToneGenerator {
 
 	}
 	
-	public static class Cache {
+	private static class Cache {
 		private static SparseArray<SparseArray<AudioTrack>> _data = new SparseArray<SparseArray<AudioTrack>>();
 		private static LinkedList<Pair<Integer,Integer>> _recentlyUsedNotes = new LinkedList<Pair<Integer,Integer>>();
 				
@@ -218,25 +219,29 @@ public class ManagedToneGenerator {
 		}
 	}
 	
-	private static Double[] _overtones;
-	private ManagedToneGenerator() {}
+	private static Double[] _defaultOvertones = {70., 30., 30., 10., 10., 20., 20., 1.};
+	private Double[] _myOverTones;
 	
-	public static void setDefaultOvertones(Double...overtones) {
-		_overtones = overtones;
+	private ManagedToneGenerator(Double... overtones) {
+		if(overtones.length == 0)
+			overtones = _defaultOvertones.clone();
+		
+		_myOverTones = _defaultOvertones;
 	}
 
 	public static AudioTrack getAudioTrackForNote(int n) {
-		return Cache.getAudioTrackForNote(n, _overtones);
+		return Cache.getAudioTrackForNote(n, _defaultOvertones);
 	}
 	
 	public static AudioTrack getAudioTrackForNote(int n, Double... overtones) {
 		return Cache.getAudioTrackForNote(n, overtones);
 	}
-	
-	public static void prioritizeNote(int n, Double... overtones) {
-		
+
+	public static void normalizeVolumes() {
+		Cache.normalizeVolumes();
 	}
-	public static void prioritizeNote(int n) {
-		prioritizeNote(n,_overtones);
+	
+	public static void releaseAudioResources() {
+		Cache.releaseAll();
 	}
 }

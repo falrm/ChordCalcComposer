@@ -69,8 +69,6 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		}
 		_kbs = ((KeyboardScroller)v.findViewById(R.id.kbScroller));
 		_kbs.setKeyboardIOHander(this);
-		
-		ManagedToneGenerator.setDefaultOvertones(70., 30., 30., 10., 10., 20., 20., 1.);
 	}
 	
 	public void harmonicModeOn() {
@@ -127,7 +125,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		
 		AudioTrack t = ManagedToneGenerator.getAudioTrackForNote(n);
 		t.pause();
-		ManagedToneGenerator.Cache.normalizeVolumes();
+		ManagedToneGenerator.normalizeVolumes();
 		t.setPlaybackHeadPosition(0);
 	}
 	void pressNote(int n) {
@@ -147,7 +145,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		}
 		_currentlyPressed.add(n);
 		ManagedToneGenerator.getAudioTrackForNote(n).play();
-		ManagedToneGenerator.Cache.normalizeVolumes();
+		ManagedToneGenerator.normalizeVolumes();
 		//_recentlyUsedNotes.remove((Integer)n);
 		//_recentlyUsedNotes.addFirst((Integer)n);
 				
