@@ -25,7 +25,6 @@ import android.util.Pair;
 public class Chord extends PitchSet {
  	private static final String TAG = "Chord";
 	private static final long serialVersionUID = 6734588916693899323L;
-	public static final String flat = "\u266D";
 	public static final String diminished = "\u00B0";
 	/**
 	* The Modulus of a chord represents the number of tones in its octave. It exists in its most basic
@@ -76,6 +75,28 @@ public class Chord extends PitchSet {
 				octave += 1;
 			}
 			return octave;
+		}
+		
+		/**
+		 * Returns the smallest distance between the two provided numbers
+		 * @param i1
+		 * @param i2
+		 * @return
+		 */
+		public int distance(int i1, int i2) {
+			int result1 = mod(i1-i2);
+			int result2 = mod(i2-i1);
+			return Math.min(result1, result2);
+		}
+		
+
+		public static int absoluteHeptDistance(String s1, String s2) {
+			int s1_octave = (int)s1.charAt(s1.length() - 1);
+			int s2_octave = (int)s2.charAt(s2.length() - 1);
+			int s1_heptClass = toHeptatonicNumber(s1.charAt(0));
+			int s2_heptClass = toHeptatonicNumber(s2.charAt(0));
+			
+			return (s2_heptClass - s1_heptClass) + 7 * (s2_octave - s1_octave);
 		}
 		
 		public int hashCode() {
@@ -271,14 +292,14 @@ public class Chord extends PitchSet {
 				case 9: if(c.contains(root+2) && !c.contains(root+5) && !c.contains(root+9)) {
 							name += "add9";
 						} else if(c.contains(root+1)) {
-							name += flat + "9";
+							name += Enharmonics.flat + "9";
 						} else if(c.contains(root + 3) && c.contains(root+4)) {
 							name += "#9";
 						}
 						break;
 				//only look for flat 9 (for sus2/sus24 chords)
 				case -9: if(c.contains(root+1)) {
-							name += flat + "9";
+							name += Enharmonics.flat + "9";
 						}
 						break;
 				
@@ -299,23 +320,23 @@ public class Chord extends PitchSet {
 				case 6: if(c.contains(root+9)) {
 							name +="add6";
 						} else if(c.contains(root+8) && c.contains(root+7)) {
-							name += flat + "6";
+							name += Enharmonics.flat + "6";
 							certainty -= 5;
 						}
 						break;
 				// only look for flat 6 (for dim chords)
 				case -6: if(c.contains(root+8) && c.contains(root+7)) {
-							name += "add"+flat+"6";
+							name += "add"+Enharmonics.flat+"6";
 							certainty -= 5;
 						} else if(c.contains(root+8)) {
-							name += flat + "6";
+							name += Enharmonics.flat + "6";
 							certainty -= 5;
 						}
 						break;
 				case 13: if(c.contains(root+9)) {
 							name += "add13";
 						} else if(c.contains(root+8) && c.contains(root+7)) {
-							name += flat + "13";
+							name += Enharmonics.flat + "13";
 						} else if(c.contains(root+10) && c.contains(root+11)) {
 							name += "#13";
 						}
@@ -331,9 +352,9 @@ public class Chord extends PitchSet {
 				
 				// in case there is a -5
 				case -7: if(c.contains(root+10)) {
-							name += "7"+flat+"5";
+							name += "7"+Enharmonics.flat+"5";
 						} else if(c.contains(root+11)) {
-							name += "M7"+flat+"5";
+							name += "M7"+Enharmonics.flat+"5";
 						} else if(c.contains(root+9)) {
 							name += diminished + "7";
 						}
@@ -343,7 +364,7 @@ public class Chord extends PitchSet {
 				case 5: if(c.contains(root+8)&&c.contains(root+9)) {
 							name += "#5";
 						} else if(c.contains(root+6)) {
-							name += flat+"5";
+							name += Enharmonics.flat+"5";
 						}
 						break;
 			}
@@ -490,7 +511,7 @@ public class Chord extends PitchSet {
 					Pair<String,Integer> p = nameTones(c, root, -6, 9, 11);
 					String colors = p.first;
 					certainty += p.second;
-					if(colors.length() > 0  && (colors.startsWith("#")||colors.startsWith(flat)))
+					if(colors.length() > 0  && (colors.startsWith("#")||colors.startsWith(Enharmonics.flat)))
 						name += "M" + colors;
 					else
 						name += colors;
@@ -594,26 +615,26 @@ public class Chord extends PitchSet {
 						// M3-5M7M9M13 (11 is optional to call it a 13 chord, as
 						// the 11 is an avoid note)
 						if (c.contains(root + 9)) {
-							name += "M13"+flat+"5";
+							name += "M13"+Enharmonics.flat+"5";
 							Pair<String,Integer> p = nameTones(c, root, 9, 11);
 							name += p.first;
 							certainty += p.second;
 							// M3-5M7M9M11
 						} else if (c.contains(root + 5)) {
-							name += "M11"+flat+"5";
+							name += "M11"+Enharmonics.flat+"5";
 							Pair<String,Integer> p = nameTones(c, root, 9);
 							name += p.first;
 							certainty += p.second;
 							// M3-5M7M9, no M11, no M13
 						} else {
-							name += "M9"+flat+"5";
+							name += "M9"+Enharmonics.flat+"5";
 							Pair<String,Integer> p = nameTones(c, root, 11, 13);
 							name += p.first;
 							certainty += p.second;
 						}
 						// M3-5M7, no M9, no M11, no M13
 					} else {
-						name += "M7"+flat+"5";
+						name += "M7"+Enharmonics.flat+"5";
 						Pair<String,Integer> p = nameTones(c, root, 9, 11, 13);
 							name += p.first;
 							certainty += p.second;
@@ -626,26 +647,26 @@ public class Chord extends PitchSet {
 					if (c.contains(root + 2)) {
 						// M3-5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if (c.contains(root + 9)) {
-							name += "13"+flat+"5";
+							name += "13"+Enharmonics.flat+"5";
 							Pair<String,Integer> p = nameTones(c, root, 9, 11);
 							name += p.first;
 							certainty += p.second;
 						// M3-5m7M9M11
 						} else if (c.contains(root + 5)) {
-							name += "11"+flat+"5";
+							name += "11"+Enharmonics.flat+"5";
 							Pair<String,Integer> p = nameTones(c, root, 9);
 							name += p.first;
 							certainty += p.second;
 						// M3-5m7M9, no M11, no M13
 						} else {
-							name += "9"+flat+"5";
+							name += "9"+Enharmonics.flat+"5";
 							Pair<String,Integer> p = nameTones(c, root, 11, 13);
 							name += p.first;
 							certainty += p.second;
 						}
 					// M3-5m7, no M9, no M11, no M13
 					} else {
-						name += "7"+flat+"5";
+						name += "7"+Enharmonics.flat+"5";
 						Pair<String,Integer> p = nameTones(c, root, 9, 11, 13);
 							name += p.first;
 							certainty += p.second;
@@ -653,13 +674,13 @@ public class Chord extends PitchSet {
 				// M3-5M6 (major 6 with no M7/m7 at all)
 				} else if (c.contains(root + 9)) {
 					certainty += 6;
-					name += "6"+flat+"5";
+					name += "6"+Enharmonics.flat+"5";
 					Pair<String,Integer> p = nameTones(c, root, 9, 11);
 							name += p.first;
 							certainty += p.second;
 				//M3-5 with no (non-flat)6 or any 7
 				} else {
-					name += "M"+flat+"5";
+					name += "M"+Enharmonics.flat+"5";
 					Pair<String,Integer> p = nameTones(c,root, -6, 9, 11);
 							name += p.first;
 							certainty += p.second;
@@ -748,7 +769,7 @@ public class Chord extends PitchSet {
 					Pair<String,Integer> p = nameTones(c, root, -6, 9, 11);
 					String colors = p.first;
 					certainty += p.second;
-					if(colors.length() > 0  && (colors.startsWith("#")||colors.startsWith(flat)))
+					if(colors.length() > 0  && (colors.startsWith("#")||colors.startsWith(Enharmonics.flat)))
 						name += "M" + colors;
 					else
 						name += colors;
@@ -893,26 +914,26 @@ public class Chord extends PitchSet {
 					if (c.contains(root + 2)) {
 						// m3-5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 						if (c.contains(root + 9)) {
-							name += "13"+flat+"5";
+							name += "13"+Enharmonics.flat+"5";
 							Pair<String,Integer> p = nameTones(c, root, 9, 11);
 							name += p.first;
 							certainty += p.second;
 							// M3-5m7M9M11
 						} else if (c.contains(root + 5)) {
-							name += "11"+flat+"5";
+							name += "11"+Enharmonics.flat+"5";
 							Pair<String,Integer> p = nameTones(c, root, 9);
 							name += p.first;
 							certainty += p.second;
 							// M3-5m7M9, no M11, no M13
 						} else {
-							name += "9"+flat+"5";
+							name += "9"+Enharmonics.flat+"5";
 							Pair<String,Integer> p = nameTones(c, root, 11, 13);
 							name += p.first;
 							certainty += p.second;
 						}
 						// M3-5m7, no M9, no M11, no M13
 					} else {
-						name += "7"+flat+"5";
+						name += "7"+Enharmonics.flat+"5";
 						Pair<String,Integer> p = nameTones(c, root, 9, 11, 13);
 							name += p.first;
 							certainty += p.second;
@@ -1119,26 +1140,26 @@ public class Chord extends PitchSet {
 				if (c.contains(root + 2)) {
 					// m3-5m7M9M13 (11 is optional to call it a 13 chord, as the 11 is an avoid note)
 					if (c.contains(root + 9)) {
-						name += "13"+flat+"5";
+						name += "13"+Enharmonics.flat+"5";
 						Pair<String,Integer> p = nameTones(c, root, 9, 11);
 							name += p.first;
 							certainty += p.second;
 						// M3-5m7M9M11
 					} else if (c.contains(root + 5)) {
-						name += "11"+flat+"5";
+						name += "11"+Enharmonics.flat+"5";
 						Pair<String,Integer> p = nameTones(c, root, 9);
 							name += p.first;
 							certainty += p.second;
 						// M3-5m7M9, no M11, no M13
 					} else {
-						name += "9"+flat+"5";
+						name += "9"+Enharmonics.flat+"5";
 						Pair<String,Integer> p = nameTones(c, root, 11, 13);
 							name += p.first;
 							certainty += p.second;
 					}
 					// M3-5m7, no M9, no M11, no M13
 				} else {
-					name += "7"+flat+"5";
+					name += "7"+Enharmonics.flat+"5";
 					Pair<String,Integer> p = nameTones(c, root, 9, 11, 13);
 							name += p.first;
 							certainty += p.second;
@@ -1181,7 +1202,7 @@ public class Chord extends PitchSet {
 	public static Chord getChordByName(String s) {
 		Chord result = new Chord();
 		// EX: F+M7#6#9
-		Pattern p = Pattern.compile("((?:A|B|C|D|E|F|G)(?:#|b|" + flat + ")?)" + //root name (1)
+		Pattern p = Pattern.compile("((?:A|B|C|D|E|F|G)(?:#|b|" + Enharmonics.flat + ")?)" + //root name (1)
 								"(-|\\+|" + diminished + "|2|sus2|sus|sus4|sus24|5?)" + // quality (2)
 								"(M?)(6|7|9|11|13|)((?:\\(no3\\))?)" + // "color quality" (3)(4)(5)
 								"((?:(?:add)?(?:b|#)?(?:-5|7|9|11|13))*)" ); // more color tones to be parsed later (6)
@@ -1194,7 +1215,7 @@ public class Chord extends PitchSet {
 					m.group(5) + " | " +
 					m.group(6));
 			
-			int root = Key.noteNameToInt(m.group(1));
+			int root = Enharmonics.noteNameToInt(m.group(1));
 			result.setRoot(root);
 			
 			// quality
@@ -1309,7 +1330,7 @@ public class Chord extends PitchSet {
 	 */
 	public static int schenkerianToInt(String s) {
 		int result = 0;
-		Pattern p = Pattern.compile("(#|" + flat + "|-|\\+|)" + "(\\d+)");
+		Pattern p = Pattern.compile("(#|" + Enharmonics.flat + "|-|\\+|)" + "(\\d+)");
 		Matcher m = p.matcher(s);
 		if( m.matches()) {
 			int interval = HEPTATONIC.mod( Integer.parseInt(m.group(2)) );
@@ -1344,7 +1365,7 @@ public class Chord extends PitchSet {
 			}
 			
 			
-			if(m.group(1) == flat) {
+			if(m.group(1) == Enharmonics.flat) {
 				result -= 1;
 			} else if(m.group(1).equals("#")) {
 				result += 1;

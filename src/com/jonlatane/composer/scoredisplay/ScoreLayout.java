@@ -16,44 +16,32 @@
 
 package com.jonlatane.composer.scoredisplay;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Random;
 
-import com.jonlatane.composer.R;
 import com.jonlatane.composer.music.Rational;
 import com.jonlatane.composer.music.Score;
+import com.jonlatane.composer.music.Score.ScoreDelta;
+import com.jonlatane.composer.scoredisplay.ScoreDrawingSurface.SystemHeader;
 
-import android.animation.Animator;
-import android.animation.FloatEvaluator;
 import android.animation.LayoutTransition;
-import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.res.TypedArray;
-import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Pair;
-import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 /**
  * A ScoreLayout is a self-managing ViewGroup that renders {@link ScoreDeltaView}s
  * containing {@link ScoreDeltaView.StaffDeltaView}s which in turn interact with
  * the underlying Score when touched by the user.
  * 
- * The first child view in a ScoreLayout is a SurfaceView that is responsible for
+ * The first child view in a ScoreLayout is a ScoreDrawingSurface that is responsible for
  * rendering a background layer.  This layer predetermines the positions of staff lines
  * before the ScoreLayout lays out its contents and passes them to the ScoreLayout.  The
  * ScoreLayout then places its tiles atop the background.
@@ -84,224 +72,12 @@ import android.widget.TextView;
  */
 public class ScoreLayout extends ViewGroup {
 	private static final String TAG = "ScoreLayout";
-	
-	private GestureDetector _gestureDetector;
-	
-    private SheetMusicSurfaceView _surface;
     
-    private Score _score;
-    private Rational _topLeft;
-    private double _animationOffset = 0;
-    
-    private double _scalingFactor = 1d;
-    
-    Animator defaultAppearingAnim, defaultDisappearingAnim;
-    Animator defaultChangingAppearingAnim, defaultChangingDisappearingAnim;
-    
-    public static class VerticalStaffSpec {
-		public static final VerticalStaffSpec DEFAULT = new VerticalStaffSpec(0, 40, 80);
-		public static int DEFAULTSTAFFHEIGHT = 60;
-		
-		public final int TOP, MIDDLE_STAFF, BOTTOM;
-    	public VerticalStaffSpec(int top, int middle, int bottom) {
-    		TOP = top;
-    		MIDDLE_STAFF = middle;
-    		BOTTOM = bottom;
-    	}
-    	
-		public static VerticalStaffSpec best(VerticalStaffSpec ss1, VerticalStaffSpec ss2) {
-			int top, middle, bottom;
-			assert(ss1.TOP == 0 && ss2.TOP == 0);
-			top = 0;
-			middle = Math.max(ss1.MIDDLE_STAFF, ss2.MIDDLE_STAFF);
-			bottom = middle + Math.max(ss1.BOTTOM - ss1.MIDDLE_STAFF, ss2.BOTTOM - ss2.MIDDLE_STAFF);
-			return new ScoreLayout.VerticalStaffSpec(top, middle, bottom);
-		}
-    }
-    
-    public static class HorizontalStaffSpec {
-		public static final HorizontalStaffSpec DEFAULT = new HorizontalStaffSpec(0, 20, 40);
-		
-		public final int LEFT, CENTER_NOTEHEAD, RIGHT;
-    	public HorizontalStaffSpec(int top, int middle, int bottom) {
-    		LEFT = top;
-    		CENTER_NOTEHEAD = middle;
-    		RIGHT = bottom;
-    	}
-    	
-		public static HorizontalStaffSpec best(HorizontalStaffSpec ss1, HorizontalStaffSpec ss2) {
-			int top, middle, bottom;
-			assert(ss1.LEFT == 0 && ss2.LEFT == 0);
-			top = 0;
-			middle = Math.max(ss1.CENTER_NOTEHEAD, ss2.CENTER_NOTEHEAD);
-			bottom = middle + Math.max(ss1.RIGHT - ss1.CENTER_NOTEHEAD, ss2.RIGHT - ss2.CENTER_NOTEHEAD);
-			return new HorizontalStaffSpec(top, middle, bottom);
-		}
-    }
-    
-    private class ScoreDeltaView extends LinearLayout {
-    	private Score.ScoreDelta _scoreDelta;
-    	private int _perfectWidth, _actualWidth;
-    	
-    	
-    	private class WidthEvaluator implements TypeEvaluator<Integer> {
-    	    @SuppressLint("NewApi")
-        	@Override
-        	public Integer evaluate(float fraction, Integer startValue, Integer endValue) {
-    	    	Integer result = startValue + (int)((endValue - startValue) * fraction);
-    	    	Log.i(TAG,"Scaling to " + result + " for " + fraction + " " + startValue + " " + endValue);
-        		//Float num = (Float)super.evaluate(fraction, startValue, endValue);
-        		setActualWidth(result);
-        		return result;
-        	}
-        }
-    	
-    	public final WidthEvaluator EVALUATOR = new WidthEvaluator();
-    	
-    	public class StaffDeltaView extends LinearLayout {
-    		private Score.Staff.StaffDelta _staffDelta;
-    		private TextView _upperLyricView, _lowerLyricView;
-    		private VerticalStaffSpec _perfectVerticalStaffSpec, _actualVerticalStaffSpec;
-    		private HorizontalStaffSpec _perfectHorizontalStaffSpec, _actualHorizontalStaffSpec;
-    		
-			private class VerticalStaffSpecEvaluator implements TypeEvaluator<VerticalStaffSpec> {
-				@Override
-	        	public VerticalStaffSpec evaluate(float fraction, VerticalStaffSpec startValue, VerticalStaffSpec endValue) {
-					int top, middle, bottom;
-					
-					top = (int)(startValue.TOP + (fraction * endValue.TOP));
-					middle = (int)(startValue.MIDDLE_STAFF + (fraction * endValue.MIDDLE_STAFF));
-					bottom = (int)(startValue.BOTTOM + (fraction * endValue.BOTTOM));
+    Score _score;
 
-					VerticalStaffSpec result = new VerticalStaffSpec(top,middle,bottom);
-	    	    	
-	        		requestLayout();
-	        		return result;
-	        	}
-			}
-			
-			private class HorizontalStaffSpecEvaluator implements TypeEvaluator<HorizontalStaffSpec> {
-				@Override
-	        	public HorizontalStaffSpec evaluate(float fraction, HorizontalStaffSpec startValue, HorizontalStaffSpec endValue) {
-					int left, center, right;
-					
-					left = (int)(startValue.LEFT + (fraction * endValue.LEFT));
-					center = (int)(startValue.CENTER_NOTEHEAD + (fraction * endValue.CENTER_NOTEHEAD));
-					right = (int)(startValue.RIGHT + (fraction * endValue.RIGHT));
-
-					HorizontalStaffSpec result = new HorizontalStaffSpec(left,center,right);
-	    	    	
-	        		requestLayout();
-	        		return result;
-	        	}
-			}
-    		
-    		public StaffDeltaView(Context context) {
-    			super(context);
-    			setOrientation(VERTICAL);
-    			_perfectVerticalStaffSpec = VerticalStaffSpec.DEFAULT;
-    			_actualVerticalStaffSpec = VerticalStaffSpec.DEFAULT;
-    			_perfectHorizontalStaffSpec = HorizontalStaffSpec.DEFAULT;
-    			_actualHorizontalStaffSpec = HorizontalStaffSpec.DEFAULT;
-    			
-    			_upperLyricView = new TextView(getContext());
-    			_lowerLyricView = new TextView(getContext());
-    			_upperLyricView.setText("upper");
-    			_lowerLyricView.setText("lower");
-    			
-    			
-    			Button b = new Button(getContext());
-    			LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(_actualWidth, VerticalStaffSpec.DEFAULT.BOTTOM - VerticalStaffSpec.DEFAULT.TOP);
-    			
-    			addView(_upperLyricView);
-    			addView(b);
-    			addView(_lowerLyricView);
-    		}
-    		
-    		public void setStaffDelta(Score.Staff.StaffDelta d) {
-        		_staffDelta = d;
-        		
-        		//Debugging stuff
-        		_upperLyricView.setText(d.LOCATION.toMixedString() + 
-        				(d.LOCATION.equals(_score.getFine()) ? " (Fine)" : ""));
-    		}
-    		
-    		public VerticalStaffSpec getPerfectVerticalStaffSpec() {
-    			return _perfectVerticalStaffSpec;
-    		}
-    		public VerticalStaffSpec getActualVerticalStaffSpec() {
-    			return _actualVerticalStaffSpec;
-    		}
-    		public void setActualVerticalStaffSpec(VerticalStaffSpec ss) {
-    			_actualVerticalStaffSpec = ss;
-    			requestLayout();
-    		}
-    		public void animateToActualVerticalStaffSpec(VerticalStaffSpec ss) {
-    			ValueAnimator.ofObject(new VerticalStaffSpecEvaluator(), _actualVerticalStaffSpec, ss).start();
-    		}
-    		
-    		public HorizontalStaffSpec getPerfectHorizontalStaffSpec() {
-    			return _perfectHorizontalStaffSpec;
-    		}
-    		public HorizontalStaffSpec getActualHorizontalStaffSpec() {
-    			return _actualHorizontalStaffSpec;
-    		}
-    		public void setActualHorizontalStaffSpec(HorizontalStaffSpec ss) {
-    			_actualHorizontalStaffSpec = ss;
-    			requestLayout();
-    		}
-    		public void animateToActualHorizontalStaffSpec(HorizontalStaffSpec ss) {
-    			ValueAnimator.ofObject(new HorizontalStaffSpecEvaluator(), _actualHorizontalStaffSpec, ss).start();
-    		}
-    	}
-    	
-    	public ScoreDeltaView(Context context ) {
-    		super(context);
-    		setOrientation(VERTICAL);
-			_perfectWidth = 30 * Math.max(1, new Random().nextInt(5));
-			_actualWidth = _perfectWidth;
-    	}
-    	
-    	public void setScoreDelta(Score.ScoreDelta d) {
-    		_scoreDelta = d;
-    		for(int i = 0; i < getChildCount(); i++) {
-    			removeViewAt(i);
-    		}
-    		for(Score.Staff.StaffDelta sd : d.STAVES) {
-    			StaffDeltaView sdv = new StaffDeltaView(getContext());
-    			sdv.setStaffDelta(sd);
-    			addView(sdv);
-    		}
-    	}
-    	
-		@Override
-		public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-			int totalHeight = 0;
-			for(int i=0; i < getChildCount(); i++) {
-				View v = getChildAt(i);
-				v.measure(widthMeasureSpec, heightMeasureSpec);
-				totalHeight += v.getMeasuredHeight();
-			}
-			setMeasuredDimension(_actualWidth, totalHeight);
-		}
-		
-		@Override
-		public void onLayout(boolean changed, int l, int t, int r, int b) {
-			super.onLayout(changed, l, t, r, b);
-		}
-		
-		public int getPerfectWidth() {
-			return _perfectWidth;
-		}
-		public int getActualWidth() {
-			return _actualWidth;
-		}
-		public void setActualWidth(int i) {
-			_actualWidth = i;
-			requestLayout();
-		}
-    }
-
+    private ScoreDrawingSurface _surface;
+    double _scalingFactor = 1d;
+    
     public ScoreLayout(Context context) {
         super(context);
         onCreate();
@@ -318,46 +94,22 @@ public class ScoreLayout extends ViewGroup {
     
 
     public void onCreate() {
-    	
-	    final LayoutTransition transitioner = new LayoutTransition();
-	    setLayoutTransition(transitioner);
-	    defaultAppearingAnim = transitioner.getAnimator(LayoutTransition.APPEARING);
-	    defaultDisappearingAnim =
-	            transitioner.getAnimator(LayoutTransition.DISAPPEARING);
-	    defaultChangingAppearingAnim =
-	            transitioner.getAnimator(LayoutTransition.CHANGE_APPEARING);
-	    defaultChangingDisappearingAnim =
-	            transitioner.getAnimator(LayoutTransition.CHANGE_DISAPPEARING);
 	    
-	    /*transitioner.setAnimator(LayoutTransition.APPEARING,  defaultAppearingAnim);
-	    transitioner.setAnimator(LayoutTransition.DISAPPEARING, defaultDisappearingAnim);
-	    transitioner.setAnimator(LayoutTransition.CHANGE_APPEARING, defaultChangingAppearingAnim);
-	    transitioner.setAnimator(LayoutTransition.CHANGE_DISAPPEARING, defaultChangingDisappearingAnim);*/
-	    
-	    //SurfaceView sv = new SurfaceView(getContext());
-	    //addView(sv);
-	    
-	    _surface = new SheetMusicSurfaceView(getContext());
-	    _surface.setParent(this);
+	    _surface = new ScoreDrawingSurface(getContext(), this);
 	    addView(_surface);
 	    
-	    /*Score s = Score.twinkleTwinkle();
-	    Score.ScoreDelta d = s.scoreDeltaAt(new Rational(1,1));
-	    for(int i = 0; i < 100; i++) {
-	    	ScoreDeltaView sdv = new ScoreDeltaView(getContext());
-	    	sdv.setScoreDelta(d);
-	    	addView(sdv,1);
-	    }*/
-	    openScore(Score.twinkleTwinkle());
+	    Score s = Score.twinkleTwinkle();
+	    Score.testScore(s);
+	    openScore(s);
     }
     
     public void openScore(Score s) {
     	_score = s;
     	Iterator<Score.ScoreDelta> itr = s.scoreIterator(Rational.ZERO);
     	int startIndex = 1;
-    	while(itr.hasNext()) {
+    	while(itr.hasNext() && startIndex < 500) {
     		Score.ScoreDelta scd = itr.next();
-    		ScoreDeltaView sdv = new ScoreDeltaView(getContext());
+    		ScoreDeltaView sdv = new ScoreDeltaView(getContext(), this);
     		sdv.setScoreDelta(scd);
     		addView(sdv, startIndex++);
     	}
@@ -375,20 +127,21 @@ public class ScoreLayout extends ViewGroup {
                 resolveSize(Integer.MAX_VALUE, heightMeasureSpec));
     }
 
-    private boolean _needsMoreViews = false;
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         int myWidth = getMeasuredWidth();
         
         int x = 0;
         int y = 0;
+        
+        int systemNumber = 1;
 
-        getChildAt(0).layout(l, t, r, b);
+        //getChildAt(0).layout(l, t, r, b);
+        _surface.layout(l, t, r, b);
         
         // Lay out everything AS MEASURED as best as we can.
-        int count = getChildCount();
-        for (int index=1; index<count; index++) {
-            final View child = getChildAt(index);
+        for (int index=1; index<getChildCount(); index++) {
+            final ScoreDeltaView child = (ScoreDeltaView) getChildAt(index);
 
             int w = child.getMeasuredWidth();
             int h = child.getMeasuredHeight();
@@ -398,26 +151,33 @@ public class ScoreLayout extends ViewGroup {
             
             // This View won't be visible to the user, remove this and all subsequent Views.
             if(top > getMeasuredHeight()) {
-            	//for(int j = index; j < count; j++) {
-            	//	removeViewAt(j);
-            	//}
             	while(index < getChildCount())
             		removeViewAt(index );
             	break;
             }
             
-            // There is room for this View horizontally, place it normally
+            // There is room for this View horizontally, place it normally in the same system we've been
+            // placing Views.
             if(left + w < myWidth) {
             	child.layout(left, top, left+w, top+h);
             	x += w;
             
-            // There is going to be a gap, we must place this view approximately
-            // and scale views (up only) so this one will fit with an animation.
+            // There isn't room for this View in the system.  How close is appears to "being" in the next
+            // system depends on how wide it is compared to how much space is left.
             } else {
             	// This ratio represents "proximity" to where the View should be drawn.
             	// 0 represents perfectly on the next line, 1 perfectly here.  Anywhere
             	// in between should correspond to positions in between for a transition
             	double d = (myWidth - left) / (double)w;
+            	
+            	while(_surface.getChildCount() < systemNumber + 1) {
+            		_surface.addView(_surface.new SystemHeader(_surface.getContext()));
+            	}
+            	SystemHeader header = (SystemHeader)_surface.getChildAt(systemNumber);
+            	int systemHeaderViewWidth;
+            	
+            	
+            	
             	left = (int)(left * d);
             	top = (int)(top + (h * (1d-d)));
             	
@@ -425,34 +185,42 @@ public class ScoreLayout extends ViewGroup {
             	
             	x = (int)(w * (1 - d));
             	y += h;
+            	systemNumber += 1;
             }
+            
         }
         
-        if(y < getMeasuredHeight()) {
-        	_needsMoreViews = true;
-        }
-        
-	    /**/
+        _surface.invalidate();
     }
 
 	void enableTransitions() {
-		getLayoutTransition().setAnimator(LayoutTransition.APPEARING,
-				defaultAppearingAnim);
-		getLayoutTransition().setAnimator(LayoutTransition.DISAPPEARING,
-				defaultDisappearingAnim);
-		getLayoutTransition().setAnimator(LayoutTransition.CHANGE_APPEARING,
-				defaultChangingAppearingAnim);
-		getLayoutTransition().setAnimator(LayoutTransition.CHANGE_DISAPPEARING,
-				defaultChangingDisappearingAnim);
+		LayoutTransition t = getLayoutTransition();
+		if(t == null) {
+			t = new LayoutTransition();
+			setLayoutTransition(t);
+		}
+			
+		t.setAnimator(LayoutTransition.APPEARING,
+				t.getAnimator(LayoutTransition.APPEARING));
+		t.setAnimator(LayoutTransition.DISAPPEARING,
+				t.getAnimator(LayoutTransition.DISAPPEARING));
+		t.setAnimator(LayoutTransition.CHANGE_APPEARING,
+				t.getAnimator(LayoutTransition.CHANGE_APPEARING));
+		t.setAnimator(LayoutTransition.CHANGE_DISAPPEARING,
+				t.getAnimator(LayoutTransition.CHANGE_DISAPPEARING));
 
 	}
 
 	void disableTransitions() {
-		getLayoutTransition().setAnimator(LayoutTransition.APPEARING, null);
-		getLayoutTransition().setAnimator(LayoutTransition.DISAPPEARING, null);
-		getLayoutTransition().setAnimator(LayoutTransition.CHANGE_APPEARING,
+		LayoutTransition t = getLayoutTransition();
+		if(t == null) {
+			return;
+		}
+		t.setAnimator(LayoutTransition.APPEARING, null);
+		t.setAnimator(LayoutTransition.DISAPPEARING, null);
+		t.setAnimator(LayoutTransition.CHANGE_APPEARING,
 				null);
-		getLayoutTransition().setAnimator(LayoutTransition.CHANGE_DISAPPEARING,
+		t.setAnimator(LayoutTransition.CHANGE_DISAPPEARING,
 				null);
 	}
     
@@ -475,69 +243,11 @@ public class ScoreLayout extends ViewGroup {
     			
     			//Scroll forwards (right to left swipe)
 		        if (dx < 0) {
-		            int removedWidth = 0;
-		            while(true) {
-		            	ScoreDeltaView sdv = (ScoreDeltaView)getChildAt(1);
-		            	if(sdv == null || sdv._scoreDelta.LOCATION.compareTo(_score.getFine()) >= 0)
-		            		break;
-		            	if(removedWidth + sdv.getActualWidth() <= -dx) {
-		            		removedWidth += sdv.getActualWidth();
-		            		Log.i(TAG,"removing view");
-		            		removeViewAt(1);
-		            	} else {
-		            		Log.i(TAG,"Breaking with removedWidth="+removedWidth);
-		            		break;
-		            	}
-		            }
-		            
-		            
-		            int leftToRemove = -dx - removedWidth;
-		            Log.i(TAG,"leftToRemove=" + leftToRemove + " removedWidth=" + removedWidth);
-		            ScoreDeltaView first = (ScoreDeltaView)getChildAt(1);
-		            Log.i(TAG,"Shortening first view to " + (first.getActualWidth() - leftToRemove));
-		            first.setActualWidth(first.getActualWidth() - leftToRemove);
-		            
+		        	scrollLeftBy(-dx);
+
 		        // Scroll backwards (left to right swipe)
 		        } else if(dx > 0) {
-		        	ScoreDeltaView first = (ScoreDeltaView)getChildAt(1);
-		        	Rational startingPoint;
-		        	if(first == null)
-		        		startingPoint = _score.getFine();
-		        	else
-		        		startingPoint = first._scoreDelta.LOCATION;
-		        	
-		        	Iterator<Score.ScoreDelta> itr = _score.reverseScoreIterator(startingPoint, false);
-		        	
-		        	int leftToAdd = dx;
-		        	
-		        	while(true) {
-		        		if(first.getActualWidth() < first.getPerfectWidth()) {
-		        			int addable = first.getPerfectWidth() - first.getActualWidth();
-		        			if(leftToAdd <= addable) {
-		        				first.setActualWidth(first.getActualWidth() + leftToAdd);
-		        				break;
-		        			} else {
-		        				first.setActualWidth(first.getActualWidth() + addable);
-		        				leftToAdd -= addable;
-		        			}
-		        		} else {
-		        			if(!itr.hasNext())
-		        				break;
-		        			Score.ScoreDelta scd = itr.next();
-		        			ScoreDeltaView sdv = new ScoreDeltaView(getContext());
-		        			sdv.setScoreDelta(scd);
-		        			addView(sdv, 1);
-		        			
-		        			int addable = sdv.getPerfectWidth();
-		        			if(leftToAdd <= addable) {
-		        				sdv.setActualWidth(leftToAdd);
-		        				break;
-		        			} else {
-		        				sdv.setActualWidth(addable);
-		        				leftToAdd -= addable;
-		        			}
-		        		}
-		        	}
+		        	scrollRightBy(dx);
 		        }
     		}
     		requestLayout();
@@ -550,22 +260,124 @@ public class ScoreLayout extends ViewGroup {
 		return false;
 	}
     
+    
+    private void scrollLeftBy(int dx) {
+    	//Remove stuff from the top left
+        int removedWidth = 0;
+        while(true) {
+        	ScoreDeltaView sdv = (ScoreDeltaView)getChildAt(1);
+        	if(sdv == null || sdv._scoreDelta.LOCATION.compareTo(_score.getFine()) >= 0)
+        		break;
+        	if(removedWidth + sdv.getActualWidth() <= dx) {
+        		removedWidth += sdv.getActualWidth();
+        		Log.i(TAG,"removing view");
+        		removeViewAt(1);
+        	} else {
+        		Log.i(TAG,"Breaking with removedWidth="+removedWidth);
+        		break;
+        	}
+        }
+        
+        
+        int leftToRemove = dx - removedWidth;
+        Log.i(TAG,"leftToRemove=" + leftToRemove + " removedWidth=" + removedWidth);
+        ScoreDeltaView first = (ScoreDeltaView)getChildAt(1);
+        if(first._scoreDelta.LOCATION.compareTo(_score.getFine()) < 0) {
+            Log.i(TAG,"Shortening first view to " + (first.getActualWidth() - leftToRemove));
+            first.setActualWidth(first.getActualWidth() - leftToRemove);
+        }
+        
+        //Add stuff to the bottom right
+        ScoreDeltaView lastVisible = (ScoreDeltaView)getChildAt(getChildCount()-1);
+        Iterator<ScoreDelta> itr = _score.scoreIterator(lastVisible._scoreDelta.LOCATION, false);
+        int leftToAdd = dx;
+        while(true) {
+    		if(lastVisible.getActualWidth() < lastVisible.getPerfectWidth()) {
+    			int addable = lastVisible.getPerfectWidth() - lastVisible.getActualWidth();
+    			if(leftToAdd <= addable) {
+    				lastVisible.setActualWidth(lastVisible.getActualWidth() + leftToAdd);
+    				break;
+    			} else {
+    				lastVisible.setActualWidth(lastVisible.getActualWidth() + addable);
+    				leftToAdd -= addable;
+    			}
+    		} else {
+    			if(!itr.hasNext())
+    				break;
+    			Score.ScoreDelta scd = itr.next();
+    			ScoreDeltaView sdv = new ScoreDeltaView(getContext(), this);
+    			sdv.setScoreDelta(scd);
+    			addView(sdv, getChildCount());
+    			
+    			int addable = sdv.getPerfectWidth();
+    			if(leftToAdd <= addable) {
+    				sdv.setActualWidth(leftToAdd);
+    				break;
+    			} else {
+    				sdv.setActualWidth(addable);
+    				leftToAdd -= addable;
+    			}
+    		}
+        }
+    }
+    
+    private void scrollRightBy(int dx) {
+    	ScoreDeltaView first = (ScoreDeltaView)getChildAt(1);
+    	Rational startingPoint;
+    	if(first == null)
+    		startingPoint = _score.getFine();
+    	else
+    		startingPoint = first._scoreDelta.LOCATION;
+    	
+    	Iterator<Score.ScoreDelta> itr = _score.reverseScoreIterator(startingPoint, false);
+    	int leftToAdd = dx;
+    	
+    	while(true) {
+    		if(first.getActualWidth() < first.getPerfectWidth()) {
+    			int addable = first.getPerfectWidth() - first.getActualWidth();
+    			if(leftToAdd <= addable) {
+    				first.setActualWidth(first.getActualWidth() + leftToAdd);
+    				break;
+    			} else {
+    				first.setActualWidth(first.getActualWidth() + addable);
+    				leftToAdd -= addable;
+    			}
+    		} else {
+    			if(!itr.hasNext())
+    				break;
+    			Score.ScoreDelta scd = itr.next();
+    			ScoreDeltaView sdv = new ScoreDeltaView(getContext(), this);
+    			sdv.setScoreDelta(scd);
+    			addView(sdv, 1);
+    			
+    			int addable = sdv.getPerfectWidth();
+    			if(leftToAdd <= addable) {
+    				sdv.setActualWidth(leftToAdd);
+    				break;
+    			} else {
+    				sdv.setActualWidth(addable);
+    				leftToAdd -= addable;
+    			}
+    		}
+    	}
+    }
+    
     /**
      * This map is useful for quite a few things.
      * @return
      */
-    private LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,VerticalStaffSpec[]>> deriveRows() {
+    private LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,StaffSpec.VerticalStaffSpec[]>> deriveRows() {
     	int myWidth = getMeasuredWidth();
     	int totalPerfectWidth = 0;
 
     	int rowStartIndex = 1;
     	
-    	LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,VerticalStaffSpec[]>> result = new LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,VerticalStaffSpec[]>>();
+    	LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,StaffSpec.VerticalStaffSpec[]>> result = new LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,StaffSpec.VerticalStaffSpec[]>>();
     	LinkedList<ScoreDeltaView> row = new LinkedList<ScoreDeltaView>();
     	
-    	VerticalStaffSpec[] bestStaffSpecs = new VerticalStaffSpec[((ScoreDeltaView)getChildAt(1))._scoreDelta.STAVES.length];
+    	StaffSpec.VerticalStaffSpec[] bestStaffSpecs = new StaffSpec.VerticalStaffSpec[((ScoreDeltaView)getChildAt(1))._scoreDelta.STAVES.length];
     	for(int j = 0; j < bestStaffSpecs.length; j++)
-    		bestStaffSpecs[j] = VerticalStaffSpec.DEFAULT;
+    		bestStaffSpecs[j] = StaffSpec.VerticalStaffSpec.DEFAULT;
     	
     	for(int i = rowStartIndex; i < getChildCount(); i++) {
     		ScoreDeltaView potentialRowMember = (ScoreDeltaView)getChildAt(i);
@@ -577,16 +389,16 @@ public class ScoreLayout extends ViewGroup {
     			totalPerfectWidth += potentialRowMember.getPerfectWidth();
     			for(int j = 0; j < potentialRowMember.getChildCount(); j++) {
     				ScoreDeltaView.StaffDeltaView staffDV = (ScoreDeltaView.StaffDeltaView) potentialRowMember.getChildAt(j);
-    				bestStaffSpecs[j] = VerticalStaffSpec.best(staffDV.getPerfectVerticalStaffSpec(),bestStaffSpecs[j]);
+    				bestStaffSpecs[j] = StaffSpec.VerticalStaffSpec.best(staffDV.getPerfectVerticalStaffSpec(),bestStaffSpecs[j]);
     			}
     		// End of row, figure out width
     		} else {
             	double perfectWidthFactor = (double)myWidth/(double)totalPerfectWidth;
-            	Pair<Double,VerticalStaffSpec[]> p = new Pair<Double,VerticalStaffSpec[]>(perfectWidthFactor,bestStaffSpecs);
+            	Pair<Double,StaffSpec.VerticalStaffSpec[]> p = new Pair<Double,StaffSpec.VerticalStaffSpec[]>(perfectWidthFactor,bestStaffSpecs);
             	result.put(row,p);
             	row = new LinkedList<ScoreDeltaView>();
             	for(int j = 0; j < bestStaffSpecs.length; j++)
-            		bestStaffSpecs[j] = VerticalStaffSpec.DEFAULT;
+            		bestStaffSpecs[j] = StaffSpec.VerticalStaffSpec.DEFAULT;
             	row.add(potentialRowMember);
             	totalPerfectWidth = potentialRowMember.getPerfectWidth();
     		}
@@ -595,7 +407,7 @@ public class ScoreLayout extends ViewGroup {
     	
     	// Scale the last row to its perfect width
     	if(!row.isEmpty()) {
-    		result.put(row,new Pair<Double,VerticalStaffSpec[]>(1d, bestStaffSpecs));
+    		result.put(row,new Pair<Double,StaffSpec.VerticalStaffSpec[]>(1d, bestStaffSpecs));
     	}
     	
     	return result;
@@ -607,9 +419,9 @@ public class ScoreLayout extends ViewGroup {
     	if(getChildAt(1) == null)
     		return;
     	
-        LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,VerticalStaffSpec[]>> rows = deriveRows();
+        LinkedHashMap<LinkedList<ScoreDeltaView>,Pair<Double,StaffSpec.VerticalStaffSpec[]>> rows = deriveRows();
     	
-    	for(Map.Entry<LinkedList<ScoreDeltaView>,Pair<Double,VerticalStaffSpec[]>> e : rows.entrySet()) {
+    	for(Map.Entry<LinkedList<ScoreDeltaView>,Pair<Double,StaffSpec.VerticalStaffSpec[]>> e : rows.entrySet()) {
     		int rowWidth = 0;
     		
     		boolean[] hasUpperLyrics = new boolean[e.getKey().getFirst()._scoreDelta.STAVES.length];
@@ -648,19 +460,13 @@ public class ScoreLayout extends ViewGroup {
     	}
     }
     
-    public void addElementToBeginning() {
-    	ScoreDeltaView slice = new ScoreDeltaView(getContext());
-    	addView(slice, 1);
+    @Override
+    public boolean shouldDelayChildPressedState() {
+    	return false;
     }
-    public void addElementToEnd() {
-    	ScoreDeltaView slice = new ScoreDeltaView(getContext());
-    	addView(slice,getChildCount());
-    }
+    
     public void removeFirstElement() {
     	removeViewAt(1);
-    }
-    public void removeLastElement() {
-    	removeViewAt(getChildCount());
     }
 }
 

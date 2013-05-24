@@ -222,7 +222,7 @@ public class ManagedToneGenerator {
 	private static Double[] _defaultOvertones = {70., 30., 30., 10., 10., 20., 20., 1.};
 	private Double[] _myOverTones;
 	
-	private ManagedToneGenerator(Double... overtones) {
+	public ManagedToneGenerator(Double... overtones) {
 		if(overtones.length == 0)
 			overtones = _defaultOvertones.clone();
 		
@@ -231,6 +231,10 @@ public class ManagedToneGenerator {
 
 	public static AudioTrack getAudioTrackForNote(int n) {
 		return Cache.getAudioTrackForNote(n, _defaultOvertones);
+	}
+	
+	public AudioTrack getCustomAudioTrackForNote(int n) {
+		return Cache.getAudioTrackForNote(n, _myOverTones);
 	}
 	
 	public static AudioTrack getAudioTrackForNote(int n, Double... overtones) {

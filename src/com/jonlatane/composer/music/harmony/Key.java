@@ -4,6 +4,7 @@ import android.util.Log;
 import android.util.Pair;
 import android.util.SparseArray;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
@@ -16,14 +17,52 @@ public final class Key extends Scale
 	private static final long serialVersionUID = 6430773851042936649L;
 	private static final String TAG = "Key";
 	private static final char[] heptatonicNotes = { 'C', 'D', 'E', 'F', 'G', 'A', 'B' };
+	private static final HashMap<Character,Integer> heptatonicInverse = new HashMap<Character,Integer>();
 	private static final SparseArray<Character> twelveToneNames = new SparseArray<Character>();
-	private static final HashMap<Character,Integer> twelveToneInverse = new HashMap<Character,Integer>();
-	private static final String[] majorKeys = { "C", "D"+flat, "D", "E"+flat, "E", "F", "G"+flat, "G", "A"+flat, "A", "B"+flat, "B" };
-	private static final String[] minorKeys = { "C", "C#", "D", "E"+flat, "E", "F", "F#", "G", "G#", "A", "B"+flat, "B" };
-	public static Key CMajor = new Key(new MajorScale(0));
-	public static Key CChromatic = new Key(new ChromaticScale(0));
+	static final HashMap<Character,Integer> twelveToneInverse = new HashMap<Character,Integer>();
+	private static final String[] majorKeys = { "C", "D"+Enharmonics.flat, "D", "E"+Enharmonics.flat, "E", "F", "G"+Enharmonics.flat, "G", "A"+Enharmonics.flat, "A", "B"+Enharmonics.flat, "B" };
+	private static final String[] minorKeys = { "C", "C#", "D", "E"+Enharmonics.flat, "E", "F", "F#", "G", "G#", "A", "B"+Enharmonics.flat, "B" };
+	public static final Key CMajor = new Key(new MajorScale(0));
+	public static final Key CMinor = new Key(new NaturalMinorScale(0));
 	
-	static{
+	public static final Key DbMajor = new Key(new MajorScale(1));
+	public static final Key CsMinor = new Key(new NaturalMinorScale(1));
+	
+	public static final Key DMajor = new Key(new MajorScale(2));
+	public static final Key DMinor = new Key(new NaturalMinorScale(2));
+	
+	public static final Key EbMajor = new Key(new MajorScale(3));
+	public static final Key EbMinor = new Key(new NaturalMinorScale(3));
+	
+	public static final Key EMajor = new Key(new MajorScale(4));
+	public static final Key EMinor = new Key(new NaturalMinorScale(4));
+	
+	public static final Key FMajor = new Key(new MajorScale(5));
+	public static final Key FMinor = new Key(new NaturalMinorScale(5));
+	
+	public static final Key GbMajor = new Key(new MajorScale(6));
+	public static final Key FsMajor = new Key(new MajorScale(6));
+	public static final Key FsMinor = new Key(new NaturalMinorScale(6));
+	
+	public static final Key GMajor = new Key(new MajorScale(7));
+	public static final Key GMinor = new Key(new NaturalMinorScale(7));
+	
+	public static final Key AbMajor = new Key(new MajorScale(8));
+	public static final Key GsMinor = new Key(new NaturalMinorScale(8));
+	public static final Key AbMinor = new Key(new NaturalMinorScale(8));
+	
+	public static final Key AMajor = new Key(new MajorScale(9));
+	public static final Key AMinor = new Key(new NaturalMinorScale(9));
+	
+	public static final Key BbMajor = new Key(new MajorScale(10));
+	public static final Key BbMinor = new Key(new NaturalMinorScale(10));
+	
+	public static final Key BMajor = new Key(new MajorScale(11));
+	public static final Key BMinor = new Key(new NaturalMinorScale(11));
+		
+	public static final Key CChromatic = new Key(new ChromaticScale(0));
+	
+	static{		
 		twelveToneNames.put(0, 'C');
 		twelveToneNames.put(2, 'D');
 		twelveToneNames.put(4, 'E');
@@ -46,6 +85,17 @@ public final class Key extends Scale
 		twelveToneInverse.put('g',7);
 		twelveToneInverse.put('a',9);
 		twelveToneInverse.put('b',11);
+		
+		heptatonicInverse.put('C',0);
+		heptatonicInverse.put('D',1);
+		heptatonicInverse.put('E',2);
+		heptatonicInverse.put('F',3);
+		heptatonicInverse.put('G',4);
+		heptatonicInverse.put('A',5);
+		heptatonicInverse.put('B',6);
+		
+		FsMajor.setRootName("F#");
+		AbMinor.setRootName("A" + Enharmonics.flat);
 	}
 	
 	private String _rootName;
@@ -79,13 +129,14 @@ public final class Key extends Scale
 	// Override these to be sure root and root name are consistent
 	@Override
 	public Integer getRoot() {
-		int rootFromName = noteNameToInt(_rootName);
-		assert(rootFromName == super.getRoot());
+		if(_rootName != null) {
+			assert(Enharmonics.noteNameToInt(_rootName) == super.getRoot());
+		}
 		return super.getRoot();
 	}
 	
 	public String getRootName() {
-		int rootFromName = noteNameToInt(_rootName);
+		int rootFromName = Enharmonics.noteNameToInt(_rootName);
 		assert(rootFromName == super.getRoot());
 		return _rootName;
 	}
@@ -97,7 +148,7 @@ public final class Key extends Scale
 	 * @return
 	 */
 	public boolean setRootName(String str) {
-		if(noteNameToInt(str) == getRoot()) {
+		if(Enharmonics.noteNameToInt(str) == getRoot()) {
 			_rootName = str;
 			return true;
 		} else {
@@ -106,7 +157,7 @@ public final class Key extends Scale
 	}
 	
 	/**
-	 * Gets the note name for the given note using its own root name.  Assumes this is a 
+	 * Gets the note name for the given note using this Key's root name.  Assumes this is a 
 	 * heptatonic key (i.e., major, minor or modal) that can be represented with only sharps,
 	 * flats, double sharps and double flats.  Naturals will also be represented if the
 	 * key assumes a note is flat.
@@ -120,37 +171,38 @@ public final class Key extends Scale
 	 * @param i
 	 * @return
 	 */
-	public String getNoteName(Integer i) {
+	public String getNoteName(int i) {
+		Log.i(TAG,"Getting note name for key" + toString() + " root name:" + _rootName);
 		String result = "";
 		i = MODULUS.mod(i);
-		/*String scaleContents = "[";
-		for(Integer k : this) {
-			scaleContents += k+",";
-		}
-		scaleContents += "]";
-		Log.i(TAG,"Getting note name" +scaleContents + _rootName);*/
-		int rootCharIndex = twelveToneInverse.get( _rootName.charAt(0) );
+
+		// This method works by careful interlocking of the heptatonic and twelve-tone systems.
+		int rootCharIndex = heptatonicInverse.get( _rootName.charAt(0) );
 		
+		// Note that this is scale degrees and thus is assumed to be heptatonic (as per documentation)
 		Pair<Integer,Integer> p = degreeOf(i);
+		
 		if(p.first == p.second) {
 			char letterName = heptatonicNotes[(rootCharIndex + p.first-1) % 7];
 			result += letterName;
 			if( i < twelveToneInverse.get(letterName)) {
-				result += flat;
+				result += Enharmonics.flat;
 			}
 			if( i > twelveToneInverse.get(letterName)) {
 				result += '#';
 			}
 		} else {
-			Log.i(TAG,""+p.first+p.second);
+			Log.i(TAG,"Trying to name note not in Key: " + p.first + ","+p.second
+					+ ";" + TWELVETONE.distance( i, getDegree(p.first) ) +","+ TWELVETONE.distance( i, getDegree(p.second)));
 			// represent it as a sharp/double-sharp/flat
-			if( ((i-p.first) % 12) < ((p.second-i) % 12)) {
-				char letterName = heptatonicNotes[(rootCharIndex + p.first-1) % 7];
+			//if( TWELVETONE.mod(i-getDegree(p.first)) < TWELVETONE.mod(getDegree(p.second)-i) ) {
+			if( TWELVETONE.distance( i, getDegree(p.first) ) < TWELVETONE.distance( i, getDegree(p.second) ) ) {
+				char letterName = heptatonicNotes[HEPTATONIC.mod(rootCharIndex + p.first - 1)];
 				result += letterName;
 				
 				// Check for flats
 				if( i < twelveToneInverse.get(letterName)) {
-					result += flat;
+					result += Enharmonics.flat;
 				}
 				
 				// Check for sharps/double-sharps
@@ -162,7 +214,7 @@ public final class Key extends Scale
 				}
 			//represent as a flat/double-flat/sharp
 			} else {
-				char letterName = heptatonicNotes[(rootCharIndex + p.second - 1) % 12];
+				char letterName = heptatonicNotes[HEPTATONIC.mod(rootCharIndex + p.second - 1)];
 				result += letterName;
 				
 				// Check for sharps
@@ -172,72 +224,16 @@ public final class Key extends Scale
 				
 				// Check for flats/double flats
 				if( i < twelveToneInverse.get(letterName)) {
-					result += flat;
+					result += Enharmonics.flat;
 				}
 				if( i < twelveToneInverse.get(letterName)-1) {
-					result += flat;
+					result += Enharmonics.flat;
 				}
 			}
 			
 		}
 		Log.i(TAG,"Got note name " + result);
 		return result;
-	}
-	
-	/**
-	 * Can convert any named note (C, Eb, Bbb, Db6) into the appropriate string representation.
-	 * If no octave is provided we assume we are in the 4th octave (above middle C, in the numeric range 0-11).
-	 * @param noteName
-	 * @return
-	 */
-	public static int noteNameToInt(String noteName) {
-		assert(noteName.length() <= 5);
-		char[] chars = noteName.toCharArray();
-		int  result = twelveToneInverse.get(chars[0]);
-		
-		for( int i = 1; i < chars.length; i = i+1) {
-			if( chars[i] == 'b' || chars[i] == flat.toCharArray()[0] )
-				result = result - 1;
-			else if( chars[i] == '#' )
-				result = result + 1;
-			else if( chars[i] == '1' || chars[1] == '2' ||chars[1] == '3' ||chars[1] == '4' ||chars[1] == '5' ||chars[1] == '6' ||chars[1] == '7' ||chars[1] == '8' ||chars[1] == '9' ||chars[1] == '0' ){
-				result = result + 12 * (Integer.parseInt(new String(new char[] {chars[i]})) - 4);
-			}
-		}
-		
-		return result;
-	}
-
-	/**
-	 * Given a letter A-G/a-g, returns a String with the needed (double)flats/sharps to make them equivalent, with
-	 * C = 0, D = 2, E = 4, F = 5, G = 7, A = 9, B = 11 (i.e., traditional twelve-tone system at C = 0).
-	 * 
-	 * Returns null if impossible.
-	 * 
-	 * i.e., tryToName('C', 0, true/false) = "C", tryToName('B', 0, true/false) = "B#", tryToName('A', -1, true) = "A##",
-	 * and tryToName('A', -1, false) = null
-	 * 
-	 * @param heptatonicName a letter A-G
-	 * @param targetTwelveTonePitchClass any numer (treated as C4=0 and so on, only its pitch class matters)
-	 * @param doubleAccidentals true to enable double flats and sharps
-	 * @return
-	 */
-	public static String tryToName(char heptatonicName, int targetTwelveTonePitchClass, boolean doubleAccidentals) {
-		int s = twelveToneInverse.get(heptatonicName);
-		switch(TWELVETONE.mod(s - targetTwelveTonePitchClass)) {
-			case 0: return "" + heptatonicName;
-			case 11: return heptatonicName + "#";
-			case 10: if(!doubleAccidentals) return null; else return heptatonicName + "##";
-			case 1: return heptatonicName + flat;
-			case 2: if(!doubleAccidentals) return null; else return heptatonicName + flat + flat;
-			default: return null;
-		}
-	}
-	
-	
-	
-	public static PitchSet noteNameToPitchSet(String noteName) {
-		return new PitchSet(noteNameToInt(noteName));
 	}
 	
 	public static Pair<String,Integer> guessName(Chord c, Integer root, Key k) {

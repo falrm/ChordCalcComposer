@@ -5,6 +5,7 @@ import java.util.LinkedList;
 
 import com.jonlatane.composer.music.Score;
 import com.jonlatane.composer.music.Score.Staff;
+import com.jonlatane.composer.music.harmony.Chord.Modulus;
 
 import android.util.Log;
 
@@ -32,6 +33,9 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 		DominantSeven.add(domSevenSevens);
 
 	}
+
+	public static final String flat = "\u266D";
+	public static final String natural = "\u266E";
 	public Enharmonics() {
 	}
 
@@ -57,6 +61,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 	 * @param c1 chord under ps1, to be enharmonically named if NOTENAMES = null (can be the same chord as c2Named)
 	 * @param ps2 pitchset that happens over c2Named, to be enharmonically named if NOTENAMES = null
 	 * @param c2Named chord with NOTENAMES != null and assumed to be "valid" (heptatonic, any double flat/sharp allowed) under ps2
+	 * @param k a Key (only one is needed) that we can fall back on, if it is provided
 	 */
 	public static void fillEnharmonics(PitchSet ps1, Chord c1, PitchSet ps2, Chord c2Named, Key... k) {
 		assert(c2Named.NOTENAMES != null);
@@ -66,16 +71,23 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 			fillEnharmonics(c2Named, k[0]);
 		
 		// Fill in ps2's notenames if needed
-		fillEnharmonics(ps2,c1);
+		fillEnharmonics(ps2,c1, k);
 		
 		// Fill in c1
 		fillEnharmonics(c1, c2Named);
 		
 		//Fill in ps1
-		fillEnharmonics(ps1,c1);
+		fillEnharmonics(ps1, c1, k);
 	}
 	
-	public static void fillEnharmonics(PitchSet ps, Chord cNamed) {
+	public static void fillEnharmonics(PitchSet ps, Chord cNamed, Key... k) {
+		if(Chord.NO_CHORD.equals(cNamed)) {
+			if(k.length == 0)
+				throw new Error("");
+			fillEnharmonics(ps, k[0]);
+			return;
+		}
+		
 		if(ps.NOTENAMES == null) {
 			ps.NOTENAMES = new String[ps.size()];
 			int idx = 0;
@@ -99,7 +111,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 						while(pitchClassName == null) {
 							heptatonicClass = Chord.HEPTATONIC.mod(heptatonicClass - 1);
 							char c = Chord.Modulus.toHeptatonicCharacter(heptatonicClass);
-							pitchClassName = Key.tryToName(c, note, false);
+							pitchClassName = Enharmonics.tryToName(c, note, false);
 						}
 						
 					// The lower note is closer, name from it
@@ -110,18 +122,24 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 							// Step the heptatonic class of the note up from where it was.
 							heptatonicClass = Chord.HEPTATONIC.mod(heptatonicClass + 1);
 							char c = Chord.Modulus.toHeptatonicCharacter(heptatonicClass);
-							pitchClassName = Key.tryToName(c, note, false);
+							pitchClassName = Enharmonics.tryToName(c, note, false);
 						}
-					// They are the same distance from each other.  Do same as upper.
+					// They are the same distance from each other.  Do same as upper (i.e., prefer flats or naturals).
 					} else {
 						char upperLetter = cNamed.NOTENAMES[cNamed.headSet(upper).size()].charAt(0);
 						int heptatonicClass = Chord.Modulus.toHeptatonicNumber(upperLetter);
 						while(pitchClassName == null) {
 							heptatonicClass = Chord.HEPTATONIC.mod(heptatonicClass - 1);
 							char c = Chord.Modulus.toHeptatonicCharacter(heptatonicClass);
-							pitchClassName = Key.tryToName(c, note, false);
+							pitchClassName = Enharmonics.tryToName(c, note, false);
 						}
 					}
+					
+					// Fallback to the Key if necessary.
+					if(pitchClassName == null && k.length > 0) {
+						ps.NOTENAMES[idx] = k[0].getNoteName(note) + Chord.TWELVETONE.octave(note);
+					}
+					
 					ps.NOTENAMES[idx] = pitchClassName + Chord.TWELVETONE.octave(note);
 				}
 				
@@ -176,7 +194,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 					while(pitchClassName == null) {
 						heptatonicClass = Chord.HEPTATONIC.mod(heptatonicClass - 1);
 						char c = Chord.Modulus.toHeptatonicCharacter(heptatonicClass);
-						pitchClassName = Key.tryToName(c, pitchClass, false);
+						pitchClassName = Enharmonics.tryToName(c, pitchClass, false);
 					}
 					
 				// The lower note is closer, name from it
@@ -187,7 +205,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 						// Step the heptatonic class of the note up from where it was.
 						heptatonicClass = Chord.HEPTATONIC.mod(heptatonicClass + 1);
 						char c = Chord.Modulus.toHeptatonicCharacter(heptatonicClass);
-						pitchClassName = Key.tryToName(c, pitchClass, false);
+						pitchClassName = Enharmonics.tryToName(c, pitchClass, false);
 					}
 				// They are the same distance from each other.  Do same as upper.
 				} else {
@@ -196,7 +214,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 					while(pitchClassName == null) {
 						heptatonicClass = Chord.HEPTATONIC.mod(heptatonicClass - 1);
 						char c = Chord.Modulus.toHeptatonicCharacter(heptatonicClass);
-						pitchClassName = Key.tryToName(c, pitchClass, false);
+						pitchClassName = Enharmonics.tryToName(c, pitchClass, false);
 					}
 				}
 				c1.NOTENAMES[idx] = pitchClassName;
@@ -206,6 +224,70 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 		}
 	}
 	
+	public static void fillEnharmonics(PitchSet ps, Key k) {
+		if(ps.NOTENAMES == null) {
+			ps.NOTENAMES = new String[ps.size()];
+			int idx = 0;
+			for(int note : ps) {
+				ps.NOTENAMES[idx++] = k.getNoteName(note) + Chord.TWELVETONE.octave(note);
+			}
+		}
+	}
+	
+	public static PitchSet noteNameToPitchSet(String noteName) {
+		return new PitchSet(noteNameToInt(noteName));
+	}
+
+	/**
+	 * Given a letter A-G/a-g, returns a String with the needed (double)flats/sharps to make them equivalent, with
+	 * C = 0, D = 2, E = 4, F = 5, G = 7, A = 9, B = 11 (i.e., traditional twelve-tone system at C = 0).
+	 * 
+	 * Returns null if impossible.
+	 * 
+	 * i.e., tryToName('C', 0, true/false) = "C", tryToName('B', 0, true/false) = "B#", tryToName('A', -1, true) = "A##",
+	 * and tryToName('A', -1, false) = null
+	 * 
+	 * @param heptatonicName a letter A-G
+	 * @param targetTwelveTonePitchClass any numer (treated as C4=0 and so on, only its pitch class matters)
+	 * @param doubleAccidentals true to enable double flats and sharps
+	 * @return
+	 */
+	public static String tryToName(char heptatonicName, int targetTwelveTonePitchClass, boolean doubleAccidentals) {
+		int s = Key.twelveToneInverse.get(heptatonicName);
+		switch(Chord.TWELVETONE.mod(s - targetTwelveTonePitchClass)) {
+			case 0: return "" + heptatonicName;
+			case 11: return heptatonicName + "#";
+			case 10: if(!doubleAccidentals) return null; else return heptatonicName + "##";
+			case 1: return heptatonicName + flat;
+			case 2: if(!doubleAccidentals) return null; else return heptatonicName + flat + flat;
+			default: return null;
+		}
+	}
+
+	/**
+	 * Can convert any named note (C, Eb, Bbb, Db6) into the appropriate string representation.
+	 * If no octave is provided we assume we are in the 4th octave (above middle C, in the numeric range 0-11).
+	 * @param noteName
+	 * @return
+	 */
+	public static int noteNameToInt(String noteName) {
+		assert(noteName.length() <= 5);
+		char[] chars = noteName.toCharArray();
+		int result = Key.twelveToneInverse.get(chars[0]);
+		
+		for( int i = 1; i < chars.length; i = i+1) {
+			if( chars[i] == 'b' || chars[i] == flat.toCharArray()[0] )
+				result = result - 1;
+			else if( chars[i] == '#' )
+				result = result + 1;
+			else if( chars[i] == '1' || chars[1] == '2' ||chars[1] == '3' ||chars[1] == '4' ||chars[1] == '5' ||chars[1] == '6' ||chars[1] == '7' ||chars[1] == '8' ||chars[1] == '9' ||chars[1] == '0' ){
+				result = result + 12 * (Integer.parseInt(new String(new char[] {chars[i]})) - 4);
+			}
+		}
+		
+		return result;
+	}
+
 	/**
 	 * Fill in the enharmonics for a given chord using the given Key's way of naming notes.  Useful if
 	 * you know the Chord fits in the key (i.e., a cadence).
@@ -222,4 +304,25 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 		}
 	}
 
+	
+	public static Chord toNamedChord(PitchSet ps2Named) {
+		Chord c = new Chord(ps2Named);
+		c.NOTENAMES = new String[c.size()];
+		int idx = 0;
+		for(int n : ps2Named) {
+			int noteNameIndex = c.headSet( Chord.TWELVETONE.mod(n) ).size();
+			String pitchSetNoteName = ps2Named.NOTENAMES[idx];
+			String chordNoteName = pitchSetNoteName.substring(0, pitchSetNoteName.length() - 2);
+			c.NOTENAMES[noteNameIndex] = chordNoteName;
+			idx++;
+		}
+		return c;
+	}
+	
+	public static void fillEnharmonics(PitchSet ps1, PitchSet ps2Named) {
+		Chord c1 = new Chord(ps1);
+		Chord c2Named = toNamedChord(ps2Named);
+		fillEnharmonics(c1, c2Named);
+		fillEnharmonics(ps1, c1);
+	}
 }

@@ -1,5 +1,7 @@
 package com.jonlatane.composer.music.harmony;
 
+import java.util.Iterator;
+
 import android.util.Log;
 import android.util.Pair;
 /**
@@ -143,21 +145,53 @@ public class Scale extends Chord {
 	}
 	
 	/**
+	 * Returns the chromatic note for the provided scale degree of this Scale.
+	 * For C Major, the parameters 1, 2, 3, 4, 5, 6, 7 return 0, 2, 4, 5, 7, 9, 11.
+	 * 
+	 * @param i
+	 * @return
+	 */
+	public int getDegree(int i) {
+		i = HEPTATONIC.mod(i);
+		if(i == 0) {
+			i = 7;
+		}
+		int currentDegree = 1;
+		Iterator<Integer> itr = tailSet(getRoot()).iterator();
+		while(true) {
+			if(itr.hasNext()) {
+				if(currentDegree == i) {
+					return itr.next();
+				} else {
+					itr.next();
+				}
+			} else {
+				itr = iterator();
+			}
+			currentDegree = HEPTATONIC.mod(currentDegree + 1);
+			if(currentDegree == 0) {
+				currentDegree = 7;
+			}
+		}
+	}
+	
+	/**
 	 * Returns a pair of scale degrees to the left and right of i.  If i is in this Scale,
 	 * the two results will be the same.  If not, each will be the scale degrees to the right
 	 * and left of i.
 	 * 
 	 * @param i
-	 * @return a Pair.
+	 * @return a Pair of numbers between 1 and size()
 	 */
 	public Pair<Integer, Integer> degreeOf(int i) {
-
-		Integer upper = ceiling(MODULUS.mod(i));
+		i = TWELVETONE.mod(i);
+		
+		Integer upper = ceiling(i);
 		if( upper == null )
-			upper = ceiling((MODULUS.mod(i))-12);
-		Integer lower = floor(MODULUS.mod(i));
+			upper = ceiling(i-12);
+		Integer lower = floor(i);
 		if( lower == null )
-			lower = floor((MODULUS.mod(i))+12);
+			lower = floor(i+12);
 		int chromatic = getRoot();
 		int degree = 0;
 		Integer lowerDegree = null;
@@ -170,6 +204,9 @@ public class Scale extends Chord {
 			if(chromatic == upper)
 				upperDegree = degree;
 			chromatic += 1;
+			
+			//degree = TWELVETONE.mod(degree);
+			chromatic = TWELVETONE.mod(chromatic);
 		}
 		
 		return new Pair<Integer,Integer>( lowerDegree, upperDegree );

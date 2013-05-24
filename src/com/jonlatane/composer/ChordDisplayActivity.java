@@ -37,7 +37,13 @@ public class ChordDisplayActivity extends Activity
 		super.onCreate(savedInstanceState);
 		
 		//Debugging stuff - to be moved elsewhere
-		Score.testTwinkleTwinkle();
+		PitchSet ps = PitchSet.toPitchSet(new String[]{"C3", "E3", "G3"});
+		Enharmonics.fillEnharmonics(ps, Key.CMajor);
+		String test1 = "";
+		for(int nameInd = 0; nameInd < ps.NOTENAMES.length; nameInd++) {
+			test1 += ps.NOTENAMES[nameInd] + " ";
+		}
+		Log.i(TAG, "fillEnharmonics test:" + test1);
 		
 		Log.d(TAG, Chord.getChordByName("C"+Chord.diminished+"7add11#13").toString());
 		Chord cA1 = Chord.getChordByName("Ab7");
@@ -147,7 +153,7 @@ public class ChordDisplayActivity extends Activity
 	public void onPause()
 	{
 		super.onPause();
-	    ManagedToneGenerator.Cache.releaseAll();
+	    ManagedToneGenerator.releaseAudioResources();
 	}
 
 	@Override

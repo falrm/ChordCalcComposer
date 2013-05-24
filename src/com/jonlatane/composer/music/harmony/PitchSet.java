@@ -37,21 +37,6 @@ public class PitchSet extends TreeSet<Integer> {
 		return result;
 	}
 	
-	/**
-	 * Stem height may be positive or negative to make the stem up or down respectively.
-	 * 
-	 * The beam angle is from the x axis (orthogonal to the stem); 0 is a right-facing horizontal beam,
-	 * 90 is a useless vertical beam, 180 is a left-facing beam.  To accomodate bidirectional beams,
-	 * the following divisions of our available range of angles are divided into dimensions:
-	 * 
-	 * 
-	 * (-90, 270) : Single-directional beams at the given angle
-	 * (270,450): Bi-directional beam 
-	 * 
-	 * Beams are drawn from the left only for angles (-360,0)
-	 */
-	public Double STEMHEIGHT = null, BEAMANGLE = null;
-	
 	public PitchSet() {
 		super();
 	}
@@ -80,7 +65,7 @@ public class PitchSet extends TreeSet<Integer> {
 	 */
 	public static PitchSet toPitchSet(String note) {
 		PitchSet result = new PitchSet();
-		result.add(Key.noteNameToInt(note));
+		result.add(Enharmonics.noteNameToInt(note));
 		return result;
 	}
 
@@ -93,7 +78,7 @@ public class PitchSet extends TreeSet<Integer> {
 	public static PitchSet toPitchSet(String[] notes) {
 		PitchSet result = new PitchSet();
 		for(String s : notes) {
-			result.add(Key.noteNameToInt(s));
+			result.add(Enharmonics.noteNameToInt(s));
 		}
 		return result;
 	}
