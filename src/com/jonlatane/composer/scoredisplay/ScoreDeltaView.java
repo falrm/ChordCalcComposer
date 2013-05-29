@@ -28,7 +28,6 @@ import com.jonlatane.composer.scoredisplay.StaffSpec.VerticalStaffSpec;
 class ScoreDeltaView extends LinearLayout {
 	private final ScoreLayout _parent;
 	Score.ScoreDelta _scoreDelta;
-	private int _perfectWidth, _actualWidth;
 	private HorizontalStaffSpec _perfectHorizontalStaffSpec, _actualHorizontalStaffSpec;
 	
 	
@@ -46,48 +45,70 @@ class ScoreDeltaView extends LinearLayout {
 	
 	public class StaffDeltaView extends LinearLayout {
 		private Score.Staff.StaffDelta _staffDelta;
+		
 		TextView _upperLyricView;
 		TextView _lowerLyricView;
 		
 		//These views all need to be synchronizable horizontally and vertically between Collections of StaffDeltaViews
-		private View _accidentalArea, _noteHeadArea, _timeSigChangeArea, _keySigChangeArea;
-		private LinearLayout _staffDivisionsDrawingArea;
-		private StaffSpec.VerticalStaffSpec _perfectVerticalStaffSpec, _actualVerticalStaffSpec;
+		private View _accidentalArea, _noteHeadArea, _clefChangeArea, _keySigChangeArea, _timeSigChangeArea;
+		LinearLayout _staffArea;
 		
-		private class VerticalStaffSpecEvaluator implements TypeEvaluator<StaffSpec.VerticalStaffSpec> {
-			@Override
-        	public VerticalStaffSpec evaluate(float fraction, StaffSpec.VerticalStaffSpec startValue, StaffSpec.VerticalStaffSpec endValue) {
-				int above, below;
+		private VerticalStaffSpec _perfectVerticalStaffSpec, _actualVerticalStaffSpec;
 				
-				above = (int)(startValue.ABOVE_CENTER_PX + (fraction*endValue.ABOVE_CENTER_PX));
-				below = (int)(startValue.BELOW_CENTER_PX + (fraction*endValue.BELOW_CENTER_PX));
-
-				StaffSpec.VerticalStaffSpec result = new StaffSpec.VerticalStaffSpec(above,below);
-    	    	
-        		requestLayout();
-        		return result;
-        	}
-		}
-		
-		
-		
 		public StaffDeltaView(Context context) {
 			super(context);
 			setOrientation(VERTICAL);
 			
-			// Set up the area for accidentals, notes, time signature changes and key signature changes
-			_staffDivisionsDrawingArea = new LinearLayout(context);
-			_staffDivisionsDrawingArea.setOrientation(HORIZONTAL);
+			// These guys's width/height is all defined in the StaffSpecs.
+			_accidentalArea = new View(context) {
+				@Override
+				public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+					setMeasuredDimension(_actualHorizontalStaffSpec.ACCIDENTAL_AREA_PX, _actualVerticalStaffSpec.getTotalHeight());
+				}
+			};
+			_noteHeadArea = new View(context) {
+				@Override
+				public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+					setMeasuredDimension(_actualHorizontalStaffSpec.NOTEHEAD_AREA_PX, _actualVerticalStaffSpec.getTotalHeight());
+				}
+			};
+			_clefChangeArea = new View(context) {
+				@Override
+				public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+					setMeasuredDimension(_actualHorizontalStaffSpec.CLEF_PX, _actualVerticalStaffSpec.getTotalHeight());
+				}
+			};
+			_keySigChangeArea = new View(context) {
+				@Override
+				public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+					setMeasuredDimension(_actualHorizontalStaffSpec.KEYSIG_PX, _actualVerticalStaffSpec.getTotalHeight());
+				}
+			};
+			_timeSigChangeArea = new View(context) {
+				@Override
+				public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+					setMeasuredDimension(_actualHorizontalStaffSpec.TIMESIG_PX, _actualVerticalStaffSpec.getTotalHeight());
+				}
+			};
+
 			
-			_accidentalArea = new View(context);
-			_noteHeadArea = new View(context);
-			_timeSigChangeArea = new View(context);
-			_keySigChangeArea = new View(context);
+			// Set up the area for accidentals, notes, time signature changes and key signature changes.
+			// No need to override anything in it, as the above views determine its dimensions.
+			_staffArea = new LinearLayout(context) {
+				@Override
+				public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+					for(int i = 0; i < getChildCount(); i++)
+						getChildAt(i).measure(widthMeasureSpec, heightMeasureSpec);
+					setMeasuredDimension(_actualHorizontalStaffSpec.getTotalWidth(), _actualVerticalStaffSpec.getTotalHeight());
+				}
+			};
+			_staffArea.setOrientation(HORIZONTAL);
 			
-			_staffDivisionsDrawingArea.addView(_accidentalArea);
-			_staffDivisionsDrawingArea.addView(_noteHeadArea);
-			_staffDivisionsDrawingArea.addView(_timeSigChangeArea);
-			_staffDivisionsDrawingArea.addView(_keySigChangeArea);
+			_staffArea.addView(_accidentalArea);
+			_staffArea.addView(_noteHeadArea);
+			_staffArea.addView(_clefChangeArea);
+			_staffArea.addView(_keySigChangeArea);
+			_staffArea.addView(_timeSigChangeArea);
 						
 			// StaffSpecs
 			_perfectVerticalStaffSpec = StaffSpec.VerticalStaffSpec.DEFAULT;
@@ -104,24 +125,17 @@ class ScoreDeltaView extends LinearLayout {
 			
 			_upperLyricView.setText("upper");
 			_lowerLyricView.setText("lower");
-			
-			// TODO remove this stuff.
-			Button b = new Button(getContext());
-			VerticalStaffSpec vss = VerticalStaffSpec.DEFAULT;
-			LinearLayout.LayoutParams p = 
-					new LinearLayout.LayoutParams(_actualWidth, vss.DEFAULT.ABOVE_CENTER_PX + vss.BELOW_CENTER_PX);
-			
+						
 			addView(_upperLyricView);
-			addView(b);
+			addView(_staffArea);
 			addView(_lowerLyricView);
 		}
 		
 		public void setStaffDelta(Score.Staff.StaffDelta d) {
     		_staffDelta = d;
-    		
-    		//Debugging stuff
-    		_upperLyricView.setText(d.LOCATION.toMixedString() + 
-    				(d.LOCATION.equals(_parent._score.getFine()) ? " (Fine)" : ""));
+    		_perfectVerticalStaffSpec = new VerticalStaffSpec(d);
+    		_actualVerticalStaffSpec = _perfectVerticalStaffSpec;
+    		_upperLyricView.setText(d.LOCATION.toMixedString());
 		}
 		
 		public StaffSpec.VerticalStaffSpec getPerfectVerticalStaffSpec() {
@@ -134,33 +148,17 @@ class ScoreDeltaView extends LinearLayout {
 			_actualVerticalStaffSpec = ss;
 			requestLayout();
 		}
-		public void animateToActualVerticalStaffSpec(StaffSpec.VerticalStaffSpec ss) {
-			ValueAnimator.ofObject(new VerticalStaffSpecEvaluator(), _actualVerticalStaffSpec, ss).start();
-		}
-		
-		public StaffSpec.HorizontalStaffSpec getPerfectHorizontalStaffSpec() {
-			return _perfectHorizontalStaffSpec;
-		}
-		public StaffSpec.HorizontalStaffSpec getActualHorizontalStaffSpec() {
-			return _actualHorizontalStaffSpec;
-		}
-		public void setActualHorizontalStaffSpec(StaffSpec.HorizontalStaffSpec ss) {
-			_actualHorizontalStaffSpec = ss;
-			requestLayout();
-		}
-		
 	}
 	
 	public ScoreDeltaView(Context context, ScoreLayout parent ) {
 		super(context);
 		setOrientation(VERTICAL);
 		_parent = parent;
-		_perfectWidth = 30 * Math.max(1, new Random().nextInt(5));
-		_actualWidth = _perfectWidth;
 	}
 	
 	public void setScoreDelta(ScoreDelta d) {
 		_scoreDelta = d;
+		
 		for(int i = 0; i < getChildCount(); i++) {
 			removeViewAt(i);
 		}
@@ -171,6 +169,19 @@ class ScoreDeltaView extends LinearLayout {
 		}
 		
 		_perfectHorizontalStaffSpec = new HorizontalStaffSpec(d);
+		_actualHorizontalStaffSpec = _perfectHorizontalStaffSpec;
+	}
+	
+	/**
+	 * Returns a number between 0 and 1 representing how "visible" this ScoreDeltaView is
+	 * relative to how much space it needs to properly render.
+	 * 
+	 * @return a number between 0 and 1.
+	 */
+	public float getVisibilityRatio() {
+		return Math.min( 1f,
+				(float)(_actualHorizontalStaffSpec.getTotalWidth())
+				/ (float)(_perfectHorizontalStaffSpec.getTotalWidth()));
 	}
 	
 	@Override
@@ -181,22 +192,53 @@ class ScoreDeltaView extends LinearLayout {
 			v.measure(widthMeasureSpec, heightMeasureSpec);
 			totalHeight += v.getMeasuredHeight();
 		}
-		setMeasuredDimension(_actualWidth, totalHeight);
+		setMeasuredDimension(getActualWidth(), totalHeight);
 	}
 	
 	@Override
 	public void onLayout(boolean changed, int l, int t, int r, int b) {
 		super.onLayout(changed, l, t, r, b);
 	}
+
+	
+	public VerticalStaffSpec[] getPerfectVerticalStaffSpecs() {
+		VerticalStaffSpec[] result = new VerticalStaffSpec[getChildCount()];
+		for(int i = 0; i < getChildCount(); i++) {
+			result[i] = ((StaffDeltaView)getChildAt(i)).getPerfectVerticalStaffSpec();
+		}
+		return result;
+	}
+	
+	public void setActualVerticalStaffSpecs(VerticalStaffSpec[] specs) {
+		for(int i = 0; i < getChildCount(); i++) {
+			((StaffDeltaView)getChildAt(i)).setActualVerticalStaffSpec(specs[i]);
+		}
+	}
+	
+	public StaffSpec.HorizontalStaffSpec getPerfectHorizontalStaffSpec() {
+		return _perfectHorizontalStaffSpec;
+	}
+	public StaffSpec.HorizontalStaffSpec getActualHorizontalStaffSpec() {
+		return _actualHorizontalStaffSpec;
+	}
+	public void setActualHorizontalStaffSpec(StaffSpec.HorizontalStaffSpec ss) {
+		_actualHorizontalStaffSpec = ss;
+		requestLayout();
+	}
 	
 	public int getPerfectWidth() {
-		return _perfectWidth;
+		return _perfectHorizontalStaffSpec.getTotalWidth();
 	}
 	public int getActualWidth() {
-		return _actualWidth;
+		return _actualHorizontalStaffSpec.getTotalWidth();
 	}
-	public void setActualWidth(int i) {
-		_actualWidth = i;
+	public void setActualWidth(int targetWidth) {
+		_actualHorizontalStaffSpec = _perfectHorizontalStaffSpec.adaptToWidth(targetWidth);
 		requestLayout();
+		for(int i = 0; i < getChildCount(); i++) {
+			getChildAt(i).requestLayout();
+			((StaffDeltaView)getChildAt(i))._staffArea.requestLayout();
+		}
+			
 	}
 }

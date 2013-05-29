@@ -11,12 +11,15 @@ import com.jonlatane.composer.music.harmony.Key;
 import com.jonlatane.composer.music.Score.ScoreDelta;
 import com.jonlatane.composer.music.Score.Staff.StaffDelta;
 import com.jonlatane.composer.music.harmony.Chord;
+import com.jonlatane.composer.scoredisplay.ScoreDeltaView.StaffDeltaView;
 import com.jonlatane.composer.scoredisplay.StaffSpec.VerticalStaffSpec;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Style;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -38,44 +41,11 @@ import android.widget.LinearLayout;
  */
 public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Callback {
 	private static final String TAG = "ScoreDrawer";
-	
+	private static final int BRACES_AREA_PX = 10;
 
 	private static final Paint NORMALPAINT = new Paint();
 	private static final Paint SELECTEDPAINT = new Paint();
-	
-	private static final Map<Key,Integer> KEY_ACCIDENTALS = new HashMap<Key,Integer>();
-	static {
-		KEY_ACCIDENTALS.put(Key.CMajor, 0);
-		KEY_ACCIDENTALS.put(Key.GMajor, 1);
-		KEY_ACCIDENTALS.put(Key.DMajor, 2);
-		KEY_ACCIDENTALS.put(Key.AMajor, 3);
-		KEY_ACCIDENTALS.put(Key.EMajor, 4);
-		KEY_ACCIDENTALS.put(Key.BMajor, 5);
-		KEY_ACCIDENTALS.put(Key.FsMajor, 6);
 		
-		KEY_ACCIDENTALS.put(Key.GbMajor, -6);
-		KEY_ACCIDENTALS.put(Key.DbMajor, -5);
-		KEY_ACCIDENTALS.put(Key.AbMajor, -4);
-		KEY_ACCIDENTALS.put(Key.EbMajor, -3);
-		KEY_ACCIDENTALS.put(Key.BbMajor, -2);
-		KEY_ACCIDENTALS.put(Key.FMajor, -1);
-		
-
-		KEY_ACCIDENTALS.put(Key.AMinor, 0);
-		KEY_ACCIDENTALS.put(Key.EMinor, 1);
-		KEY_ACCIDENTALS.put(Key.BMinor, 2);
-		KEY_ACCIDENTALS.put(Key.FsMinor, 3);
-		KEY_ACCIDENTALS.put(Key.CsMinor, 4);
-		KEY_ACCIDENTALS.put(Key.GsMinor, 5);
-		
-		KEY_ACCIDENTALS.put(Key.EbMinor, -6);
-		KEY_ACCIDENTALS.put(Key.BbMinor, -5);
-		KEY_ACCIDENTALS.put(Key.FMinor, -4);
-		KEY_ACCIDENTALS.put(Key.CMinor, -3);
-		KEY_ACCIDENTALS.put(Key.GMinor, -2);
-		KEY_ACCIDENTALS.put(Key.DMinor, -1);
-	}
-	
 	private final ScoreLayout _parent;
 	final SurfaceView _surface;
 	private final SurfaceHolder _holder;
@@ -100,28 +70,29 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 	 * @author Jon Latane
 	 *
 	 */
-	class SystemHeader extends LinearLayout {
-		private double _transitionedAmount = 0d;
-		private ScoreDelta _scoreDelta = null;
-		private ScoreDelta _transScoreDelta = null;
-		
-		private int _layoutX, _layoutY;
+	class SystemHeaderView extends ViewGroup {
+		private double _partialVisibilityRatio = 0d;
+		private ScoreDeltaView _partialScoreDelta = null;
+		private ScoreDeltaView _completeScoreDelta = null;
 		
 		private class StaffHeader extends LinearLayout {
 			private View _clefArea, _keySigArea, _timeSigArea;
-			private StaffSpec.VerticalStaffSpec _staffSpec = null;
-			private StaffSpec.VerticalStaffSpec _transStaffSpec = null;
+			private int _staffNumber;
 			
-			public StaffHeader(Context context) {
+			public StaffHeader(Context context, int staffNumber) {
 				super(context);
 				setOrientation(HORIZONTAL);
+				_staffNumber = staffNumber;
 				_clefArea = new View(context) {
 					@Override 
 					public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-						setMeasuredDimension((int) (StaffSpec.CLEF_WIDTH * _parent._scalingFactor), 50);
+						setMeasuredDimension((int) (StaffSpec.CLEF_WIDTH_PX * _parent._scalingFactor), 50);
 					}
 				};
 			}
+			
+			
+			
 			@Override
 			public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 				_clefArea.measure(widthMeasureSpec,heightMeasureSpec);
@@ -130,19 +101,57 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				int width = _clefArea.getMeasuredWidth() + _keySigArea.getMeasuredWidth() + _timeSigArea.getMeasuredWidth();
 			}
 		}
-		public SystemHeader(Context context) {
+		
+		public SystemHeaderView(Context context) {
 			super(context);
-			setOrientation(VERTICAL);
 		}
 		
-		/**
-		 * To be used for animation.  When 0 <= f < 1, this SystemHeader's
-		 * width (and what is
-		 * @param f
-		 * @param d
-		 */
-		public void transitionTo(double d, ScoreDelta delta) {
-			_transitionedAmount = d;
+		
+		
+		@Override 
+		public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+			setMeasuredDimension(deriveLayoutWidth(), deriveLayoutHeight());
+		}
+		
+		@Override
+		protected void onLayout(boolean changed, int l, int t, int r, int b) {
+			
+			
+		}
+
+		public ScoreDeltaView getPartialDelta() {
+			return _partialScoreDelta;
+		}
+		public void setPartialDelta(ScoreDeltaView _partialScoreDelta) {
+			this._partialScoreDelta = _partialScoreDelta;
+		}
+
+
+
+		public ScoreDeltaView getCompleteDelta() {
+			return _completeScoreDelta;
+		}
+
+
+
+		public void setCompleteDelta(ScoreDeltaView _completeScoreDelta) {
+			this._completeScoreDelta = _completeScoreDelta;
+		}
+		public double getPartialVisibilityRatio() {
+			return _partialVisibilityRatio;
+		}
+		public void setPartialVisibilityRatio(double _partialVisibilityRatio) {
+			this._partialVisibilityRatio = _partialVisibilityRatio;
+		}
+	
+		private int deriveLayoutHeight() {
+			if(_completeScoreDelta != null)
+				return  _completeScoreDelta.getMeasuredHeight();
+			else
+				return _partialScoreDelta.getMeasuredHeight();
+		}
+		public int deriveLayoutWidth() {
+			return 70;
 		}
 	}
 	
@@ -157,7 +166,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 	}
 	
 	public int systemHeaderWidth(ScoreDelta scoreD) {
-		int result = StaffSpec.CLEF_WIDTH + StaffSpec.TIMESIGNATURE_WIDTH; 
+		int result = StaffSpec.CLEF_WIDTH_PX + StaffSpec.TIMESIGNATURE_WIDTH_PX; 
 		int maxNumAccidentals = 0;
 		for(StaffDelta staffD : scoreD.STAVES) {
 			Key k = staffD.ESTABLISHED.KEY;
@@ -199,13 +208,62 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 		_surface.layout(l, t, r, b);
 	}
 	
+	Paint __orange = new Paint();
+	Paint __black = new Paint();
+	Paint __blue = new Paint();
 	@Override 
     protected void onDraw(Canvas canvas){
 		super.onDraw(canvas);
         Log.w(TAG, "onDraw Called in ViewGroup");
 		Canvas c = _holder.lockCanvas();
-			if(c != null) {
+		__orange.setColor(Color.argb(255, 255, 182, 10));
+		__orange.setStyle(Style.STROKE);
+		__black.setStyle(Style.STROKE);
+		__blue.setColor(Color.BLUE);
+		__blue.setStyle(Style.STROKE);
+		if(c != null) {
 			c.drawColor(Color.WHITE);
+			
+			// Iterate through ScoreHeaderViews
+			for(int i = 1; i < getChildCount(); i++) {
+				SystemHeaderView header = (SystemHeaderView) getChildAt(i);
+				Rect headerRect = new Rect();
+				header.getHitRect(headerRect);
+				
+				// TODO Draw header and staff lines
+				c.drawRect(headerRect, __orange);
+			}
+			
+			// Iterate through the ScoreDeltaViews
+			for(int i = 1; i < _parent.getChildCount(); i++) {
+				ScoreDeltaView scoreDV = (ScoreDeltaView) _parent.getChildAt(i);
+				Rect scoreDVRect = new Rect();
+				scoreDV.getHitRect(scoreDVRect);
+				Log.i(TAG,"ScoreRect:" + scoreDVRect);
+				
+				c.drawRect(scoreDVRect, __blue);
+				for(int j = 0; j < scoreDV.getChildCount(); j++) {
+					StaffDeltaView staffDV = (StaffDeltaView) scoreDV.getChildAt(j);
+					Rect staffDVRect = new Rect();
+					staffDV.getHitRect(staffDVRect);
+					staffDVRect.offsetTo(scoreDVRect.left, scoreDVRect.top + staffDVRect.top);
+					staffDVRect.intersect(scoreDVRect);
+					Log.i(TAG,"StaffRect:" + staffDVRect);
+
+					c.drawRect(staffDVRect, __blue);
+					
+					Rect staffAreaRect = new Rect();
+					staffDV._staffArea.getHitRect(staffAreaRect);
+					staffAreaRect.offsetTo(staffDVRect.left, staffDVRect.top + staffAreaRect.top);
+					staffAreaRect.intersect(staffDVRect);
+					c.drawRect(staffAreaRect, __blue);
+					
+					int staffCenterOffset = staffDV.getActualVerticalStaffSpec().ABOVE_CENTER_PX;
+					
+					c.drawLine(staffAreaRect.left, staffAreaRect.top + staffCenterOffset,
+							staffAreaRect.right, staffAreaRect.top + staffCenterOffset, __black);
+				}
+			}
 			_holder.unlockCanvasAndPost(c);
 		}
     }

@@ -19,12 +19,14 @@ package com.jonlatane.composer.scoredisplay;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import com.jonlatane.composer.music.Rational;
 import com.jonlatane.composer.music.Score;
 import com.jonlatane.composer.music.Score.ScoreDelta;
-import com.jonlatane.composer.scoredisplay.ScoreDrawingSurface.SystemHeader;
+import com.jonlatane.composer.scoredisplay.ScoreDrawingSurface.SystemHeaderView;
+import com.jonlatane.composer.scoredisplay.StaffSpec.VerticalStaffSpec;
 
 import android.animation.LayoutTransition;
 import android.animation.ValueAnimator;
@@ -72,6 +74,7 @@ import android.view.ViewGroup;
  */
 public class ScoreLayout extends ViewGroup {
 	private static final String TAG = "ScoreLayout";
+	private static final double MAX_SCALE = 10, MIN_SCALE = .1;
     
     Score _score;
 
@@ -115,32 +118,214 @@ public class ScoreLayout extends ViewGroup {
     	}
     }
 
+    /**
+     * Returns a list of all the ScoreDeltaViews that fit in a row of the targetWidth based on their
+     * actual widths.  
+     * 
+     * The second part of the result pair represents how much space was left.  For instance, for 3
+     * ScoreDeltaViews of width 20 and a targetWidth of 50, result.first.size() = 2 and result.second = 10.
+     * 
+     * @param startingIndex
+     * @param targetWidth
+     * @return
+     */
+    private Pair< LinkedList<ScoreDeltaView>, Integer > getActualRow(int startingIndex, int targetWidth) {
+    	assert(startingIndex < getChildCount());
+    	
+    	if(getChildCount() == 2)
+    		Log.i(TAG, "Uhoh?");
+    	
+    	LinkedList<ScoreDeltaView> row = new LinkedList<ScoreDeltaView>();
+    	int remainingWidth = targetWidth;
+    	
+    	for(int i = startingIndex; i < getChildCount(); i++) {
+    		ScoreDeltaView sdv = (ScoreDeltaView) getChildAt(i);
+    		if(remainingWidth - sdv.getActualWidth() >= 0) {
+    			row.add(sdv);
+    			remainingWidth -= sdv.getActualWidth();
+    		} else {
+    			break;
+    		}
+    	}
+    	
+    	return new Pair<LinkedList<ScoreDeltaView>, Integer>(row, remainingWidth);
+    }
+    
+    private Pair< LinkedList<ScoreDeltaView>, Integer > getPerfectRow(int startingIndex, int targetWidth) {
+    	assert(startingIndex < getChildCount());
+    	
+    	if(getChildCount() == 2)
+    		Log.i(TAG, "Uhoh?");
+    	
+    	LinkedList<ScoreDeltaView> row = new LinkedList<ScoreDeltaView>();
+    	int remainingWidth = targetWidth;
+    	
+    	for(int i = startingIndex; i < getChildCount(); i++) {
+    		ScoreDeltaView sdv = (ScoreDeltaView) getChildAt(i);
+    		if(remainingWidth - sdv.getPerfectWidth() >= 0) {
+    			row.add(sdv);
+    			remainingWidth -= sdv.getPerfectWidth();
+    		} else {
+    			break;
+    		}
+    	}
+    	
+    	return new Pair<LinkedList<ScoreDeltaView>, Integer>(row, remainingWidth);
+    }
+    
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int count = getChildCount();
-        for (int index=0; index<count; index++) {
-            final View child = getChildAt(index);
-            child.measure(widthMeasureSpec, heightMeasureSpec);
-        }
-
+    	// USE ALL THE SPACE
         setMeasuredDimension(resolveSize(Integer.MAX_VALUE, widthMeasureSpec),
                 resolveSize(Integer.MAX_VALUE, heightMeasureSpec));
+        
+        // This doesn't measure any of the SystemHeaderViews in _surface - that is done below.
+        // It will, however, measure its SurfaceView at index 0.  Hence, we start with system number 1.
+        _surface.measure(widthMeasureSpec, heightMeasureSpec);
+        
+        // TODO oh god this is hard
+        int systemNumber = 1;
+        
+        int effectiveWidthOfFirstRowMember = ((ScoreDeltaView) getChildAt(1)).getActualWidth();
+        
+        // We will work a system at a time, setting rowStartIndex
+        for (int rowStartIndex=1; rowStartIndex < getChildCount(); systemNumber++) {
+        	// We must first compute how wide the system header will be based on the first two members of this row.
+        	// Because the header's height is determined based on its width, it is not actually measured until
+        	// after we have resolved the height of the row.
+        	SystemHeaderView header = (SystemHeaderView)_surface.getChildAt(systemNumber);
+        	if(header == null) {
+        		header = _surface.new SystemHeaderView(_surface.getContext());
+        		_surface.addView(header, systemNumber);
+        	}
+        	
+        	ScoreDeltaView firstSDVInRow = (ScoreDeltaView)getChildAt(rowStartIndex);
+        	ScoreDeltaView secondSDVInRow = (ScoreDeltaView)getChildAt(rowStartIndex + 1);
+        	
+        	header.setPartialDelta(firstSDVInRow);
+        	header.setCompleteDelta(secondSDVInRow);
+        	
+        	double firstRowMemberPartialVisibilityRatio = (double)effectiveWidthOfFirstRowMember 
+        			/ (double)((ScoreDeltaView)getChildAt(rowStartIndex)).getActualWidth();
+        	
+        	header.setPartialVisibilityRatio( firstRowMemberPartialVisibilityRatio );
+        	
+        	// Now, we must resolve the height of the row.
+        	// Note we use rowStartIndex + 1 to exclude the first row member (and subtract effectiveWidthOfFirstRowMember)
+        	// Generally we will NOT affect the VerticalStaffSpec of the first view in a row.  The only
+        	// exception is the very first row; the conditional for this is below.
+        	Pair< LinkedList<ScoreDeltaView>, Integer> p = getActualRow( rowStartIndex + 1, 
+        			getMeasuredWidth() - header.deriveLayoutWidth() - effectiveWidthOfFirstRowMember);
+        	
+        	// This gives us the row EXCLUDING the first element of it.
+        	LinkedList<ScoreDeltaView> rowNoFirst = p.first;
+        	//List<ScoreDeltaView> rowNoFirst = row.subList(1, row.size());
+        	if(rowNoFirst.size() == 0) {
+        		firstSDVInRow.measure(widthMeasureSpec, heightMeasureSpec);
+        		break;
+        	}
+        	
+        	VerticalStaffSpec[] rowInternalBestStaffSpec = VerticalStaffSpec.best(rowNoFirst);
+        	
+        	// Now adjust for the first element 
+        	VerticalStaffSpec[] rowAdjustedStaffSpec = 
+        			VerticalStaffSpec.influenceToBest(firstSDVInRow.getPerfectVerticalStaffSpecs(), rowInternalBestStaffSpec,
+        					firstRowMemberPartialVisibilityRatio);
+        	
+        	// Finally see if the remaining space is going to be filled with an incoming View.  In that
+        	// case, it must also affect the overall row StaffSpec
+        	ScoreDeltaView incoming = (ScoreDeltaView)getChildAt(rowStartIndex + rowNoFirst.size() + 1);
+        	if(incoming != null) {
+        		rowAdjustedStaffSpec = VerticalStaffSpec.influenceToBest(incoming.getPerfectVerticalStaffSpecs(), rowAdjustedStaffSpec, 
+        				(double)p.second / (double)incoming.getActualWidth());
+        	}
+        	
+        	// Apply our adjusted spec across the row
+        	for(ScoreDeltaView sdv : rowNoFirst) {
+        		sdv.setActualVerticalStaffSpecs(rowAdjustedStaffSpec);
+        		sdv.measure(widthMeasureSpec, heightMeasureSpec);
+        	}
+        	if(incoming != null) {
+	        	incoming.setActualVerticalStaffSpecs(rowAdjustedStaffSpec);
+	        	incoming.measure(widthMeasureSpec, heightMeasureSpec);
+        	}
+        	
+        	// The first View in this is our boundary case.  The first View of every other row is set with that of
+        	// the previous.
+        	if(rowStartIndex == 1) {
+        		firstSDVInRow.setActualVerticalStaffSpecs(rowAdjustedStaffSpec);
+        		firstSDVInRow.measure(widthMeasureSpec, heightMeasureSpec);
+        	}
+        	
+        	// Measure the header, which bases its life on the first and second members of this row.
+        	header.measure(widthMeasureSpec, heightMeasureSpec);
+        	
+        	rowStartIndex += rowNoFirst.size() + 1;
+        	
+        	if(rowStartIndex < getChildCount())
+        		effectiveWidthOfFirstRowMember = incoming.getActualWidth() - p.second;
+        	//final ScoreDeltaView child = (ScoreDeltaView) getChildAt(rowStartIndex);
+            //child.measure(widthMeasureSpec, heightMeasureSpec);
+        }
+
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        int myWidth = getMeasuredWidth();
-        
-        int x = 0;
-        int y = 0;
+        _surface.layout(l, t, r, b);
+
         
         int systemNumber = 1;
-
-        //getChildAt(0).layout(l, t, r, b);
-        _surface.layout(l, t, r, b);
+        int effectiveWidthOfFirstRowMember = ((ScoreDeltaView) getChildAt(1)).getActualWidth();
+        
+        int left = 0, top = 0;
+        // We will work a system at a time, setting rowStartIndex
+        for (int rowStartIndex=1; rowStartIndex < getChildCount(); systemNumber++) {
+        	SystemHeaderView header = (SystemHeaderView)_surface.getChildAt(systemNumber);
+        	header.layout(0, top, header.getMeasuredWidth(), top + header.getMeasuredHeight());
+        	left += header.getMeasuredWidth();
+        	
+        	ScoreDeltaView firstSDVInRow = (ScoreDeltaView)getChildAt(rowStartIndex);
+        	ScoreDeltaView secondSDVInRow = (ScoreDeltaView)getChildAt(rowStartIndex + 1);
+        	Pair< LinkedList<ScoreDeltaView>, Integer> p = getActualRow( rowStartIndex + 1, 
+        			getMeasuredWidth() - header.getMeasuredWidth() - effectiveWidthOfFirstRowMember);
+        	
+        	LinkedList<ScoreDeltaView> rowNoFirst = p.first;
+        	
+        	if(rowStartIndex == 1) {
+        		firstSDVInRow.layout(left, top, 
+            			left + firstSDVInRow.getMeasuredWidth(), top + firstSDVInRow.getMeasuredHeight());
+        		left += firstSDVInRow.getMeasuredWidth();
+        	} else {
+        		left += effectiveWidthOfFirstRowMember;
+        	}
+        	
+        	for(ScoreDeltaView v : rowNoFirst) {
+        		v.layout(left, top, left + v.getMeasuredWidth(), top + v.getMeasuredHeight());
+        		left += v.getMeasuredWidth();
+        	}
+        	
+        	ScoreDeltaView incoming = (ScoreDeltaView)getChildAt(rowStartIndex + rowNoFirst.size() + 1);
+        	if(incoming != null) {
+        		double d = (double)p.second / (double)incoming.getMeasuredWidth();
+        		//int incL = _surface.getChildAt(systemNumber+1).getMeasuredWidth()
+        		//		+ (int)(left * d);
+        		int incL = left - (int)((left - _surface.getChildAt(systemNumber+1).getMeasuredWidth()) * (1d-d));
+        		int incT = (int)(top + (header.getMeasuredHeight() * (1d-d)));
+        		incoming.layout(incL, incT, incL+incoming.getMeasuredWidth(), incT+incoming.getMeasuredHeight());
+        	}
+        	
+        	// Prepare for the next time around the loop!
+        	left = 0;
+        	top += header.getMeasuredHeight();
+        	rowStartIndex += rowNoFirst.size() + 1;
+        	
+        	if(rowStartIndex < getChildCount())
+        		effectiveWidthOfFirstRowMember = incoming.getMeasuredWidth() - p.second;
+        }
         
         // Lay out everything AS MEASURED as best as we can.
-        for (int index=1; index<getChildCount(); index++) {
+        /*for (int index=1; index<getChildCount(); index++) {
             final ScoreDeltaView child = (ScoreDeltaView) getChildAt(index);
 
             int w = child.getMeasuredWidth();
@@ -171,9 +356,9 @@ public class ScoreLayout extends ViewGroup {
             	double d = (myWidth - left) / (double)w;
             	
             	while(_surface.getChildCount() < systemNumber + 1) {
-            		_surface.addView(_surface.new SystemHeader(_surface.getContext()));
+            		_surface.addView(_surface.new SystemHeaderView(_surface.getContext()));
             	}
-            	SystemHeader header = (SystemHeader)_surface.getChildAt(systemNumber);
+            	SystemHeaderView header = (SystemHeaderView)_surface.getChildAt(systemNumber);
             	int systemHeaderViewWidth;
             	
             	
@@ -188,7 +373,7 @@ public class ScoreLayout extends ViewGroup {
             	systemNumber += 1;
             }
             
-        }
+        }*/
         
         _surface.invalidate();
     }
@@ -225,37 +410,67 @@ public class ScoreLayout extends ViewGroup {
 	}
     
     Float __prevMotionX = null;
+    Double __prev2FingerDistance = null;
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-    	Log.i(TAG,"onTouchEvent");
+    	//Log.i(TAG,"onTouchEvent");
     	if(event.getPointerCount() > 1) {
     		return false;
     	}
-    	if(event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-    		__prevMotionX = event.getX();
-    		return true;
-    	} else if(event.getActionMasked() == MotionEvent.ACTION_MOVE && event.getPointerCount() == 1) {
-    		disableTransitions();
-    		if(__prevMotionX != null) {
-    			int dx = (int) (event.getX() - __prevMotionX);
-
-    			Log.i(TAG,"Move of x" + event.getX() + "," + __prevMotionX + " dx="+dx);
-    			
-    			//Scroll forwards (right to left swipe)
-		        if (dx < 0) {
-		        	scrollLeftBy(-dx);
-
-		        // Scroll backwards (left to right swipe)
-		        } else if(dx > 0) {
-		        	scrollRightBy(dx);
-		        }
-    		}
-    		requestLayout();
-    		enableTransitions();
-    		__prevMotionX = event.getX();
-	        return true;
-    	} else if(event.getActionMasked() == MotionEvent.ACTION_UP && event.getPointerCount() == 1) {
-    		fixLayout();
+    	
+    	// 1 finger to scroll
+    	if(event.getPointerCount() == 1) {
+	    	if(event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+	    		__prevMotionX = event.getX();
+	    		return true;
+	    	} else if(event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+	    		disableTransitions();
+	    		if(__prevMotionX != null) {
+	    			int dx = (int) (event.getX() - __prevMotionX);
+	
+	    			Log.i(TAG,"Move of x" + event.getX() + "," + __prevMotionX + " dx="+dx);
+	    			
+	    			//Scroll forwards (right to left swipe)
+			        if (dx < 0) {
+			        	scrollLeftBy(-dx);
+	
+			        // Scroll backwards (left to right swipe)
+			        } else if(dx > 0) {
+			        	scrollRightBy(dx);
+			        }
+	    		}
+	    		requestLayout();
+	    		enableTransitions();
+	    		__prevMotionX = event.getX();
+		        return true;
+	    	} else if(event.getActionMasked() == MotionEvent.ACTION_UP) {
+	    		__prevMotionX = null;
+	    		fixLayout();
+	    	}
+	    	ScoreDeltaView first = (ScoreDeltaView) getChildAt(1);
+	    	Log.i(TAG, "First view perfect: " + first.getPerfectHorizontalStaffSpec().toString());
+	    	Log.i(TAG, "First view actual: " + first.getActualHorizontalStaffSpec().toString());
+	    // 2 fingers to zoom
+    	} else if(event.getPointerCount() == 2) {
+    		Log.i(TAG,"Two Fingers");
+    		double newDistance = Math.sqrt(( (event.getX(1)-event.getX(0)) * (event.getX(1)-event.getX(0)) ) + 
+    										( (event.getY(1)-event.getY(0)) * (event.getY(1)-event.getY(0)) ));
+    		if(event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+    			__prev2FingerDistance = newDistance;
+    		} else if(event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+	    		disableTransitions();
+	    		if(__prev2FingerDistance != null) {
+	    			double distanceRatioToPrev = newDistance/__prev2FingerDistance;
+	    			_scalingFactor = Math.min(MAX_SCALE, Math.max(MIN_SCALE, _scalingFactor * distanceRatioToPrev));
+	    			Log.i(TAG,"Zoomed to scaling factor" + _scalingFactor);
+	    		}
+	    		requestLayout();
+	    		enableTransitions();
+	    		__prev2FingerDistance = newDistance;
+		        return true;
+	    	} else if(event.getActionMasked() == MotionEvent.ACTION_UP) {
+	    		__prev2FingerDistance = null;
+	    	}
     	}
 		return false;
 	}
@@ -305,6 +520,8 @@ public class ScoreLayout extends ViewGroup {
     			if(!itr.hasNext())
     				break;
     			Score.ScoreDelta scd = itr.next();
+    			if(!itr.hasNext())
+    				break;
     			ScoreDeltaView sdv = new ScoreDeltaView(getContext(), this);
     			sdv.setScoreDelta(scd);
     			addView(sdv, getChildCount());
@@ -414,7 +631,7 @@ public class ScoreLayout extends ViewGroup {
     }
     
     public void fixLayout() {
-    	int myWidth = getMeasuredWidth();
+    	/*int myWidth = getMeasuredWidth();
     	
     	if(getChildAt(1) == null)
     		return;
@@ -457,7 +674,7 @@ public class ScoreLayout extends ViewGroup {
 
     		}
     		Log.i(TAG,"Made row of width " + rowWidth);
-    	}
+    	}*/
     }
     
     @Override

@@ -1085,7 +1085,7 @@ public class Chord extends PitchSet {
 		// x2x3x4+5 - +5 chord, no M2, no M/m3, no P4
 		} else if(c.contains(root+8)) {
 			if(c.contains(root))
-				certainty += 8;
+				certainty += 6;
 			name += "+";
 			String seven = nameTones(c,root,7).first;
 			name += seven;
@@ -1420,12 +1420,11 @@ public class Chord extends PitchSet {
 		
 	@Override
 	public boolean equals(Object o) {
+		if(o == this) return true;
 		if(o instanceof Chord) {
 			Chord c = (Chord)o;
 			if(c.getRoot() == getRoot() && containsAll(c) && c.containsAll(this))
 				return true;
-		} else if(o == null && this.equals(NO_CHORD)) {
-			return true;
 		}
 		return false;
 	}

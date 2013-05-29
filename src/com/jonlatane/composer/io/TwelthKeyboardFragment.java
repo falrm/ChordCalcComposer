@@ -34,6 +34,8 @@ public class TwelthKeyboardFragment extends Fragment {
 	private KeyboardScroller _keyboardScroller;
 	private KeyboardIOHandler _myKbdIO;
 	private HorizontalScrollView _chordScroller;
+	private Key _keyToNameFrom = Key.CMajor;
+	
 	@Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -69,7 +71,7 @@ public class TwelthKeyboardFragment extends Fragment {
 		
 		@Override
 		protected List<String> doInBackground(Chord... c) {
-			data = Key.getRootLikelihoodsAndNamesInC(Key.CChromatic, c[0]);
+			data = Key.getRootLikelihoodsAndNames(Key.CChromatic, c[0], _keyToNameFrom);
 			List<String> result = new LinkedList<String>();
 			for(Map.Entry<Integer,List<String>> e : data.descendingMap().entrySet() ) {
 				for( String s : e.getValue() ) {
@@ -203,9 +205,17 @@ public class TwelthKeyboardFragment extends Fragment {
 	}
 	
 	public void highlightChord(Chord c) {
-		
+		_myKbdIO.setHarmonicChord(c);
 	}
 	public void clearChordHighlights() {
-		
+		_myKbdIO.setHarmonicChord(null);
+	}
+
+	public Key getKeyToNameFrom() {
+		return _keyToNameFrom;
+	}
+
+	public void setKeyToNameFrom(Key _keyToNameFrom) {
+		this._keyToNameFrom = _keyToNameFrom;
 	}
 }

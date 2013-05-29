@@ -44,6 +44,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	// Harmonic input-related fields
 	private boolean _harmonicMode = false;
 	private boolean _cancelHarmonicLongPressRootSelection = false;
+	
 	//private Integer _harmonicRoot = null;
 	private Chord _harmonicChord = null;
 	

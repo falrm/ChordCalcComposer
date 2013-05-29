@@ -76,8 +76,9 @@ public class Clef {
 			case 'A': topNoteValueFromTreble = -1; break;
 			default: throw new Error();
 		}
-		bottomNoteValueFromTreble += 7 * ( (int)(bottomNoteName.charAt(bottomNoteName.length()-1)) - 4);
-		topNoteValueFromTreble += 7 * ( (int)(topNoteName.charAt(topNoteName.length()-1)) - 4);
+		int bottomNoteOctave = Character.getNumericValue( bottomNoteName.charAt(bottomNoteName.length()-1) );
+		bottomNoteValueFromTreble += 7 * ( Character.getNumericValue( bottomNoteName.charAt(bottomNoteName.length()-1) ) - 4);
+		topNoteValueFromTreble += 7 * ( Character.getNumericValue( topNoteName.charAt(topNoteName.length()-1) ) - 4);
 		
 		bottomNoteValueFromTreble += TYPE;
 		topNoteValueFromTreble += TYPE;

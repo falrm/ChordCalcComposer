@@ -8,7 +8,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
- * This class is responsible for the work of enharmonics.  
+ * A Key is just what we think it is, and is sort of where we tie together
+ * all the harmonic things defined at lower levels.  We must always assume a Key
+ * is a major or minor scale represented with 0-7 flats or sharps, which occur in
+ * circle-of-fifths order.  That is what most of the logic below accomplishes.  This
+ * provides us with 30 total keys to write in.
+ * 
  * @author Jon
  *
  */
@@ -20,12 +25,18 @@ public final class Key extends Scale
 	private static final HashMap<Character,Integer> heptatonicInverse = new HashMap<Character,Integer>();
 	private static final SparseArray<Character> twelveToneNames = new SparseArray<Character>();
 	static final HashMap<Character,Integer> twelveToneInverse = new HashMap<Character,Integer>();
+	
+	// These two arrays provide us with a list of the names we personally prefer for each of the major and minor keys.
+	// When a Key is constructed, it will assume this is the root name, though that can be overridden.
 	private static final String[] majorKeys = { "C", "D"+Enharmonics.flat, "D", "E"+Enharmonics.flat, "E", "F", "G"+Enharmonics.flat, "G", "A"+Enharmonics.flat, "A", "B"+Enharmonics.flat, "B" };
 	private static final String[] minorKeys = { "C", "C#", "D", "E"+Enharmonics.flat, "E", "F", "F#", "G", "G#", "A", "B"+Enharmonics.flat, "B" };
+	
+	// ALL THE MAJOR/MINOR KEYS.  The above arrays define their default names, but they may be overridden.
 	public static final Key CMajor = new Key(new MajorScale(0));
 	public static final Key CMinor = new Key(new NaturalMinorScale(0));
 	
 	public static final Key DbMajor = new Key(new MajorScale(1));
+	public static final Key CsMajor = new Key(new MajorScale(1));
 	public static final Key CsMinor = new Key(new NaturalMinorScale(1));
 	
 	public static final Key DMajor = new Key(new MajorScale(2));
@@ -33,6 +44,7 @@ public final class Key extends Scale
 	
 	public static final Key EbMajor = new Key(new MajorScale(3));
 	public static final Key EbMinor = new Key(new NaturalMinorScale(3));
+	public static final Key DsMinor = new Key(new NaturalMinorScale(3));
 	
 	public static final Key EMajor = new Key(new MajorScale(4));
 	public static final Key EMinor = new Key(new NaturalMinorScale(4));
@@ -56,8 +68,10 @@ public final class Key extends Scale
 	
 	public static final Key BbMajor = new Key(new MajorScale(10));
 	public static final Key BbMinor = new Key(new NaturalMinorScale(10));
+	public static final Key AsMinor = new Key(new NaturalMinorScale(10));
 	
 	public static final Key BMajor = new Key(new MajorScale(11));
+	public static final Key CbMajor = new Key(new MajorScale(11));
 	public static final Key BMinor = new Key(new NaturalMinorScale(11));
 		
 	public static final Key CChromatic = new Key(new ChromaticScale(0));
@@ -96,6 +110,10 @@ public final class Key extends Scale
 		
 		FsMajor.setRootName("F#");
 		AbMinor.setRootName("A" + Enharmonics.flat);
+		CbMajor.setRootName("C" + Enharmonics.flat);
+		CsMajor.setRootName("C#");
+		DsMinor.setRootName("D#");
+		AsMinor.setRootName("A#");
 	}
 	
 	private String _rootName;
@@ -151,6 +169,20 @@ public final class Key extends Scale
 		if(Enharmonics.noteNameToInt(str) == getRoot()) {
 			_rootName = str;
 			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == this) return true;
+		if(o.getClass().equals(Key.class)) {
+			Key k = (Key)o;
+			if(containsAll(k) && k.containsAll(this) && k.getRoot().equals(getRoot()) && k.getRootName().equals(getRootName()))
+				return true;
+			else
+				return false;
 		} else {
 			return false;
 		}

@@ -213,6 +213,7 @@ public class Score {
 			 * with the preceding StaffDelta.
 			 */
 			public Key KEY_CHANGE_AFTER = null;
+			public Clef CLEF_CHANGE_AFTER = null;
 			
 			/**
 			 * A simple class for storing pointers to things in a Staff.
@@ -220,6 +221,7 @@ public class Score {
 			 *
 			 */
 			public class StaffDeltaStuff {
+				public Clef CLEF = null;
 				public Key KEY = null;
 				public Chord CHORD = null;
 			}
@@ -241,9 +243,17 @@ public class Score {
 			
 			result.LOCATION = r;
 			
+			Rational nextInOverallRhythm = getOverallRhythm().higher(r);
+			if( nextInOverallRhythm != null ) {
+				result.KEY_CHANGE_AFTER = _keys._data.get(nextInOverallRhythm);
+				result.CLEF_CHANGE_AFTER = _clefs._data.get(nextInOverallRhythm);
+			}
+			
+			result.ESTABLISHED.CLEF = _clefs.getObjectAt(r);
 			result.ESTABLISHED.KEY = _keys.getObjectAt(r);
 			result.ESTABLISHED.CHORD = _chords.getObjectAt(r);
 			
+			result.CHANGED.CLEF = _clefs._data.get(r);
 			result.CHANGED.KEY = _keys._data.get(r);
 			result.CHANGED.CHORD = _chords._data.get(r);
 			
@@ -449,6 +459,9 @@ public class Score {
 	public class ScoreDelta {
 		public Rational LOCATION = null;
 		public Rational BEATNUMBER = null;
+		public TimeSignature TIME_CHANGE_AFTER =  null;
+		public boolean IS_END_OF_MEASURE = false;
+		public boolean PRECEDES_FINE = false;
 		
 		/**
 		 * A simple class for storing pointers to things in a Score.
@@ -467,6 +480,15 @@ public class Score {
 	public ScoreDelta scoreDeltaAt(Rational r) {
 		ScoreDelta result = new ScoreDelta();
 		result.LOCATION = r;
+		
+		Rational nextInOverallRhythm = getOverallRhythm().higher(r);
+		if(nextInOverallRhythm != null) {
+			result.TIME_CHANGE_AFTER = _meter._data.get(nextInOverallRhythm);
+			result.IS_END_OF_MEASURE = _meter.getBeatOf(nextInOverallRhythm).compareTo( r ) < 0;
+		} else {
+			result.PRECEDES_FINE = true;
+		}
+		
 		result.BEATNUMBER = _meter.getBeatOf(r);
 		
 		result.ESTABLISHED.TS = _meter.getObjectAt(r);
@@ -486,29 +508,13 @@ public class Score {
 			//private boolean encounteredFine = false;
 			@Override
 			public boolean hasNext() {
-				//if(encounteredFine) {
-				//	return false;
-				//} else {
-				//	//boolean result = rhythm.hasNext();
-				//	return true;
-				//}
 				return rhythm.hasNext();
 			}
 
 			@Override
 			public ScoreDelta next() {
-				//if(rhythm.hasNext()) {
 					Rational r = rhythm.next();
-				//	if(r.equals(getFine())) {
-				//		encounteredFine = true;
-				//	}
 					return scoreDeltaAt(r);
-				//} else if(!encounteredFine) {
-				//	encounteredFine = true;
-				//	return scoreDeltaAt(getFine());
-				//} else {
-				//	throw new NoSuchElementException();
-				//}
 			}
 
 			@Override
@@ -560,7 +566,7 @@ public class Score {
 	
 	public NavigableSet<Rational> getOverallRhythm() {
 		TreeSet<Rational> result = new TreeSet<Rational>();
-		result.add(getFine());
+		//result.add(getFine());
 		result.addAll(_meter.getRhythm());
 		
 		// Add all downbeats from the Meter from the beginning to the Fine by working backwards through it.
