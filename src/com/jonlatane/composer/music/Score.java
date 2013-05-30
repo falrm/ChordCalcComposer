@@ -701,7 +701,7 @@ public class Score {
 		Staff.Voice melody = s1.newVoice();
 		Staff.Voice harmony = s2.newVoice();
 		
-		melody._notes.put(new Rational(1,1), PitchSet.toPitchSet("C4"));
+		melody._notes.put(new Rational(1,1), PitchSet.toPitchSet("C2"));
 		melody._notes.put(new Rational(2,1), PitchSet.toPitchSet("C4"));
 		melody._notes.put(new Rational(3,1), PitchSet.toPitchSet("G4"));
 		melody._notes.put(new Rational(4,1), PitchSet.toPitchSet("G4"));
@@ -724,7 +724,7 @@ public class Score {
 		melody._notes.put(new Rational(22,1), PitchSet.toPitchSet("E4"));
 		melody._notes.put(new Rational(23,1), PitchSet.toPitchSet("D4"));
 		melody._notes.put(new Rational(25,1), PitchSet.toPitchSet("G4"));
-		melody._notes.put(new Rational(26,1), PitchSet.toPitchSet("G4"));
+		melody._notes.put(new Rational(26,1), PitchSet.toPitchSet("G7"));
 		melody._notes.put(new Rational(27,1), PitchSet.toPitchSet("F4"));
 		melody._notes.put(new Rational(28,1), PitchSet.toPitchSet("F4"));
 		melody._notes.put(new Rational(29,1), PitchSet.toPitchSet("E4"));

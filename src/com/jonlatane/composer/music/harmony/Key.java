@@ -154,8 +154,15 @@ public final class Key extends Scale
 	}
 	
 	public String getRootName() {
-		int rootFromName = Enharmonics.noteNameToInt(_rootName);
-		assert(rootFromName == super.getRoot());
+		if(_rootName == null) {
+			int root = getRoot();
+			boolean isMajor = contains(root + 4);
+			if(isMajor)
+				_rootName = majorKeys[root];
+			else
+				_rootName = minorKeys[root];
+		}
+		
 		return _rootName;
 	}
 	
@@ -373,4 +380,15 @@ public final class Key extends Scale
 		return getRootLikelihoodsAndNames(inputRootCandidates, c, CMajor);
 	}
 
+	@Override
+	public int hashCode() {
+		int result = getRootName().hashCode();
+		int tonic = getRoot();
+		result = (result*12) + tonic;
+		for(int n : this) {
+			if(n != tonic)
+				result = (result*12) + n;
+		}
+		return result;
+	}
 }

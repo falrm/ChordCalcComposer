@@ -187,7 +187,7 @@ public class ScoreLayout extends ViewGroup {
         int systemNumber = 1;
         
         int effectiveWidthOfFirstRowMember = ((ScoreDeltaView) getChildAt(1)).getActualWidth();
-        
+        SystemHeaderView finalPartialHeader = null;
         // We will work a system at a time, setting rowStartIndex
         for (int rowStartIndex=1; rowStartIndex < getChildCount(); systemNumber++) {
         	// We must first compute how wide the system header will be based on the first two members of this row.
@@ -205,8 +205,15 @@ public class ScoreLayout extends ViewGroup {
         	header.setPartialDelta(firstSDVInRow);
         	header.setCompleteDelta(secondSDVInRow);
         	
-        	double firstRowMemberPartialVisibilityRatio = (double)effectiveWidthOfFirstRowMember 
-        			/ (double)((ScoreDeltaView)getChildAt(rowStartIndex)).getActualWidth();
+        	Log.i(TAG,"VSS headache " + effectiveWidthOfFirstRowMember + "," + firstSDVInRow.getActualWidth());
+        	double firstRowMemberPartialVisibilityRatio;
+        	if(rowStartIndex == 1) {
+        		firstRowMemberPartialVisibilityRatio = Math.min(1d,(double)effectiveWidthOfFirstRowMember 
+            			/ (double)firstSDVInRow.getPerfectWidth());
+        	} else {
+        		firstRowMemberPartialVisibilityRatio = (double)effectiveWidthOfFirstRowMember 
+        			/ (double)firstSDVInRow.getActualWidth();
+        	}
         	
         	header.setPartialVisibilityRatio( firstRowMemberPartialVisibilityRatio );
         	
@@ -227,10 +234,14 @@ public class ScoreLayout extends ViewGroup {
         	
         	VerticalStaffSpec[] rowInternalBestStaffSpec = VerticalStaffSpec.best(rowNoFirst);
         	
+        	Log.i(TAG,"Best for row " + systemNumber + ": " + rowInternalBestStaffSpec[0].toString());
+        	
         	// Now adjust for the first element 
         	VerticalStaffSpec[] rowAdjustedStaffSpec = 
         			VerticalStaffSpec.influenceToBest(firstSDVInRow.getPerfectVerticalStaffSpecs(), rowInternalBestStaffSpec,
         					firstRowMemberPartialVisibilityRatio);
+        	
+        	Log.i(TAG,"with First: " + rowAdjustedStaffSpec[0].toString() + "@" + firstRowMemberPartialVisibilityRatio);
         	
         	// Finally see if the remaining space is going to be filled with an incoming View.  In that
         	// case, it must also affect the overall row StaffSpec
@@ -239,15 +250,34 @@ public class ScoreLayout extends ViewGroup {
         		rowAdjustedStaffSpec = VerticalStaffSpec.influenceToBest(incoming.getPerfectVerticalStaffSpecs(), rowAdjustedStaffSpec, 
         				(double)p.second / (double)incoming.getActualWidth());
         	}
+        	Log.i(TAG,"with incoming: " + rowAdjustedStaffSpec[0].toString());
         	
         	// Apply our adjusted spec across the row
         	for(ScoreDeltaView sdv : rowNoFirst) {
+        		Log.i(TAG, "VSS set in row " + systemNumber + 
+        				" to " + rowAdjustedStaffSpec[0].toString() + " at " + sdv._scoreDelta.LOCATION.toMixedString());
         		sdv.setActualVerticalStaffSpecs(rowAdjustedStaffSpec);
         		sdv.measure(widthMeasureSpec, heightMeasureSpec);
         	}
         	if(incoming != null) {
-	        	incoming.setActualVerticalStaffSpecs(rowAdjustedStaffSpec);
+        		Log.i(TAG,"measured incoming in system " + systemNumber);
+        		VerticalStaffSpec[] customIncomingStaffSpec = VerticalStaffSpec.influenceToBest(rowAdjustedStaffSpec, incoming.getActualVerticalStaffSpec(),
+        				(double)(p.second) / (double)incoming.getActualWidth());
+	        	//incoming.setActualVerticalStaffSpecs(rowAdjustedStaffSpec);
+        		incoming.setActualVerticalStaffSpecs(customIncomingStaffSpec);
 	        	incoming.measure(widthMeasureSpec, heightMeasureSpec);
+	        	finalPartialHeader = (SystemHeaderView) _surface.getChildAt(systemNumber+1);
+	        	if(finalPartialHeader == null) {
+	        		Log.i(TAG,"Added new header for incoming");
+	        		finalPartialHeader = _surface.new SystemHeaderView(getContext());
+	        		_surface.addView(finalPartialHeader, systemNumber + 1);
+	        	}
+	        	finalPartialHeader.setPartialDelta(incoming);
+        		finalPartialHeader.setPartialVisibilityRatio((double)(incoming.getActualWidth() - p.second)/(double)(incoming.getMeasuredWidth()));
+        	} else {
+        		finalPartialHeader = null;
+        		for(int s = systemNumber + 1; s < _surface.getChildCount(); s++)
+        			_surface.removeViewAt(s);
         	}
         	
         	// The first View in this is our boundary case.  The first View of every other row is set with that of
@@ -267,7 +297,8 @@ public class ScoreLayout extends ViewGroup {
         	//final ScoreDeltaView child = (ScoreDeltaView) getChildAt(rowStartIndex);
             //child.measure(widthMeasureSpec, heightMeasureSpec);
         }
-
+        if(finalPartialHeader != null)
+        	finalPartialHeader.measure(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
@@ -310,7 +341,9 @@ public class ScoreLayout extends ViewGroup {
         		double d = (double)p.second / (double)incoming.getMeasuredWidth();
         		//int incL = _surface.getChildAt(systemNumber+1).getMeasuredWidth()
         		//		+ (int)(left * d);
-        		int incL = left - (int)((left - _surface.getChildAt(systemNumber+1).getMeasuredWidth()) * (1d-d));
+        		SystemHeaderView nextHeader = (SystemHeaderView) _surface.getChildAt(systemNumber+1);
+        		Log.i(TAG,"incoming layout..., nextHeader: " + nextHeader.getMeasuredWidth() + "," + nextHeader.getMeasuredHeight());
+        		int incL = left - (int)((left - nextHeader.getMeasuredWidth()) * (1d-d));
         		int incT = (int)(top + (header.getMeasuredHeight() * (1d-d)));
         		incoming.layout(incL, incT, incL+incoming.getMeasuredWidth(), incT+incoming.getMeasuredHeight());
         	}

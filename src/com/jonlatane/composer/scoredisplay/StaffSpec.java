@@ -12,6 +12,8 @@ import android.util.Pair;
 import com.jonlatane.composer.music.Score.ScoreDelta;
 import com.jonlatane.composer.music.Score.Staff.StaffDelta;
 import com.jonlatane.composer.music.Score.Staff.Voice.VoiceDelta;
+import com.jonlatane.composer.music.coverings.Clef;
+import com.jonlatane.composer.music.coverings.TimeSignature;
 import com.jonlatane.composer.music.harmony.Chord;
 import com.jonlatane.composer.music.harmony.Enharmonics;
 import com.jonlatane.composer.music.harmony.Key;
@@ -99,8 +101,8 @@ public class StaffSpec {
 				if(!ps.equals(PitchSet.REST)) {
 					assert(ps.NOTENAMES.length == ps.size());
 					Pair<Integer,Integer> p = d.ESTABLISHED.CLEF.getHeptatonicStepsFromCenter(ps);
-					neededStepsAboveCenter = Math.max(neededStepsAboveCenter, p.second);
-					neededStepsBelowCenter = Math.max(neededStepsBelowCenter, p.second);
+					neededStepsAboveCenter = Math.max(neededStepsAboveCenter, p.first);
+					neededStepsBelowCenter = Math.max(neededStepsBelowCenter, -p.second);
 				}
 			}
 			ABOVE_CENTER_PX = (neededStepsAboveCenter + DEFAULT_MARGIN_IN_STEPS) * HEPTATONICSTEP_PX;
@@ -134,6 +136,10 @@ public class StaffSpec {
 			//	return new VerticalStaffSpec(ABOVE_CENTER_PX - removeFromTop, BELOW_CENTER_PX - removeFromBottom);
 			//}
 		}
+		@Override
+		public String toString() {
+			return "VSS:" + ABOVE_CENTER_PX + ", " + BELOW_CENTER_PX;
+		}
 		
 		public static VerticalStaffSpec best(VerticalStaffSpec ss1, VerticalStaffSpec ss2) {
 			int above, below, upper, lower;
@@ -156,7 +162,8 @@ public class StaffSpec {
 			return result;
 		}
 		
-		public static VerticalStaffSpec influenceToBest(VerticalStaffSpec influencer, VerticalStaffSpec influencee, double influence) {
+		public static VerticalStaffSpec influenceToBest(VerticalStaffSpec influencer, VerticalStaffSpec influencee,
+				double influence) {
 			VerticalStaffSpec best = best(influencer, influencee);
 			int above = influencee.ABOVE_CENTER_PX + (int)( influence * (best.ABOVE_CENTER_PX-influencee.ABOVE_CENTER_PX) );
 			int below = influencee.BELOW_CENTER_PX + (int)( influence * (best.BELOW_CENTER_PX-influencee.BELOW_CENTER_PX) );
@@ -223,7 +230,7 @@ public class StaffSpec {
 					precedesClefChange = true;
 				
 				for(VoiceDelta vd : sd.VOICES) {
-					numAccCols = Math.max(numAccCols, getNumAccidentalColumns(vd.ESTABLISHED.NOTES));
+					numAccCols = Math.max(numAccCols, StaffSpec.getNumAccidentalColumns(vd.ESTABLISHED.NOTES));
 				}
 			}
 			ACCIDENTAL_AREA_PX = DEFAULT.ACCIDENTAL_AREA_PX + (numAccCols * ACCIDENTAL_WIDTH_PX);
@@ -320,51 +327,6 @@ public class StaffSpec {
 					   + KEYSIG_PX + ","
 					    + TIMESIG_PX + "]";
 		}
-		public static int getNumAccidentalColumns(PitchSet ps) {
-			int result = 0;
-			
-			// For efficiency, let's assume we'll never need more than 10 "columns" of accidentals.  This allows
-			// us to render a double flat on every one of 5 notes within a fifth (e.g., Cbb5, Dbb5, Ebb5, Fbb5, Gbb5).
-			// We can reuse a column if it's a heptatonic sixth apart.
-			String[] lastAccidentalLocationPerColumn = new String[10];
-			for( int j = 0; j < lastAccidentalLocationPerColumn.length; j++) {
-				lastAccidentalLocationPerColumn[j] = null;
-			}
-			
-			// Iterate from the top note down.
-			for(int i = ps.NOTENAMES.length - 1; i >=0; i--) {
-				String name = ps.NOTENAMES[i];
-				if(name.charAt(1) == '#' || name.charAt(1) == 'b' || name.charAt(1) == Enharmonics.flat.charAt(0)) {
-					// Double flats require two columns to draw properly
-					if(name.charAt(2) == 'b' || name.charAt(1) == Enharmonics.flat.charAt(0)) {
-						for( int j = 0; j < lastAccidentalLocationPerColumn.length; j++) {
-							if( (lastAccidentalLocationPerColumn[j] == null || Math.abs(Modulus.absoluteHeptDistance(name, lastAccidentalLocationPerColumn[j])) >= 5) 
-									&& (lastAccidentalLocationPerColumn[j+1] == null || Math.abs(Modulus.absoluteHeptDistance(name, lastAccidentalLocationPerColumn[j+1])) >= 5) ) {
-								lastAccidentalLocationPerColumn[j] = name;
-								lastAccidentalLocationPerColumn[j+1] = name;
-								if( j+1 > result )
-									result = j+1;
-								break;
-							}
-						}
-					// Everything else (naturals, flats, sharps, double sharps) only needs one column.
-					} else {
-						for( int j = 0; j < lastAccidentalLocationPerColumn.length; j++) {
-							if(lastAccidentalLocationPerColumn[j] == null 
-									|| Math.abs(Modulus.absoluteHeptDistance(name, lastAccidentalLocationPerColumn[j])) >= 5) {
-								lastAccidentalLocationPerColumn[j] = name;
-								if( j > result )
-									result = j;
-								break;
-							}
-						}
-					}
-				}
-			}
-			
-			return result;
-		}
-		
 		public static HorizontalStaffSpec best(HorizontalStaffSpec ss1, HorizontalStaffSpec ss2) {
 			int a, n, c, t, k;
 			a = Math.max(ss1.ACCIDENTAL_AREA_PX, ss2.ACCIDENTAL_AREA_PX);
@@ -376,5 +338,70 @@ public class StaffSpec {
 			return new HorizontalStaffSpec(a, n, c, t, k);
 		}
 	}
+	
+	public static int toStandardKeySignatureWidth(Key k) {
+		return Math.abs(KEY_ACCIDENTALS.get(k)) * ACCIDENTAL_WIDTH_PX;
+	}
 
+	public static int toStandardSignatureWidth(Clef c, Key k, TimeSignature ts) {
+		int result = 0;
+		if(c != null)
+			result += CLEF_WIDTH_PX;
+		else
+			result += HorizontalStaffSpec.DEFAULT.CLEF_PX;
+		if(k != null)
+			result += toStandardKeySignatureWidth(k);
+		else
+			result += HorizontalStaffSpec.DEFAULT.KEYSIG_PX;
+		if(ts != null)
+			result += TIMESIGNATURE_WIDTH_PX;
+		else
+			result += HorizontalStaffSpec.DEFAULT.TIMESIG_PX;
+		return result;
+	}
+
+	public static int getNumAccidentalColumns(PitchSet ps) {
+		int result = 0;
+		
+		// For efficiency, let's assume we'll never need more than 10 "columns" of accidentals.  This allows
+		// us to render a double flat on every one of 5 notes within a fifth (e.g., Cbb5, Dbb5, Ebb5, Fbb5, Gbb5).
+		// We can reuse a column if it's a heptatonic sixth apart.
+		String[] lastAccidentalLocationPerColumn = new String[10];
+		for( int j = 0; j < lastAccidentalLocationPerColumn.length; j++) {
+			lastAccidentalLocationPerColumn[j] = null;
+		}
+		
+		// Iterate from the top note down.
+		for(int i = ps.NOTENAMES.length - 1; i >=0; i--) {
+			String name = ps.NOTENAMES[i];
+			if(name.charAt(1) == '#' || name.charAt(1) == 'b' || name.charAt(1) == Enharmonics.flat.charAt(0)) {
+				// Double flats require two columns to draw properly
+				if(name.charAt(2) == 'b' || name.charAt(1) == Enharmonics.flat.charAt(0)) {
+					for( int j = 0; j < lastAccidentalLocationPerColumn.length; j++) {
+						if( (lastAccidentalLocationPerColumn[j] == null || Math.abs(Modulus.absoluteHeptDistance(name, lastAccidentalLocationPerColumn[j])) >= 5) 
+								&& (lastAccidentalLocationPerColumn[j+1] == null || Math.abs(Modulus.absoluteHeptDistance(name, lastAccidentalLocationPerColumn[j+1])) >= 5) ) {
+							lastAccidentalLocationPerColumn[j] = name;
+							lastAccidentalLocationPerColumn[j+1] = name;
+							if( j+1 > result )
+								result = j+1;
+							break;
+						}
+					}
+				// Everything else (naturals, flats, sharps, double sharps) only needs one column.
+				} else {
+					for( int j = 0; j < lastAccidentalLocationPerColumn.length; j++) {
+						if(lastAccidentalLocationPerColumn[j] == null 
+								|| Math.abs(Modulus.absoluteHeptDistance(name, lastAccidentalLocationPerColumn[j])) >= 5) {
+							lastAccidentalLocationPerColumn[j] = name;
+							if( j > result )
+								result = j;
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+		return result;
+	}
 }

@@ -86,7 +86,19 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				_clefArea = new View(context) {
 					@Override 
 					public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-						setMeasuredDimension((int) (StaffSpec.CLEF_WIDTH_PX * _parent._scalingFactor), 50);
+						setMeasuredDimension((int) (StaffSpec.CLEF_WIDTH_PX), 50);
+					}
+				};
+				_keySigArea = new View(context) {
+					@Override 
+					public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+						setMeasuredDimension((int) (StaffSpec.CLEF_WIDTH_PX), 50);
+					}
+				};
+				_timeSigArea = new View(context) {
+					@Override 
+					public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+						setMeasuredDimension((int) (StaffSpec.CLEF_WIDTH_PX), 50);
 					}
 				};
 			}
@@ -95,6 +107,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 			
 			@Override
 			public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+				
 				_clefArea.measure(widthMeasureSpec,heightMeasureSpec);
 				_keySigArea.measure(widthMeasureSpec,heightMeasureSpec);
 				_timeSigArea.measure(widthMeasureSpec,heightMeasureSpec);
@@ -140,6 +153,19 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 		public double getPartialVisibilityRatio() {
 			return _partialVisibilityRatio;
 		}
+		
+		/**
+		 * Visibili
+		 * @return
+		 */
+		public int visibilityToAlpha() {
+			int a;
+			if(_completeScoreDelta == null)
+				a = (int)(255*getPartialVisibilityRatio());
+			else
+				a = 255;
+			return a;
+		}
 		public void setPartialVisibilityRatio(double _partialVisibilityRatio) {
 			this._partialVisibilityRatio = _partialVisibilityRatio;
 		}
@@ -151,6 +177,23 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				return _partialScoreDelta.getMeasuredHeight();
 		}
 		public int deriveLayoutWidth() {
+			int w = BRACES_AREA_PX;
+			//Remove excess StaffHeaderViews
+			int numStaves = _parent._score.getNumStaves();
+			while(numStaves < getChildCount())
+				removeViewAt(numStaves);
+			//Add new StaffHeaderViews as needed
+			while(getChildCount() < numStaves) {
+				StaffHeader sh = new StaffHeader(getContext(), getChildCount());
+				addView(sh, getChildCount());
+			}
+			
+			//Get the width of each StaffHeaderView
+			/*if(_completeScoreDelta != null) {
+				c = _completeScoreDelta._scoreDelta.ESTABLISHED.
+			} else {
+				
+			}*/
 			return 70;
 		}
 	}
@@ -231,6 +274,8 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				header.getHitRect(headerRect);
 				
 				// TODO Draw header and staff lines
+				//__orange.setColor(header.adjustAlphaToVisibility(__orange.getColor()));
+				__orange.setAlpha(header.visibilityToAlpha());
 				c.drawRect(headerRect, __orange);
 			}
 			

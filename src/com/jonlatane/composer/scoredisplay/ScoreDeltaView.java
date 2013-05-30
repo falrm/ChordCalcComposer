@@ -5,11 +5,13 @@ import java.util.Random;
 import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.jonlatane.composer.music.Rational;
 import com.jonlatane.composer.music.Score;
 import com.jonlatane.composer.music.Score.ScoreDelta;
 import com.jonlatane.composer.music.Score.Staff.StaffDelta;
@@ -26,6 +28,7 @@ import com.jonlatane.composer.scoredisplay.StaffSpec.VerticalStaffSpec;
  *
  */
 class ScoreDeltaView extends LinearLayout {
+	public static final String TAG = "ScoreDeltaView";
 	private final ScoreLayout _parent;
 	Score.ScoreDelta _scoreDelta;
 	private HorizontalStaffSpec _perfectHorizontalStaffSpec, _actualHorizontalStaffSpec;
@@ -131,8 +134,28 @@ class ScoreDeltaView extends LinearLayout {
 			addView(_lowerLyricView);
 		}
 		
+		//TODO this will be eliminated and is only here for debugging
+		@Override
+		protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+			//super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+			int totalHeight = 0;
+			for(int i = 0; i < getChildCount(); i++) {
+				View child = getChildAt(i);
+				child.measure(widthMeasureSpec, heightMeasureSpec);
+				totalHeight += child.getMeasuredHeight();
+			}
+			setMeasuredDimension(_actualHorizontalStaffSpec.getTotalWidth(), totalHeight);
+			if(_scoreDelta.LOCATION.equals(Rational.ONE)) {
+				Log.i(TAG, "First SDV Perfect" + _perfectVerticalStaffSpec.toString());
+				Log.i(TAG, "First SDV Actual" + _actualVerticalStaffSpec.toString());
+				
+			}
+		}
+		
 		public void setStaffDelta(Score.Staff.StaffDelta d) {
     		_staffDelta = d;
+    		if(d.LOCATION.equals(Rational.ONE))
+    			Log.i(TAG, "DEBUG");
     		_perfectVerticalStaffSpec = new VerticalStaffSpec(d);
     		_actualVerticalStaffSpec = _perfectVerticalStaffSpec;
     		_upperLyricView.setText(d.LOCATION.toMixedString());
@@ -200,7 +223,13 @@ class ScoreDeltaView extends LinearLayout {
 		super.onLayout(changed, l, t, r, b);
 	}
 
-	
+	public VerticalStaffSpec[] getActualVerticalStaffSpec() {
+		VerticalStaffSpec[] result = new VerticalStaffSpec[getChildCount()];
+		for(int i = 0; i < getChildCount(); i++) {
+			result[i] = ((StaffDeltaView)getChildAt(i)).getActualVerticalStaffSpec();
+		}
+		return result;
+	}
 	public VerticalStaffSpec[] getPerfectVerticalStaffSpecs() {
 		VerticalStaffSpec[] result = new VerticalStaffSpec[getChildCount()];
 		for(int i = 0; i < getChildCount(); i++) {
