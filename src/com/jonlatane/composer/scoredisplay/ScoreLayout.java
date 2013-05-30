@@ -31,6 +31,7 @@ import com.jonlatane.composer.scoredisplay.StaffSpec.VerticalStaffSpec;
 import android.animation.LayoutTransition;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.Pair;
@@ -100,6 +101,7 @@ public class ScoreLayout extends ViewGroup {
 	    
 	    _surface = new ScoreDrawingSurface(getContext(), this);
 	    addView(_surface);
+	    disableTransitions();
 	    
 	    Score s = Score.twinkleTwinkle();
 	    Score.testScore(s);
@@ -182,8 +184,6 @@ public class ScoreLayout extends ViewGroup {
         // This doesn't measure any of the SystemHeaderViews in _surface - that is done below.
         // It will, however, measure its SurfaceView at index 0.  Hence, we start with system number 1.
         _surface.measure(widthMeasureSpec, heightMeasureSpec);
-        
-        // TODO oh god this is hard
         int systemNumber = 1;
         
         int effectiveWidthOfFirstRowMember = ((ScoreDeltaView) getChildAt(1)).getActualWidth();
@@ -205,7 +205,7 @@ public class ScoreLayout extends ViewGroup {
         	header.setPartialDelta(firstSDVInRow);
         	header.setCompleteDelta(secondSDVInRow);
         	
-        	Log.i(TAG,"VSS headache " + effectiveWidthOfFirstRowMember + "," + firstSDVInRow.getActualWidth());
+        	//Log.i(TAG,"VSS headache " + effectiveWidthOfFirstRowMember + "," + firstSDVInRow.getActualWidth());
         	double firstRowMemberPartialVisibilityRatio;
         	if(rowStartIndex == 1) {
         		firstRowMemberPartialVisibilityRatio = Math.min(1d,(double)effectiveWidthOfFirstRowMember 
@@ -234,14 +234,14 @@ public class ScoreLayout extends ViewGroup {
         	
         	VerticalStaffSpec[] rowInternalBestStaffSpec = VerticalStaffSpec.best(rowNoFirst);
         	
-        	Log.i(TAG,"Best for row " + systemNumber + ": " + rowInternalBestStaffSpec[0].toString());
+        	//Log.i(TAG,"Best for row " + systemNumber + ": " + rowInternalBestStaffSpec[0].toString());
         	
         	// Now adjust for the first element 
         	VerticalStaffSpec[] rowAdjustedStaffSpec = 
         			VerticalStaffSpec.influenceToBest(firstSDVInRow.getPerfectVerticalStaffSpecs(), rowInternalBestStaffSpec,
         					firstRowMemberPartialVisibilityRatio);
         	
-        	Log.i(TAG,"with First: " + rowAdjustedStaffSpec[0].toString() + "@" + firstRowMemberPartialVisibilityRatio);
+        	//Log.i(TAG,"with First: " + rowAdjustedStaffSpec[0].toString() + "@" + firstRowMemberPartialVisibilityRatio);
         	
         	// Finally see if the remaining space is going to be filled with an incoming View.  In that
         	// case, it must also affect the overall row StaffSpec
@@ -250,25 +250,38 @@ public class ScoreLayout extends ViewGroup {
         		rowAdjustedStaffSpec = VerticalStaffSpec.influenceToBest(incoming.getPerfectVerticalStaffSpecs(), rowAdjustedStaffSpec, 
         				(double)p.second / (double)incoming.getActualWidth());
         	}
-        	Log.i(TAG,"with incoming: " + rowAdjustedStaffSpec[0].toString());
+        	//Log.i(TAG,"with incoming: " + rowAdjustedStaffSpec[0].toString());
         	
         	// Apply our adjusted spec across the row
         	for(ScoreDeltaView sdv : rowNoFirst) {
-        		Log.i(TAG, "VSS set in row " + systemNumber + 
-        				" to " + rowAdjustedStaffSpec[0].toString() + " at " + sdv._scoreDelta.LOCATION.toMixedString());
+        		//Log.i(TAG, "VSS set in row " + systemNumber + 
+        		//		" to " + rowAdjustedStaffSpec[0].toString() + " at " + sdv._scoreDelta.LOCATION.toMixedString());
         		sdv.setActualVerticalStaffSpecs(rowAdjustedStaffSpec);
         		sdv.measure(widthMeasureSpec, heightMeasureSpec);
         	}
         	if(incoming != null) {
-        		Log.i(TAG,"measured incoming in system " + systemNumber);
-        		VerticalStaffSpec[] customIncomingStaffSpec = VerticalStaffSpec.influenceToBest(rowAdjustedStaffSpec, incoming.getActualVerticalStaffSpec(),
-        				(double)(p.second) / (double)incoming.getActualWidth());
+        		//Log.i(TAG,"measured incoming in system " + systemNumber);
+        		ScoreDeltaView afterIncoming = (ScoreDeltaView)getChildAt(rowStartIndex + rowNoFirst.size() + 2);
+        		VerticalStaffSpec[] customIncomingStaffSpec;
+        		if(afterIncoming != null) {
+        			customIncomingStaffSpec = VerticalStaffSpec.influenceLeftRight(
+            				rowAdjustedStaffSpec, afterIncoming.getActualVerticalStaffSpecs(),
+            				(double)(p.second) / (double)incoming.getActualWidth());
+        		} else {
+        			customIncomingStaffSpec = VerticalStaffSpec.influenceLeftRight(
+            				rowAdjustedStaffSpec, incoming.getPerfectVerticalStaffSpecs(),
+            				(double)(p.second) / (double)incoming.getActualWidth());
+        		}
+        		/*VerticalStaffSpec[] asdf = (ScoreDeltaView)getChildAt(rowStartIndex + rowNoFirst.size() + 2)
+        		VerticalStaffSpec[] customIncomingStaffSpec = VerticalStaffSpec.influenceToBest(
+        				rowAdjustedStaffSpec, incoming.getActualVerticalStaffSpec(),
+        				(double)(p.second) / (double)incoming.getActualWidth());*/
 	        	//incoming.setActualVerticalStaffSpecs(rowAdjustedStaffSpec);
         		incoming.setActualVerticalStaffSpecs(customIncomingStaffSpec);
 	        	incoming.measure(widthMeasureSpec, heightMeasureSpec);
 	        	finalPartialHeader = (SystemHeaderView) _surface.getChildAt(systemNumber+1);
 	        	if(finalPartialHeader == null) {
-	        		Log.i(TAG,"Added new header for incoming");
+	        		//Log.i(TAG,"Added new header for incoming");
 	        		finalPartialHeader = _surface.new SystemHeaderView(getContext());
 	        		_surface.addView(finalPartialHeader, systemNumber + 1);
 	        	}
@@ -317,7 +330,7 @@ public class ScoreLayout extends ViewGroup {
         	left += header.getMeasuredWidth();
         	
         	ScoreDeltaView firstSDVInRow = (ScoreDeltaView)getChildAt(rowStartIndex);
-        	ScoreDeltaView secondSDVInRow = (ScoreDeltaView)getChildAt(rowStartIndex + 1);
+        	//ScoreDeltaView secondSDVInRow = (ScoreDeltaView)getChildAt(rowStartIndex + 1);
         	Pair< LinkedList<ScoreDeltaView>, Integer> p = getActualRow( rowStartIndex + 1, 
         			getMeasuredWidth() - header.getMeasuredWidth() - effectiveWidthOfFirstRowMember);
         	
@@ -342,7 +355,7 @@ public class ScoreLayout extends ViewGroup {
         		//int incL = _surface.getChildAt(systemNumber+1).getMeasuredWidth()
         		//		+ (int)(left * d);
         		SystemHeaderView nextHeader = (SystemHeaderView) _surface.getChildAt(systemNumber+1);
-        		Log.i(TAG,"incoming layout..., nextHeader: " + nextHeader.getMeasuredWidth() + "," + nextHeader.getMeasuredHeight());
+        		//Log.i(TAG,"incoming layout..., nextHeader: " + nextHeader.getMeasuredWidth() + "," + nextHeader.getMeasuredHeight());
         		int incL = left - (int)((left - nextHeader.getMeasuredWidth()) * (1d-d));
         		int incT = (int)(top + (header.getMeasuredHeight() * (1d-d)));
         		incoming.layout(incL, incT, incL+incoming.getMeasuredWidth(), incT+incoming.getMeasuredHeight());
@@ -356,57 +369,6 @@ public class ScoreLayout extends ViewGroup {
         	if(rowStartIndex < getChildCount())
         		effectiveWidthOfFirstRowMember = incoming.getMeasuredWidth() - p.second;
         }
-        
-        // Lay out everything AS MEASURED as best as we can.
-        /*for (int index=1; index<getChildCount(); index++) {
-            final ScoreDeltaView child = (ScoreDeltaView) getChildAt(index);
-
-            int w = child.getMeasuredWidth();
-            int h = child.getMeasuredHeight();
-            
-            int left = x;
-            int top = y;
-            
-            // This View won't be visible to the user, remove this and all subsequent Views.
-            if(top > getMeasuredHeight()) {
-            	while(index < getChildCount())
-            		removeViewAt(index );
-            	break;
-            }
-            
-            // There is room for this View horizontally, place it normally in the same system we've been
-            // placing Views.
-            if(left + w < myWidth) {
-            	child.layout(left, top, left+w, top+h);
-            	x += w;
-            
-            // There isn't room for this View in the system.  How close is appears to "being" in the next
-            // system depends on how wide it is compared to how much space is left.
-            } else {
-            	// This ratio represents "proximity" to where the View should be drawn.
-            	// 0 represents perfectly on the next line, 1 perfectly here.  Anywhere
-            	// in between should correspond to positions in between for a transition
-            	double d = (myWidth - left) / (double)w;
-            	
-            	while(_surface.getChildCount() < systemNumber + 1) {
-            		_surface.addView(_surface.new SystemHeaderView(_surface.getContext()));
-            	}
-            	SystemHeaderView header = (SystemHeaderView)_surface.getChildAt(systemNumber);
-            	int systemHeaderViewWidth;
-            	
-            	
-            	
-            	left = (int)(left * d);
-            	top = (int)(top + (h * (1d-d)));
-            	
-            	child.layout(left, top, left+w, top+h);
-            	
-            	x = (int)(w * (1 - d));
-            	y += h;
-            	systemNumber += 1;
-            }
-            
-        }*/
         
         _surface.invalidate();
     }
@@ -443,7 +405,10 @@ public class ScoreLayout extends ViewGroup {
 	}
     
     Float __prevMotionX = null;
+    Long __prevMotionTime = null;
+    Float __prevVelX = null;
     Double __prev2FingerDistance = null;
+    LinkedList<AsyncTask> __kineticOperations = new LinkedList<AsyncTask>();
     @Override
     public boolean onTouchEvent(MotionEvent event) {
     	//Log.i(TAG,"onTouchEvent");
@@ -453,36 +418,152 @@ public class ScoreLayout extends ViewGroup {
     	
     	// 1 finger to scroll
     	if(event.getPointerCount() == 1) {
-	    	if(event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-	    		__prevMotionX = event.getX();
-	    		return true;
-	    	} else if(event.getActionMasked() == MotionEvent.ACTION_MOVE) {
-	    		disableTransitions();
-	    		if(__prevMotionX != null) {
-	    			int dx = (int) (event.getX() - __prevMotionX);
-	
-	    			Log.i(TAG,"Move of x" + event.getX() + "," + __prevMotionX + " dx="+dx);
-	    			
-	    			//Scroll forwards (right to left swipe)
-			        if (dx < 0) {
-			        	scrollLeftBy(-dx);
-	
-			        // Scroll backwards (left to right swipe)
-			        } else if(dx > 0) {
-			        	scrollRightBy(dx);
-			        }
-	    		}
-	    		requestLayout();
-	    		enableTransitions();
-	    		__prevMotionX = event.getX();
-		        return true;
-	    	} else if(event.getActionMasked() == MotionEvent.ACTION_UP) {
-	    		__prevMotionX = null;
-	    		fixLayout();
+			for(AsyncTask t : __kineticOperations) {
+				t.cancel(true);
+			}
+			__kineticOperations.clear();
+    		switch(event.getActionMasked()) {
+	    		case MotionEvent.ACTION_DOWN:
+	    		case MotionEvent.ACTION_POINTER_DOWN:
+		    		__prevMotionX = event.getX();
+		    		__prevMotionTime = System.currentTimeMillis();
+		    		return true;
+	    		case MotionEvent.ACTION_MOVE:
+		    		if(__prevMotionX != null) {
+		    			float dxFloat = event.getX() - __prevMotionX;
+		    			float dt_seconds = (float)(System.currentTimeMillis() - __prevMotionTime)/1000f;
+			    		__prevMotionTime = System.currentTimeMillis();
+		    			__prevVelX = dxFloat/dt_seconds;
+		    			
+		    			final int dx = (int) dxFloat;
+		
+		    			Log.i(TAG,"Move of x" + event.getX() + "," + __prevMotionX + " dx="+dx);
+		    			
+		    			//Scroll forwards (right to left swipe)
+				        if (dx < 0) {
+						   scrollLeftBy(-dx);
+				        // Scroll backwards (left to right swipe)
+				        } else if(dx > 0) {
+				        	scrollRightBy(dx);
+				        }
+		    		}
+		    		__prevMotionX = event.getX();
+			        return true;
+	    		case MotionEvent.ACTION_UP: 
+	            case MotionEvent.ACTION_POINTER_UP: 
+	            case MotionEvent.ACTION_CANCEL: 
+		    		if(__prevVelX != null) {
+		    			final float myVelX = __prevVelX;
+		    			__kineticOperations.add( new AsyncTask<Object,Object,Object>() {
+		    				boolean isCancelled = false;
+		    				@Override
+		    				protected void onCancelled() {
+		    					isCancelled = true;
+		    				}
+		    				
+							@Override
+							protected Object doInBackground(Object... params) {
+								float velX = myVelX;
+								float deceleration;
+								if(velX > 0)
+									deceleration= 2000f*(float)_scalingFactor;
+								else
+									deceleration = -2000f*(float)_scalingFactor;
+								long prevTime = System.currentTimeMillis();
+								float accumDX = 0;
+								int totalScrolled = 0;
+								while(Math.abs(velX) > 0 && !isCancelled) {
+									long now = System.currentTimeMillis();
+									float dt_seconds = (float)(now - prevTime) / 1000f;
+									prevTime = now;
+									float dx = velX * dt_seconds - deceleration * dt_seconds * dt_seconds / 2;
+									accumDX += dx;
+									final int toScroll = ((int)accumDX) - totalScrolled;
+									totalScrolled += toScroll;
+									if(toScroll < 0) {
+										post(new Runnable() {
+											@Override
+											public void run() {
+												scrollLeftBy(-toScroll);
+											}
+										});
+									} else if(toScroll > 0) {
+										post(new Runnable() {
+											@Override
+											public void run() {
+												scrollRightBy(toScroll);
+											}
+										});
+									}
+									velX -= deceleration * dt_seconds;
+									Log.i(TAG,"Elastic"+velX+","+dx);
+									if((deceleration > 0 && velX < 0) || (deceleration < 0 && velX > 0))
+										break;
+									try {
+										Thread.sleep(10);
+									} catch (InterruptedException e) {}
+								}
+
+								return null;
+							}
+							
+							@Override
+							protected void onPostExecute(Object result) {
+								post(new Runnable() {
+									@Override
+									public void run() {
+										fixLayout();
+									}
+								});
+							}
+		    				
+		    			}.execute());
+		    			/*
+								float velX = myVelX;
+								float deceleration;
+								if(velX > 0)
+									deceleration= 200f*(float)_scalingFactor;
+								else
+									deceleration = -200f*(float)_scalingFactor;
+								long prevTime = System.currentTimeMillis();
+								float accumDX = 0;
+								int totalScrolled = 0;
+								while(Math.abs(velX) > 0) {
+									long now = System.currentTimeMillis();
+									float dt_seconds = (float)(now - prevTime) / 1000f;
+									prevTime = now;
+									float dx = velX * dt_seconds - deceleration * dt_seconds * dt_seconds / 2;
+									accumDX += dx;
+									int toScroll = ((int)accumDX) - totalScrolled;
+									totalScrolled += toScroll;
+									if(toScroll < 0) {
+										scrollLeftBy(toScroll);
+									} else if(toScroll > 0) {
+										scrollRightBy(toScroll);
+									}
+									velX -= deceleration * dt_seconds;
+									Log.i(TAG,"Elastic"+velX+","+dx);
+									if((deceleration > 0 && velX < 0) || (deceleration < 0 && velX > 0))
+										break;
+									try {
+										Thread.sleep(50);
+									} catch (InterruptedException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+								}
+								fixLayout();
+							}
+		    				
+		    			});*/
+		    		} else {
+		    			fixLayout();
+		    		}
+		    		fixLayout();
+		    		__prevMotionX = null;
+		    		__prevMotionTime = null;
 	    	}
-	    	ScoreDeltaView first = (ScoreDeltaView) getChildAt(1);
-	    	Log.i(TAG, "First view perfect: " + first.getPerfectHorizontalStaffSpec().toString());
-	    	Log.i(TAG, "First view actual: " + first.getActualHorizontalStaffSpec().toString());
+	    	
 	    // 2 fingers to zoom
     	} else if(event.getPointerCount() == 2) {
     		Log.i(TAG,"Two Fingers");
@@ -509,107 +590,83 @@ public class ScoreLayout extends ViewGroup {
 	}
     
     
-    private void scrollLeftBy(int dx) {
+    private void scrollLeftBy(final int dx) {
+		if(getChildCount() == 2)
+    		return;
     	//Remove stuff from the top left
-        int removedWidth = 0;
-        while(true) {
-        	ScoreDeltaView sdv = (ScoreDeltaView)getChildAt(1);
-        	if(sdv == null || sdv._scoreDelta.LOCATION.compareTo(_score.getFine()) >= 0)
-        		break;
-        	if(removedWidth + sdv.getActualWidth() <= dx) {
-        		removedWidth += sdv.getActualWidth();
-        		Log.i(TAG,"removing view");
-        		removeViewAt(1);
-        	} else {
-        		Log.i(TAG,"Breaking with removedWidth="+removedWidth);
-        		break;
-        	}
+		int removedFromLeft = 0;
+        //Remove as many views as possible.
+        while(removedFromLeft + ((ScoreDeltaView)getChildAt(1)).getActualWidth() < dx && getChildCount() > 2) {
+        	removedFromLeft += ((ScoreDeltaView)getChildAt(1)).getActualWidth();
+		    removeViewAt(1);
+        }
+        //Shorten the first view to complete the job.
+        if(getChildCount() > 2) {
+	        int leftToRemove = dx - removedFromLeft;
+	        ScoreDeltaView first = (ScoreDeltaView)getChildAt(1);
+	        first.setActualWidth(first.getActualWidth() - leftToRemove);
+	        removedFromLeft += leftToRemove;
         }
         
-        
-        int leftToRemove = dx - removedWidth;
-        Log.i(TAG,"leftToRemove=" + leftToRemove + " removedWidth=" + removedWidth);
-        ScoreDeltaView first = (ScoreDeltaView)getChildAt(1);
-        if(first._scoreDelta.LOCATION.compareTo(_score.getFine()) < 0) {
-            Log.i(TAG,"Shortening first view to " + (first.getActualWidth() - leftToRemove));
-            first.setActualWidth(first.getActualWidth() - leftToRemove);
-        }
         
         //Add stuff to the bottom right
-        ScoreDeltaView lastVisible = (ScoreDeltaView)getChildAt(getChildCount()-1);
+		ScoreDeltaView lastVisible = (ScoreDeltaView)getChildAt(getChildCount()-1);
         Iterator<ScoreDelta> itr = _score.scoreIterator(lastVisible._scoreDelta.LOCATION, false);
-        int leftToAdd = dx;
-        while(true) {
-    		if(lastVisible.getActualWidth() < lastVisible.getPerfectWidth()) {
-    			int addable = lastVisible.getPerfectWidth() - lastVisible.getActualWidth();
-    			if(leftToAdd <= addable) {
-    				lastVisible.setActualWidth(lastVisible.getActualWidth() + leftToAdd);
-    				break;
-    			} else {
-    				lastVisible.setActualWidth(lastVisible.getActualWidth() + addable);
-    				leftToAdd -= addable;
-    			}
-    		} else {
-    			if(!itr.hasNext())
-    				break;
-    			Score.ScoreDelta scd = itr.next();
-    			if(!itr.hasNext())
-    				break;
-    			ScoreDeltaView sdv = new ScoreDeltaView(getContext(), this);
-    			sdv.setScoreDelta(scd);
-    			addView(sdv, getChildCount());
-    			
-    			int addable = sdv.getPerfectWidth();
-    			if(leftToAdd <= addable) {
-    				sdv.setActualWidth(leftToAdd);
-    				break;
-    			} else {
-    				sdv.setActualWidth(addable);
-    				leftToAdd -= addable;
-    			}
-    		}
+        int leftToAdd = removedFromLeft;
+        while(itr.hasNext() && leftToAdd > 0) {
+    		ScoreDelta d = itr.next();
+    		ScoreDeltaView sdv = new ScoreDeltaView(getContext(), this);
+			sdv.setScoreDelta(d);
+			int addable = sdv.getPerfectWidth();
+			if(leftToAdd <= addable) {
+				sdv.setActualWidth(leftToAdd);
+				addView(sdv,getChildCount());
+				break;
+			} else {
+				sdv.setActualWidth(addable);
+				addView(sdv,getChildCount());
+				leftToAdd -= addable;
+			}
         }
+		requestLayout();
     }
     
-    private void scrollRightBy(int dx) {
-    	ScoreDeltaView first = (ScoreDeltaView)getChildAt(1);
-    	Rational startingPoint;
-    	if(first == null)
-    		startingPoint = _score.getFine();
-    	else
-    		startingPoint = first._scoreDelta.LOCATION;
+    private void scrollRightBy(final int dx) {
+    	final ScoreDeltaView first = (ScoreDeltaView)getChildAt(1);
+    	Log.i(TAG,"Right scroll, first view at " +first._scoreDelta.LOCATION + 
+    			":" + first.getPerfectWidth() + "," + first.getActualWidth());
     	
-    	Iterator<Score.ScoreDelta> itr = _score.reverseScoreIterator(startingPoint, false);
-    	int leftToAdd = dx;
-    	
-    	while(true) {
-    		if(first.getActualWidth() < first.getPerfectWidth()) {
-    			int addable = first.getPerfectWidth() - first.getActualWidth();
-    			if(leftToAdd <= addable) {
-    				first.setActualWidth(first.getActualWidth() + leftToAdd);
-    				break;
-    			} else {
-    				first.setActualWidth(first.getActualWidth() + addable);
-    				leftToAdd -= addable;
-    			}
-    		} else {
-    			if(!itr.hasNext())
-    				break;
-    			Score.ScoreDelta scd = itr.next();
-    			ScoreDeltaView sdv = new ScoreDeltaView(getContext(), this);
-    			sdv.setScoreDelta(scd);
-    			addView(sdv, 1);
-    			
-    			int addable = sdv.getPerfectWidth();
-    			if(leftToAdd <= addable) {
-    				sdv.setActualWidth(leftToAdd);
-    				break;
-    			} else {
-    				sdv.setActualWidth(addable);
-    				leftToAdd -= addable;
-    			}
-    		}
+		int leftToAdd = dx;
+    	if(first.getActualWidth() < first.getPerfectWidth()) {
+    		int addable = first.getPerfectWidth() - first.getActualWidth();
+    		int toAdd = Math.min(leftToAdd, addable);
+    		Log.i(TAG,"Right scroll " + toAdd);
+    		first.setActualWidth(first.getActualWidth() + toAdd);
+    		leftToAdd -= toAdd;
     	}
+    	
+    	Log.i(TAG, "Right scroll must fill " + leftToAdd + " with new Views");
+    	
+    	Rational startingPoint = first._scoreDelta.LOCATION;
+    	Iterator<Score.ScoreDelta> itr = _score.reverseScoreIterator(startingPoint, false);
+    	while(itr.hasNext() && leftToAdd > 0) {
+    		ScoreDelta d = itr.next();
+    		ScoreDeltaView sdv = new ScoreDeltaView(getContext(), this);
+        	Log.i(TAG,"Going backwards got " + d.LOCATION.toMixedString() + d.STAVES[0].VOICES[0].ESTABLISHED.NOTES);
+			sdv.setScoreDelta(d);
+			int addable = sdv.getPerfectWidth();
+			if(leftToAdd <= addable) {
+				sdv.setActualWidth(leftToAdd);
+				addView(sdv,1);
+				break;
+			} else {
+				sdv.setActualWidth(addable);
+				addView(sdv,1);
+				leftToAdd -= addable;
+			}
+    	}
+    	
+		requestLayout();
     }
     
     /**
@@ -712,7 +769,7 @@ public class ScoreLayout extends ViewGroup {
     
     @Override
     public boolean shouldDelayChildPressedState() {
-    	return false;
+    	return true;
     }
     
     public void removeFirstElement() {

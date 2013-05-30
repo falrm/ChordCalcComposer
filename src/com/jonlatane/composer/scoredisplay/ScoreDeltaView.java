@@ -123,8 +123,8 @@ class ScoreDeltaView extends LinearLayout {
 			_upperLyricView = new TextView(getContext());
 			_lowerLyricView = new TextView(getContext());
 			
-			_upperLyricView.setTextIsSelectable(true);
-			_lowerLyricView.setTextIsSelectable(true);
+			_upperLyricView.setTextIsSelectable(false);
+			_lowerLyricView.setTextIsSelectable(false);
 			
 			_upperLyricView.setText("upper");
 			_lowerLyricView.setText("lower");
@@ -223,7 +223,7 @@ class ScoreDeltaView extends LinearLayout {
 		super.onLayout(changed, l, t, r, b);
 	}
 
-	public VerticalStaffSpec[] getActualVerticalStaffSpec() {
+	public VerticalStaffSpec[] getActualVerticalStaffSpecs() {
 		VerticalStaffSpec[] result = new VerticalStaffSpec[getChildCount()];
 		for(int i = 0; i < getChildCount(); i++) {
 			result[i] = ((StaffDeltaView)getChildAt(i)).getActualVerticalStaffSpec();
@@ -263,11 +263,11 @@ class ScoreDeltaView extends LinearLayout {
 	}
 	public void setActualWidth(int targetWidth) {
 		_actualHorizontalStaffSpec = _perfectHorizontalStaffSpec.adaptToWidth(targetWidth);
-		requestLayout();
-		for(int i = 0; i < getChildCount(); i++) {
+		//requestLayout();
+		/*for(int i = 0; i < getChildCount(); i++) {
 			getChildAt(i).requestLayout();
 			((StaffDeltaView)getChildAt(i))._staffArea.requestLayout();
-		}
+		}*/
 			
 	}
 }

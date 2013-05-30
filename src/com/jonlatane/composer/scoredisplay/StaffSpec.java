@@ -179,6 +179,22 @@ public class StaffSpec {
 			}
 			return result;
 		}
+		
+		public static VerticalStaffSpec influenceLeftRight(VerticalStaffSpec left, VerticalStaffSpec right, double leftNess) {
+			int above = right.ABOVE_CENTER_PX + (int)(leftNess *(left.ABOVE_CENTER_PX - right.ABOVE_CENTER_PX));
+			int below = right.BELOW_CENTER_PX + (int)(leftNess *(left.BELOW_CENTER_PX - right.BELOW_CENTER_PX));
+			int upper = right.UPPER_AREA_PX + (int)(leftNess *(left.UPPER_AREA_PX - right.UPPER_AREA_PX));
+			int lower = right.LOWER_AREA_PX + (int)(leftNess *(left.LOWER_AREA_PX - right.LOWER_AREA_PX));
+			return new VerticalStaffSpec(above, below, upper, lower);
+		}
+		
+		public static VerticalStaffSpec[] influenceLeftRight(VerticalStaffSpec[] lefts, VerticalStaffSpec[] rights, double leftNess) {
+			VerticalStaffSpec[] result = new VerticalStaffSpec[rights.length];
+			for(int i = 0; i < result.length; i++) {
+				result[i] = influenceLeftRight(lefts[i], rights[i], leftNess);
+			}
+			return result;
+		}
 	}
 
 	/**

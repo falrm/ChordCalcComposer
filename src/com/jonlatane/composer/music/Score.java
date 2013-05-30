@@ -557,6 +557,7 @@ public class Score {
 	 * @return
 	 */
 	public Iterator<ScoreDelta> reverseScoreIterator(final Rational startEndSayWhat, boolean inclusive) {
+		Log.i(TAG,"Backiteration: "+getOverallRhythm().headSet(startEndSayWhat,inclusive).toString());
 		return scoreDeltaIterator(getOverallRhythm().headSet(startEndSayWhat,inclusive).descendingIterator());
 	}
 	
