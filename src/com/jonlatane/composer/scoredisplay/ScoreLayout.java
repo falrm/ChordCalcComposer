@@ -80,7 +80,7 @@ public class ScoreLayout extends ViewGroup {
     Score _score;
 
     private ScoreDrawingSurface _surface;
-    double _scalingFactor = 1d;
+    double SCALINGFACTOR = 1d;
     
     public ScoreLayout(Context context) {
         super(context);
@@ -408,17 +408,13 @@ public class ScoreLayout extends ViewGroup {
     Long __prevMotionTime = null;
     Float __prevVelX = null;
     Double __prev2FingerDistance = null;
-    LinkedList<AsyncTask> __kineticOperations = new LinkedList<AsyncTask>();
+    LinkedList<AsyncTask<?,?,?>> __kineticOperations = new LinkedList<AsyncTask<?,?,?>>();
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-    	//Log.i(TAG,"onTouchEvent");
-    	if(event.getPointerCount() > 1) {
-    		return false;
-    	}
-    	
+    public boolean onTouchEvent(MotionEvent event) {    	
     	// 1 finger to scroll
     	if(event.getPointerCount() == 1) {
-			for(AsyncTask t : __kineticOperations) {
+    		Log.i(TAG, "One finger");
+			for(AsyncTask<?,?,?> t : __kineticOperations) {
 				t.cancel(true);
 			}
 			__kineticOperations.clear();
@@ -466,9 +462,9 @@ public class ScoreLayout extends ViewGroup {
 								float velX = myVelX;
 								float deceleration;
 								if(velX > 0)
-									deceleration= 2000f*(float)_scalingFactor;
+									deceleration= 2000f*(float)SCALINGFACTOR;
 								else
-									deceleration = -2000f*(float)_scalingFactor;
+									deceleration = -2000f*(float)SCALINGFACTOR;
 								long prevTime = System.currentTimeMillis();
 								float accumDX = 0;
 								int totalScrolled = 0;
@@ -562,10 +558,11 @@ public class ScoreLayout extends ViewGroup {
 		    		fixLayout();
 		    		__prevMotionX = null;
 		    		__prevMotionTime = null;
+		    	    __prev2FingerDistance = null;
 	    	}
 	    	
 	    // 2 fingers to zoom
-    	} else if(event.getPointerCount() == 2) {
+    	} else if(event.getPointerCount() == 2 ) {
     		Log.i(TAG,"Two Fingers");
     		double newDistance = Math.sqrt(( (event.getX(1)-event.getX(0)) * (event.getX(1)-event.getX(0)) ) + 
     										( (event.getY(1)-event.getY(0)) * (event.getY(1)-event.getY(0)) ));
@@ -575,8 +572,8 @@ public class ScoreLayout extends ViewGroup {
 	    		disableTransitions();
 	    		if(__prev2FingerDistance != null) {
 	    			double distanceRatioToPrev = newDistance/__prev2FingerDistance;
-	    			_scalingFactor = Math.min(MAX_SCALE, Math.max(MIN_SCALE, _scalingFactor * distanceRatioToPrev));
-	    			Log.i(TAG,"Zoomed to scaling factor" + _scalingFactor);
+	    			SCALINGFACTOR = Math.min(MAX_SCALE, Math.max(MIN_SCALE, SCALINGFACTOR * distanceRatioToPrev));
+	    			Log.i(TAG,"Zoomed to scaling factor" + SCALINGFACTOR);
 	    		}
 	    		requestLayout();
 	    		enableTransitions();
@@ -584,6 +581,7 @@ public class ScoreLayout extends ViewGroup {
 		        return true;
 	    	} else if(event.getActionMasked() == MotionEvent.ACTION_UP) {
 	    		__prev2FingerDistance = null;
+	    		__prevVelX = null;
 	    	}
     	}
 		return false;

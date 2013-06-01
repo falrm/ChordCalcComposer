@@ -12,6 +12,7 @@ import com.jonlatane.composer.music.Score.ScoreDelta;
 import com.jonlatane.composer.music.Score.Staff.StaffDelta;
 import com.jonlatane.composer.music.harmony.Chord;
 import com.jonlatane.composer.scoredisplay.ScoreDeltaView.StaffDeltaView;
+import com.jonlatane.composer.scoredisplay.ScoreDrawingSurface.SystemHeaderView.StaffHeaderView;
 import com.jonlatane.composer.scoredisplay.StaffSpec.VerticalStaffSpec;
 
 import android.content.Context;
@@ -75,11 +76,12 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 		private ScoreDeltaView _partialScoreDelta = null;
 		private ScoreDeltaView _completeScoreDelta = null;
 		
-		private class StaffHeader extends LinearLayout {
+		class StaffHeaderView extends LinearLayout {
 			private View _clefArea, _keySigArea, _timeSigArea;
+			private VerticalStaffSpec staffSpec;
 			private int _staffNumber;
 			
-			public StaffHeader(Context context, int staffNumber) {
+			public StaffHeaderView(Context context, int staffNumber) {
 				super(context);
 				setOrientation(HORIZONTAL);
 				_staffNumber = staffNumber;
@@ -111,7 +113,12 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				_clefArea.measure(widthMeasureSpec,heightMeasureSpec);
 				_keySigArea.measure(widthMeasureSpec,heightMeasureSpec);
 				_timeSigArea.measure(widthMeasureSpec,heightMeasureSpec);
-				int width = _clefArea.getMeasuredWidth() + _keySigArea.getMeasuredWidth() + _timeSigArea.getMeasuredWidth();
+				//int width = _clefArea.getMeasuredWidth() + _keySigArea.getMeasuredWidth() + _timeSigArea.getMeasuredWidth();
+				
+				//int height = staffSpec.getTotalHeight();
+				int height = staffSpec.ABOVE_CENTER_PX + staffSpec.BELOW_CENTER_PX;
+				int width = deriveLayoutWidth() - (int)(BRACES_AREA_PX * _parent.SCALINGFACTOR);
+				setMeasuredDimension(width, height);
 			}
 		}
 		
@@ -124,12 +131,35 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 		@Override 
 		public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 			setMeasuredDimension(deriveLayoutWidth(), deriveLayoutHeight());
+			ScoreDeltaView scoreDV = (_completeScoreDelta == null) 
+					? _partialScoreDelta : _completeScoreDelta;
+			for(int i = 0; i < scoreDV.getChildCount(); i++) {
+				StaffDeltaView staffDV = (StaffDeltaView) scoreDV.getChildAt(i);
+				StaffHeaderView header = (StaffHeaderView) getChildAt(i);
+				if(header == null) {
+					header = this.new StaffHeaderView(getContext(), i);
+					addView(header, i);
+				}
+				header.staffSpec = staffDV.getActualVerticalStaffSpec();
+				header.measure(widthMeasureSpec, heightMeasureSpec);
+			}
 		}
 		
 		@Override
 		protected void onLayout(boolean changed, int l, int t, int r, int b) {
-			
-			
+			ScoreDeltaView scoreDV = (_completeScoreDelta == null) 
+					? _partialScoreDelta : _completeScoreDelta;
+			for(int i = 0; i < scoreDV.getChildCount(); i++) {
+				StaffDeltaView staffDV = (StaffDeltaView) scoreDV.getChildAt(i);
+				StaffHeaderView header = (StaffHeaderView) getChildAt(i);
+				Rect staffDVRect = new Rect();
+				staffDV.getHitRect(staffDVRect);
+				Rect staffAreaRect = new Rect();
+				staffDV._staffArea.getHitRect(staffAreaRect);
+				
+				header.layout((int)(BRACES_AREA_PX * _parent.SCALINGFACTOR), staffDVRect.top + staffAreaRect.top,
+						r, staffDVRect.top + staffAreaRect.top + header.getMeasuredHeight() );
+			}
 		}
 
 		public ScoreDeltaView getPartialDelta() {
@@ -177,16 +207,6 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				return _partialScoreDelta.getMeasuredHeight();
 		}
 		public int deriveLayoutWidth() {
-			int w = BRACES_AREA_PX;
-			//Remove excess StaffHeaderViews
-			int numStaves = _parent._score.getNumStaves();
-			while(numStaves < getChildCount())
-				removeViewAt(numStaves);
-			//Add new StaffHeaderViews as needed
-			while(getChildCount() < numStaves) {
-				StaffHeader sh = new StaffHeader(getContext(), getChildCount());
-				addView(sh, getChildCount());
-			}
 			
 			//Get the width of each StaffHeaderView
 			/*if(_completeScoreDelta != null) {
@@ -194,10 +214,27 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 			} else {
 				
 			}*/
-			return 70;
+			return deriveLayoutWidthFor(_partialScoreDelta, _completeScoreDelta, _partialVisibilityRatio);
+		}
+		
+		public int deriveLayoutWidthFor(ScoreDeltaView left, ScoreDeltaView right, double leftNess) {
+			int w = BRACES_AREA_PX;
+			//Remove excess StaffHeaderViews
+			int numStaves = _parent._score.getNumStaves();
+			while(numStaves < getChildCount())
+				removeViewAt(numStaves);
+			//Add new StaffHeaderViews as needed
+			while(getChildCount() < numStaves) {
+				StaffHeaderView sh = new StaffHeaderView(getContext(), getChildCount());
+				addView(sh, getChildCount());
+			}
+			
+			//TODO
+			int result = (int)(BRACES_AREA_PX * _parent.SCALINGFACTOR);
+			
+			return result + 70;
 		}
 	}
-	
 	
 	public ScoreDrawingSurface(Context context, ScoreLayout parent) {
 		super(context);
@@ -276,7 +313,24 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				// TODO Draw header and staff lines
 				//__orange.setColor(header.adjustAlphaToVisibility(__orange.getColor()));
 				__orange.setAlpha(header.visibilityToAlpha());
+				__black.setAlpha(header.visibilityToAlpha());
 				c.drawRect(headerRect, __orange);
+				for(int j = 0; j < header.getChildCount(); j++) {
+					StaffHeaderView staffHeader = (StaffHeaderView) header.getChildAt(j);
+					Rect staffHeaderRect = new Rect();
+					staffHeader.getHitRect(staffHeaderRect);
+					int staffAreaTop = headerRect.top + staffHeaderRect.top;
+					int middleStaffLine = staffAreaTop + staffHeader.staffSpec.ABOVE_CENTER_PX;
+					
+					// Draw the middle staff line
+					c.drawLine((float) (BRACES_AREA_PX * _parent.SCALINGFACTOR), middleStaffLine, 
+							c.getWidth(), middleStaffLine, __black);
+					// Draw the other staff lines
+					for(int whichLineFromCenter : new int[] {-2, -1, 1, 2}) {
+						c.drawLine((float) (BRACES_AREA_PX * _parent.SCALINGFACTOR), middleStaffLine + (int)(whichLineFromCenter * StaffSpec.HEPTATONICTHIRD_PX * _parent.SCALINGFACTOR), 
+								c.getWidth(), middleStaffLine + (int)(whichLineFromCenter * StaffSpec.HEPTATONICTHIRD_PX * _parent.SCALINGFACTOR), __black);
+					}
+				}
 			}
 			
 			// Iterate through the ScoreDeltaViews
@@ -306,7 +360,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 					int staffCenterOffset = staffDV.getActualVerticalStaffSpec().ABOVE_CENTER_PX;
 					
 					c.drawLine(staffAreaRect.left, staffAreaRect.top + staffCenterOffset,
-							staffAreaRect.right, staffAreaRect.top + staffCenterOffset, __black);
+							staffAreaRect.right, staffAreaRect.top + staffCenterOffset, __blue);
 				}
 			}
 			_holder.unlockCanvasAndPost(c);

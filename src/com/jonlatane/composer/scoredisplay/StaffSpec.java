@@ -195,6 +195,16 @@ public class StaffSpec {
 			}
 			return result;
 		}
+		
+		public static VerticalStaffSpec scale(VerticalStaffSpec vss, double scale) {
+			int a, b, u, l;
+			u = (int)(vss.UPPER_AREA_PX * scale);
+			l = (int)(vss.UPPER_AREA_PX * scale);
+			int remaining = (int)(vss.getTotalHeight() * scale) - u - l;
+			a = (int)(((double)vss.ABOVE_CENTER_PX/(double)(vss.ABOVE_CENTER_PX + vss.BELOW_CENTER_PX)) * (double)remaining);
+			b = remaining - a;
+			return new VerticalStaffSpec(a, b, u, l);
+		}
 	}
 
 	/**
@@ -344,16 +354,68 @@ public class StaffSpec {
 					    + TIMESIG_PX + "]";
 		}
 		public static HorizontalStaffSpec best(HorizontalStaffSpec ss1, HorizontalStaffSpec ss2) {
-			int a, n, c, t, k;
+			int a, n, c, k, t;
 			a = Math.max(ss1.ACCIDENTAL_AREA_PX, ss2.ACCIDENTAL_AREA_PX);
 			n = Math.max(ss1.NOTEHEAD_AREA_PX, ss2.NOTEHEAD_AREA_PX);
 			c = Math.max(ss1.CLEF_PX, ss2.CLEF_PX);
-			t = Math.max(ss1.TIMESIG_PX, ss2.TIMESIG_PX);
 			k = Math.max(ss1.KEYSIG_PX, ss2.KEYSIG_PX);
+			t = Math.max(ss1.TIMESIG_PX, ss2.TIMESIG_PX);
 
-			return new HorizontalStaffSpec(a, n, c, t, k);
+			return new HorizontalStaffSpec(a, n, c, k, t);
+		}
+		
+		public static HorizontalStaffSpec scale(HorizontalStaffSpec vss, double scale) {
+			int a, n, c, k, t;
+			t = (int)(vss.TIMESIG_PX * scale);
+			c = (int)(vss.CLEF_PX * scale);
+			int remaining = (int)(vss.getTotalWidth() * scale) - t - c;
+			n = (int)(
+					(double)vss.NOTEHEAD_AREA_PX/(double)(vss.NOTEHEAD_AREA_PX + vss.ACCIDENTAL_AREA_PX + vss.KEYSIG_PX)
+						* (double)remaining);
+			a = (int)(
+					(double)vss.ACCIDENTAL_AREA_PX/(double)(vss.NOTEHEAD_AREA_PX + vss.ACCIDENTAL_AREA_PX + vss.KEYSIG_PX)
+						* (double)remaining);
+			k = remaining - n - a;
+			
+			return new HorizontalStaffSpec(a, n, c, k, t);
 		}
 	}
+	
+	
+	/*public static class StaffHeaderSpec {
+		public static final StaffHeaderSpec DEFAULT = new StaffHeaderSpec(CLEF_WIDTH_PX + 5, 5, 5);
+		public final int CLEF_PX, KEYSIG_PX, TIMESIG_PX;
+		private StaffHeaderSpec(int c, int k, int t) {
+			CLEF_PX = c;
+			KEYSIG_PX = k;
+			TIMESIG_PX = t;
+		}
+		
+		
+		public StaffHeaderSpec(ScoreDelta d) {
+			CLEF_PX = DEFAULT.CLEF_PX;
+			int widestKeyNumAccidentals = 0;
+			
+		}
+		
+		public int getTotalWidth() {
+			return CLEF_PX + KEYSIG_PX + TIMESIG_PX;
+		}
+		public static StaffHeaderSpec best(StaffHeaderSpec shs1, StaffHeaderSpec shs2) {
+			int c = Math.max(shs1.CLEF_PX, shs2.CLEF_PX);
+			int k = Math.max(shs1.KEYSIG_PX, shs2.KEYSIG_PX);
+			int t = Math.max(shs1.TIMESIG_PX, shs2.TIMESIG_PX);
+			return new StaffHeaderSpec(c, k, t);
+		}
+		
+		public static StaffHeaderSpec best(Collection<StaffHeaderSpec> c) {
+			int c
+		}
+		
+		public static StaffHeaderSpec influenceLeftRight(StaffHeaderSpec left, StaffHeaderSpec right, double leftNess) {
+			
+		}
+	}*/
 	
 	public static int toStandardKeySignatureWidth(Key k) {
 		return Math.abs(KEY_ACCIDENTALS.get(k)) * ACCIDENTAL_WIDTH_PX;
