@@ -135,11 +135,11 @@ public class ChordDisplayActivity extends Activity
 	    	_myKeyboard.toggleKeyboardFragment();
 	    	break;
 	    case R.id.debugFunction1:
-	    	((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
-	    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
+	    	//((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
+	    	//((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
 	    	break;
 	    case R.id.debugFunction2:
-	    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
+	    	//((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
 	    	break;
 	    default:
 	      break;

@@ -152,13 +152,13 @@ class ScoreDeltaView extends LinearLayout {
     		if(d.LOCATION.equals(Rational.ONE))
     			Log.i(TAG, "DEBUG");
     		_perfectVerticalStaffSpec = new VerticalStaffSpec(d);
-    		_actualVerticalStaffSpec = VerticalStaffSpec.scale(_perfectVerticalStaffSpec, _parent.SCALINGFACTOR);
+    		_actualVerticalStaffSpec = VerticalStaffSpec.scale(_perfectVerticalStaffSpec, _parent.getScalingFactor());
     		_upperLyricView.setText(d.LOCATION.toMixedString());
 		}
 		
 		public StaffSpec.VerticalStaffSpec getPerfectVerticalStaffSpec() {
 			//return _perfectVerticalStaffSpec;
-			return VerticalStaffSpec.scale(_perfectVerticalStaffSpec, _parent.SCALINGFACTOR);
+			return VerticalStaffSpec.scale(_perfectVerticalStaffSpec, _parent.getScalingFactor());
 		}
 		public StaffSpec.VerticalStaffSpec getActualVerticalStaffSpec() {
 			return _actualVerticalStaffSpec;
@@ -188,7 +188,7 @@ class ScoreDeltaView extends LinearLayout {
 		}
 		
 		_perfectHorizontalStaffSpec = new HorizontalStaffSpec(d);
-		_actualHorizontalStaffSpec = HorizontalStaffSpec.scale(_perfectHorizontalStaffSpec, _parent.SCALINGFACTOR);
+		_actualHorizontalStaffSpec = HorizontalStaffSpec.scale(_perfectHorizontalStaffSpec, _parent.getScalingFactor());
 	}
 	
 	/**
@@ -242,7 +242,7 @@ class ScoreDeltaView extends LinearLayout {
 	
 	public StaffSpec.HorizontalStaffSpec getPerfectHorizontalStaffSpec() {
 		//return _perfectHorizontalStaffSpec;
-		return HorizontalStaffSpec.scale(_perfectHorizontalStaffSpec, _parent.SCALINGFACTOR);
+		return HorizontalStaffSpec.scale(_perfectHorizontalStaffSpec, _parent.getScalingFactor());
 	}
 	public StaffSpec.HorizontalStaffSpec getActualHorizontalStaffSpec() {
 		return _actualHorizontalStaffSpec;

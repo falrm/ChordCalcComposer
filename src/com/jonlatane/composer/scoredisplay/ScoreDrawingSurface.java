@@ -117,7 +117,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				
 				//int height = staffSpec.getTotalHeight();
 				int height = staffSpec.ABOVE_CENTER_PX + staffSpec.BELOW_CENTER_PX;
-				int width = deriveLayoutWidth() - (int)(BRACES_AREA_PX * _parent.SCALINGFACTOR);
+				int width = deriveLayoutWidth() - (int)(BRACES_AREA_PX * _parent.getScalingFactor());
 				setMeasuredDimension(width, height);
 			}
 		}
@@ -157,7 +157,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				Rect staffAreaRect = new Rect();
 				staffDV._staffArea.getHitRect(staffAreaRect);
 				
-				header.layout((int)(BRACES_AREA_PX * _parent.SCALINGFACTOR), staffDVRect.top + staffAreaRect.top,
+				header.layout((int)(BRACES_AREA_PX * _parent.getScalingFactor()), staffDVRect.top + staffAreaRect.top,
 						r, staffDVRect.top + staffAreaRect.top + header.getMeasuredHeight() );
 			}
 		}
@@ -230,7 +230,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 			}
 			
 			//TODO
-			int result = (int)(BRACES_AREA_PX * _parent.SCALINGFACTOR);
+			int result = (int)(BRACES_AREA_PX * _parent.getScalingFactor());
 			
 			return result + 70;
 		}
@@ -323,12 +323,12 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 					int middleStaffLine = staffAreaTop + staffHeader.staffSpec.ABOVE_CENTER_PX;
 					
 					// Draw the middle staff line
-					c.drawLine((float) (BRACES_AREA_PX * _parent.SCALINGFACTOR), middleStaffLine, 
+					c.drawLine((float) (BRACES_AREA_PX * _parent.getScalingFactor()), middleStaffLine, 
 							c.getWidth(), middleStaffLine, __black);
 					// Draw the other staff lines
 					for(int whichLineFromCenter : new int[] {-2, -1, 1, 2}) {
-						c.drawLine((float) (BRACES_AREA_PX * _parent.SCALINGFACTOR), middleStaffLine + (int)(whichLineFromCenter * StaffSpec.HEPTATONICTHIRD_PX * _parent.SCALINGFACTOR), 
-								c.getWidth(), middleStaffLine + (int)(whichLineFromCenter * StaffSpec.HEPTATONICTHIRD_PX * _parent.SCALINGFACTOR), __black);
+						c.drawLine((float) (BRACES_AREA_PX * _parent.getScalingFactor()), middleStaffLine + (int)(whichLineFromCenter * StaffSpec.HEPTATONICTHIRD_PX * _parent.getScalingFactor()), 
+								c.getWidth(), middleStaffLine + (int)(whichLineFromCenter * StaffSpec.HEPTATONICTHIRD_PX * _parent.getScalingFactor()), __black);
 					}
 				}
 			}

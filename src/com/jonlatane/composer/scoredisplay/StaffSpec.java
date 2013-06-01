@@ -79,7 +79,7 @@ public class StaffSpec {
 	static final int CLEF_WIDTH_PX = 50;
 
 	public static class VerticalStaffSpec {
-		public static final VerticalStaffSpec DEFAULT = new VerticalStaffSpec(40, 40, 0, 0);
+		public static final VerticalStaffSpec DEFAULT = new VerticalStaffSpec(0, 0, 0, 0);
 		public static final int DEFAULT_MARGIN_IN_STEPS = 3;
 		
 		public final int ABOVE_CENTER_PX, BELOW_CENTER_PX;
@@ -366,16 +366,24 @@ public class StaffSpec {
 		
 		public static HorizontalStaffSpec scale(HorizontalStaffSpec vss, double scale) {
 			int a, n, c, k, t;
-			t = (int)(vss.TIMESIG_PX * scale);
-			c = (int)(vss.CLEF_PX * scale);
-			int remaining = (int)(vss.getTotalWidth() * scale) - t - c;
-			n = (int)(
-					(double)vss.NOTEHEAD_AREA_PX/(double)(vss.NOTEHEAD_AREA_PX + vss.ACCIDENTAL_AREA_PX + vss.KEYSIG_PX)
-						* (double)remaining);
-			a = (int)(
-					(double)vss.ACCIDENTAL_AREA_PX/(double)(vss.NOTEHEAD_AREA_PX + vss.ACCIDENTAL_AREA_PX + vss.KEYSIG_PX)
-						* (double)remaining);
-			k = remaining - n - a;
+			if(scale > 1) {
+				t = (int)(vss.TIMESIG_PX * scale);
+				c = (int)(vss.CLEF_PX * scale);
+				int remaining = (int)(vss.getTotalWidth() * scale) - t - c;
+				n = (int)(
+						(double)vss.NOTEHEAD_AREA_PX/(double)(vss.NOTEHEAD_AREA_PX + vss.ACCIDENTAL_AREA_PX + vss.KEYSIG_PX)
+							* (double)remaining);
+				a = (int)(
+						(double)vss.ACCIDENTAL_AREA_PX/(double)(vss.NOTEHEAD_AREA_PX + vss.ACCIDENTAL_AREA_PX + vss.KEYSIG_PX)
+							* (double)remaining);
+				k = remaining - n - a;
+			} else {
+				t = (int)(vss.TIMESIG_PX * scale);
+				c = (int)(vss.CLEF_PX * scale);
+				n = (int)(vss.NOTEHEAD_AREA_PX * scale);
+				a = (int)(vss.ACCIDENTAL_AREA_PX * scale);
+				k = (int)(scale * vss.getTotalWidth()) - a - n - c - t;
+			}
 			
 			return new HorizontalStaffSpec(a, n, c, k, t);
 		}

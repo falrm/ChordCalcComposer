@@ -26,6 +26,7 @@ import com.jonlatane.composer.music.Rational;
 import com.jonlatane.composer.music.Score;
 import com.jonlatane.composer.music.Score.ScoreDelta;
 import com.jonlatane.composer.scoredisplay.ScoreDrawingSurface.SystemHeaderView;
+import com.jonlatane.composer.scoredisplay.StaffSpec.HorizontalStaffSpec;
 import com.jonlatane.composer.scoredisplay.StaffSpec.VerticalStaffSpec;
 
 import android.animation.LayoutTransition;
@@ -75,12 +76,12 @@ import android.view.ViewGroup;
  */
 public class ScoreLayout extends ViewGroup {
 	private static final String TAG = "ScoreLayout";
-	private static final double MAX_SCALE = 10, MIN_SCALE = .1;
+	private static final double MAX_SCALE = 2, MIN_SCALE = .5;
     
     Score _score;
 
     private ScoreDrawingSurface _surface;
-    double SCALINGFACTOR = 1d;
+    private double SCALINGFACTOR = 1d;
     
     public ScoreLayout(Context context) {
         super(context);
@@ -462,9 +463,9 @@ public class ScoreLayout extends ViewGroup {
 								float velX = myVelX;
 								float deceleration;
 								if(velX > 0)
-									deceleration= 2000f*(float)SCALINGFACTOR;
+									deceleration= 2000f*(float)getScalingFactor();
 								else
-									deceleration = -2000f*(float)SCALINGFACTOR;
+									deceleration = -2000f*(float)getScalingFactor();
 								long prevTime = System.currentTimeMillis();
 								float accumDX = 0;
 								int totalScrolled = 0;
@@ -514,48 +515,10 @@ public class ScoreLayout extends ViewGroup {
 							}
 		    				
 		    			}.execute());
-		    			/*
-								float velX = myVelX;
-								float deceleration;
-								if(velX > 0)
-									deceleration= 200f*(float)_scalingFactor;
-								else
-									deceleration = -200f*(float)_scalingFactor;
-								long prevTime = System.currentTimeMillis();
-								float accumDX = 0;
-								int totalScrolled = 0;
-								while(Math.abs(velX) > 0) {
-									long now = System.currentTimeMillis();
-									float dt_seconds = (float)(now - prevTime) / 1000f;
-									prevTime = now;
-									float dx = velX * dt_seconds - deceleration * dt_seconds * dt_seconds / 2;
-									accumDX += dx;
-									int toScroll = ((int)accumDX) - totalScrolled;
-									totalScrolled += toScroll;
-									if(toScroll < 0) {
-										scrollLeftBy(toScroll);
-									} else if(toScroll > 0) {
-										scrollRightBy(toScroll);
-									}
-									velX -= deceleration * dt_seconds;
-									Log.i(TAG,"Elastic"+velX+","+dx);
-									if((deceleration > 0 && velX < 0) || (deceleration < 0 && velX > 0))
-										break;
-									try {
-										Thread.sleep(50);
-									} catch (InterruptedException e) {
-										// TODO Auto-generated catch block
-										e.printStackTrace();
-									}
-								}
-								fixLayout();
-							}
-		    				
-		    			});*/
-		    		} else {
-		    			fixLayout();
 		    		}
 		    		fixLayout();
+		    		
+		    		__prevVelX = null;
 		    		__prevMotionX = null;
 		    		__prevMotionTime = null;
 		    	    __prev2FingerDistance = null;
@@ -572,16 +535,15 @@ public class ScoreLayout extends ViewGroup {
 	    		disableTransitions();
 	    		if(__prev2FingerDistance != null) {
 	    			double distanceRatioToPrev = newDistance/__prev2FingerDistance;
-	    			SCALINGFACTOR = Math.min(MAX_SCALE, Math.max(MIN_SCALE, SCALINGFACTOR * distanceRatioToPrev));
-	    			Log.i(TAG,"Zoomed to scaling factor" + SCALINGFACTOR);
+	    			setScalingFactor(getScalingFactor() * distanceRatioToPrev);
+	    			Log.i(TAG,"Zoomed to scaling factor" + getScalingFactor());
 	    		}
-	    		requestLayout();
 	    		enableTransitions();
 	    		__prev2FingerDistance = newDistance;
 		        return true;
 	    	} else if(event.getActionMasked() == MotionEvent.ACTION_UP) {
 	    		__prev2FingerDistance = null;
-	    		__prevVelX = null;
+	    		//__prevVelX = null;
 	    	}
     	}
 		return false;
@@ -772,6 +734,32 @@ public class ScoreLayout extends ViewGroup {
     
     public void removeFirstElement() {
     	removeViewAt(1);
+    }
+    
+    public double getScalingFactor() {
+    	return SCALINGFACTOR;
+    }
+    
+    public void setScalingFactor(double d) {
+    	d = Math.min(MAX_SCALE, Math.max(MIN_SCALE, d));
+    	double newToOld = d/SCALINGFACTOR;
+    	for(int i = 1; i < getChildCount(); i++) {
+    		ScoreDeltaView sdv = (ScoreDeltaView) getChildAt(i);
+    		double actualToPerfect = sdv.getActualWidth() / sdv.getPerfectWidth();
+    		if(actualToPerfect == 0) {
+    			actualToPerfect = 1;
+    		}
+    		//Log.i(TAG,"Ratio " + newToOld + "*" +actualToPerfect + "=" + (newToOld*actualToPerfect));
+    		//sdv.setActualWidth((int) (newToOld * actualToPerfect * sdv.getActualWidth()));
+    		//Log.i(TAG, "Scaled HSS: " 
+    		//		+ HorizontalStaffSpec.scale(sdv.getPerfectHorizontalStaffSpec(), newToOld * actualToPerfect).toString()
+    		//		+ " @scale" + newToOld + "*" +actualToPerfect + "=" + (newToOld*actualToPerfect));
+    		sdv.setActualHorizontalStaffSpec(
+    				HorizontalStaffSpec.scale(sdv.getPerfectHorizontalStaffSpec(), newToOld * actualToPerfect)
+    			);
+    	}
+    	SCALINGFACTOR = d;
+    	requestLayout();
     }
 }
 
