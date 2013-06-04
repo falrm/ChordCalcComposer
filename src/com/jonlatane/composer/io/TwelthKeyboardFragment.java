@@ -11,7 +11,6 @@ import com.jonlatane.composer.music.harmony.Key;
 
 import android.animation.IntEvaluator;
 import android.animation.ValueAnimator;
-import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.os.*;
 import android.util.Log;
@@ -108,7 +107,6 @@ public class TwelthKeyboardFragment extends Fragment {
 	        this.v = v;
 	    }
 
-	    @SuppressLint("NewApi")
 		@Override
 	    public Integer evaluate(float fraction, Integer startValue, Integer endValue) {
 	        int num = (Integer)super.evaluate(fraction, startValue, endValue);
