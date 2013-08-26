@@ -23,19 +23,17 @@ public class PitchSet extends TreeSet<Integer> {
 	public String[] NOTENAMES = null;
 	
 	/**
-	 * This is used for deciding whether to render something of duration 1 and 1/4 as a quarter
-	 * tied to a sixteenth or a sixteenth tied to a quarter.  It can be determined at runtime
-	 * in the rendering layer and cached here in the model.  The rendering layer uses the time
-	 * the PitchSet had its onset/attack/initiation and this to render the noteheads where they
-	 * need to go.  For no ties, this is just an array of size 1.
+	 * An array of at minimum two elements from which the rendering layer may choose to draw noteheads.
+	 * The first element, in the context of a StaffDelta, should always be the corresponding LOCATION.
+	 * The last element should always be the LOCATION of the next StaffDelta with a CHANGED PitchSet.
+	 * For example, the NOTEHEADLOCS [1, 2, 2 1/4] would represent a quarter tied to a sixteenth.
+	 * [1, 2 1/4, 2 3/4] would represent a dotted quarter tied to a sixteenth, identical otherwise to
+	 * [1, 2 3/4] a double-dotted note.
+	 * 
+	 * (The above examples assume a TimeSignature has BOTTOM = 4.) 
 	 */
-	public Rational[] TIEDVALUES = null;
-	public Rational runtimeDuration() {
-		Rational result = Rational.ZERO;
-		for(Rational r : TIEDVALUES)
-			result = result.plus(r);
-		return result;
-	}
+	public Rational[] NOTEHEADLOCS = null;
+	
 	
 	public PitchSet() {
 		super();

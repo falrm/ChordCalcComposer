@@ -12,9 +12,7 @@ import android.widget.HorizontalScrollView;
 
 public class KeyboardScroller extends HorizontalScrollView {
 	private static String TAG = "KBScroller";
-	private KeyboardIOHandler _io = null;
-	private GestureDetector gd;
-	
+	private KeyboardIOHandler _io = null;	
 	
 	public KeyboardScroller(Context context) {
 		super(context);
@@ -31,54 +29,6 @@ public class KeyboardScroller extends HorizontalScrollView {
 	}
 	
 	void onCreate(Context c){
-		final GestureDetector.OnGestureListener gl = new GestureDetector.SimpleOnGestureListener() {
-			@Override
-			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-				if( e1 == null || e2 == null) {
-					return true;
-				}
-				Log.i(TAG, "Fling found");
-		        int dx = (int) (e2.getX() - e1.getX());
-		        int dy = (int) (e2.getY() - e1.getY());
-		        
-		        // don't accept the fling if it's too short
-		        // as it may conflict with a button push
-		        if (Math.abs(dx) > findViewById(R.id.keyA0).getWidth() * 2 && Math.abs(velocityX) > Math.abs(velocityY)) {
-		        	enableScrolling();
-		            fling((int) -(velocityX));
-		            
-		            new AsyncTask<Integer, Integer, Integer>() {
-		                protected Integer doInBackground(Integer... urls) {
-		                    try {
-								Thread.sleep(700);
-							} catch (InterruptedException e) {}
-		                    return 0;
-		                }
-
-		                protected void onProgressUpdate(Integer... progress) {
-		                    
-		                }
-
-		                protected void onPostExecute(Integer result) {
-		                    disableScrolling();
-		                }
-		            }.execute(new Integer[]{0});
-		            return true;
-		        } else {
-		            return true;
-		        }
-		    }
-		};
-		gd = new GestureDetector(getContext(), gl);
-		post(new Runnable() {
-			public void run() {
-				try {
-					Thread.sleep(700);
-				} catch (InterruptedException e) {
-				}
-				smoothScrollTo(20 * findViewById(R.id.keyA0).getWidth(), 0);
-			}
-		});
 	}
 	
 	@Override
@@ -91,19 +41,15 @@ public class KeyboardScroller extends HorizontalScrollView {
 	}
 
 	@Override public boolean onTouchEvent(MotionEvent event) {
-		if(!_enableScrolling) {
-			gd.onTouchEvent(event);
-			return true;
+		if(_enableScrolling && event.getPointerCount() < 2) {
+				super.onTouchEvent(event);
+			return false;
 		} else {
-			return super.onTouchEvent(event);
+			return false ;//super.onTouchEvent(event);
 		}
 	}
-	@Override public boolean onInterceptTouchEvent(MotionEvent ev) {
-		if(!_enableScrolling) {
-			return gd.onTouchEvent(ev); 
-		} else {
-			return super.onInterceptTouchEvent(ev);
-		}
+	@Override public boolean onInterceptTouchEvent(MotionEvent event) {
+		return onTouchEvent(event);
 	}
 	
 	private boolean _enableScrolling = false;

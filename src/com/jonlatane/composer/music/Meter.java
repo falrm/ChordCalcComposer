@@ -14,6 +14,22 @@ public class Meter extends RhythmMap<TimeSignature> {
 		super();
 	}
 	
+	public Rational nextDownBeat(Rational r) {
+		Rational meterEstablishedAt = _data.lowerKey(r);
+		TimeSignature ts = _data.get(meterEstablishedAt);
+		Rational result = meterEstablishedAt;
+		Rational inc = new Rational(ts.TOP, 1);
+		while(result.compareTo(r) <= 0) {
+			result = result.plus( inc );
+		}
+		Rational higher = _data.higherKey(r);
+		
+		if(result.compareTo(higher) > 0)
+			result = higher;
+
+		return result;
+	}
+	
 	public Rational getBeatOf(Rational r) {
 		TimeSignature ts = getObjectAt(r);
 		if(ts == null) {
@@ -22,7 +38,7 @@ public class Meter extends RhythmMap<TimeSignature> {
 		Rational meterEstablishedAt = _data.lowerKey(r);
 		if(meterEstablishedAt == null)
 			return null;
-		Rational n = r.minus(_data.lowerKey(r));
+		Rational n = r.minus(meterEstablishedAt);
 		Integer i = Double.valueOf( n.toDouble() ).intValue() % ts.TOP;
 		return n.minus( new Rational(ts.TOP, 1).times(new Rational(i, 1)) );
 	}

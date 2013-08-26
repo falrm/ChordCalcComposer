@@ -76,7 +76,7 @@ import android.view.ViewGroup;
  */
 public class ScoreLayout extends ViewGroup {
 	private static final String TAG = "ScoreLayout";
-	private static final double MAX_SCALE = 2, MIN_SCALE = .5;
+	private static final double MAX_SCALE = 2, MIN_SCALE = .35;
     
     Score _score;
 
@@ -105,7 +105,7 @@ public class ScoreLayout extends ViewGroup {
 	    disableTransitions();
 	    
 	    Score s = Score.twinkleTwinkle();
-	    Score.testScore(s);
+	    Score.fillEnharmonics(s);
 	    openScore(s);
     }
     
@@ -319,7 +319,7 @@ public class ScoreLayout extends ViewGroup {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         _surface.layout(l, t, r, b);
 
-        
+        // "System number" 0 is the SurfaceView drawing takes place on
         int systemNumber = 1;
         int effectiveWidthOfFirstRowMember = ((ScoreDeltaView) getChildAt(1)).getActualWidth();
         
@@ -356,6 +356,13 @@ public class ScoreLayout extends ViewGroup {
         		//int incL = _surface.getChildAt(systemNumber+1).getMeasuredWidth()
         		//		+ (int)(left * d);
         		SystemHeaderView nextHeader = (SystemHeaderView) _surface.getChildAt(systemNumber+1);
+        		if(nextHeader == null) {
+        			nextHeader = _surface.new SystemHeaderView(_surface.getContext());
+        			_surface.addView(nextHeader,systemNumber+1);
+        			nextHeader.setPartialDelta(incoming);
+        			nextHeader.setCompleteDelta((ScoreDeltaView)getChildAt(rowStartIndex + rowNoFirst.size() + 2));
+        			nextHeader.measure(getMeasuredWidth(), getMeasuredHeight());
+        		}
         		//Log.i(TAG,"incoming layout..., nextHeader: " + nextHeader.getMeasuredWidth() + "," + nextHeader.getMeasuredHeight());
         		int incL = left - (int)((left - nextHeader.getMeasuredWidth()) * (1d-d));
         		int incT = (int)(top + (header.getMeasuredHeight() * (1d-d)));

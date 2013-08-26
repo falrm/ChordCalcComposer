@@ -1,13 +1,17 @@
 package com.jonlatane.composer.music.harmony;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import com.jonlatane.composer.music.Score;
 import com.jonlatane.composer.music.Score.Staff;
+import com.jonlatane.composer.music.Score.Staff.StaffDelta;
+import com.jonlatane.composer.music.Score.Staff.Voice;
 import com.jonlatane.composer.music.harmony.Chord.Modulus;
 
 import android.util.Log;
+import android.util.Pair;
 
 public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 	private static final long serialVersionUID = 5672524358L;
@@ -34,9 +38,9 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 
 	}
 
-	public static final String flat = "\u266D";
-	public static final String natural = "\u266E";
-	public Enharmonics() {
+	public static final char FLAT = '\u266D';
+	public static final char NATURAL = '\u266E';
+	private Enharmonics() {
 	}
 
 	public static Enharmonics from(PitchSet ps1, Chord c1, PitchSet ps2, Chord c2) {
@@ -257,9 +261,11 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 		switch(Chord.TWELVETONE.mod(s - targetTwelveTonePitchClass)) {
 			case 0: return "" + heptatonicName;
 			case 11: return heptatonicName + "#";
-			case 10: if(!doubleAccidentals) return null; else return heptatonicName + "##";
-			case 1: return heptatonicName + flat;
-			case 2: if(!doubleAccidentals) return null; else return heptatonicName + flat + flat;
+			case 10: if(!doubleAccidentals) return null;
+					 else return heptatonicName + "##";
+			case 1: return new String(new char[] {heptatonicName, FLAT}); // heptatonicName + flat; 
+			case 2: if(!doubleAccidentals) return null;
+					else return new String(new char[] {heptatonicName, FLAT, FLAT});
 			default: return null;
 		}
 	}
@@ -276,7 +282,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 		int result = Key.twelveToneInverse.get(chars[0]);
 		
 		for( int i = 1; i < chars.length; i = i+1) {
-			if( chars[i] == 'b' || chars[i] == flat.toCharArray()[0] )
+			if( chars[i] == 'b' || chars[i] == FLAT )
 				result = result - 1;
 			else if( chars[i] == '#' )
 				result = result + 1;
@@ -288,6 +294,78 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 		return result;
 	}
 
+	/**
+	 * Returns true if the note represented by the given is flat.
+	 * 
+	 * @param noteName ex. "F", "F#", "Eb4", "G" + Enharmonics.natural
+	 * @return
+	 */
+	public boolean isFlat(String noteName) {
+		if(noteName.length() > 1) {
+			if(noteName.charAt(1) == 'b' || noteName.charAt(1) == FLAT) {
+				if(noteName.length() > 2) {
+					if(noteName.charAt(2) == 'b' || noteName.charAt(2) == FLAT)
+						return false;
+					else
+						return true;
+				} else
+					return true;
+			} else
+				return false;
+		} else
+			return false;
+	}
+	
+	/**
+	 * Returns true if the note represented by the given is double-flat.
+	 * 
+	 * @param noteName ex. "F", "F#", "Eb4", "G" + Enharmonics.natural
+	 * @return
+	 */
+	public boolean isDoubleFlat(String noteName) {
+		if(noteName.length() > 2 
+				&& (noteName.charAt(1) == 'b' || noteName.charAt(1) == FLAT)
+				&& (noteName.charAt(2) == 'b' || noteName.charAt(2) == FLAT))
+			return true;
+		else return false;
+	}
+	
+	/**
+	 * Returns true if the note represented by the given is sharp.
+	 * 
+	 * @param noteName ex. "F", "F#", "Eb4", "G" + Enharmonics.natural
+	 * @return
+	 */
+	public boolean isSharp(String noteName) {
+		if(noteName.length() > 1) {
+			if(noteName.charAt(1) == '#') {
+				if(noteName.length() > 2) {
+					if(noteName.charAt(2) == '#')
+						return false;
+					else
+						return true;
+				} else
+					return true;
+			} else
+				return false;
+		} else
+			return false;
+	}
+	
+	/**
+	 * Returns true if the note represented by the given is double-sharp.
+	 * 
+	 * @param noteName ex. "F", "F#", "Eb4", "G" + Enharmonics.natural
+	 * @return
+	 */
+	public boolean isDoubleSharp(String noteName) {
+		if(noteName.length() > 2 
+				&& (noteName.charAt(1) == '#')
+				&& (noteName.charAt(2) == '#'))
+			return true;
+		else return false;
+	}
+	
 	/**
 	 * Fill in the enharmonics for a given chord using the given Key's way of naming notes.  Useful if
 	 * you know the Chord fits in the key (i.e., a cadence).

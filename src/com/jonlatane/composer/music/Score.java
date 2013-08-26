@@ -19,6 +19,7 @@ import android.util.SparseIntArray;
 
 import com.jonlatane.composer.music.Score.Staff.StaffDelta;
 import com.jonlatane.composer.music.Score.Staff.Voice;
+import com.jonlatane.composer.music.Score.Staff.Voice.VoiceDelta;
 import com.jonlatane.composer.music.coverings.Clef;
 import com.jonlatane.composer.music.coverings.TimeSignature;
 import com.jonlatane.composer.music.harmony.*;
@@ -594,9 +595,9 @@ public class Score {
 				result.addAll(v._notes.getRhythm());
 				for(Map.Entry<Rational, PitchSet> e : v._notes._data.entrySet()) {
 					result.add(e.getKey());
-					if(e.getValue() != null && e.getValue().TIEDVALUES != null)
-						for(Rational r : e.getValue().TIEDVALUES) {
-							result.add(e.getKey().plus(r));
+					if(e.getValue() != null && e.getValue().NOTEHEADLOCS != null)
+						for(Rational r : e.getValue().NOTEHEADLOCS) {
+							result.add(r);
 						}
 				}
 			}
@@ -750,11 +751,11 @@ public class Score {
 	}
 	
 	/**
-	 * Run a gamut of tests to make sure the given Score is consistent.
+	 * Fill in the NOTENAMES field for every Chord and PitchSet within this Score
 	 * 
 	 * @param s
 	 */
-	public static void testScore(Score s) {
+	public static void fillEnharmonics(Score s) {
 		// Iterate backward through the Score to fill its enharmonics.
 		PitchSet[][] ps2Named = new PitchSet[s._staves.length][];
 		Chord[] c2Named = new Chord[s._staves.length];
@@ -805,9 +806,103 @@ public class Score {
 				}
 			}
 		}
+	}
+	
+	public static void resolveTies(Score s) {
+		resolveTies(s, 1);
+	}
+	
+	public static void resolveTies(Score s, int maxNumberOfDotsAllowed) {
+		Iterator<ScoreDelta> itr = s.reverseScoreIterator(s.getFine(), false);
+		Rational[][] lastChangedNoteLocs = new Rational[s.getNumStaves()][];
+		for(int i = 0; i < s.getNumStaves(); i++) {
+			lastChangedNoteLocs[i] = new Rational[s.getStaff(i).getNumVoices()];
+			for(int j = 0; j < lastChangedNoteLocs[i].length; j++) {
+				lastChangedNoteLocs[i][j] = s.getFine();
+			}
+		}
+		while(itr.hasNext()) {
+			ScoreDelta scd = itr.next();
+			for(int i = 0; i < scd.STAVES.length; i++) {
+				StaffDelta sd = scd.STAVES[i];
+				for(int j = 0; j < s._staves[i]._voices.length; j++) {
+					VoiceDelta vd = sd.VOICES[j];
+					if(vd.CHANGED.NOTES != null) {
+						LinkedList<Rational> locations = new LinkedList<Rational>();
+						
+						// Divide the note up by the number of bars it's in first.
+						Rational currentLoc = scd.LOCATION;
+						while(currentLoc.compareTo(lastChangedNoteLocs[i][j]) < 0) {
+							locations.add(currentLoc);
+							currentLoc = s._meter.nextDownBeat(currentLoc);
+						}
+						locations.add(lastChangedNoteLocs[i][j]);
+						
+						// Go through each measured section
+						for(int l = 0; l < locations.size() - 1; l++) {
+							Rational begin = locations.get(l);
+							Rational end = locations.get(l + 1);
+							Rational duration = end.minus(begin);
+							int subdivisionsAdded = 0;
+							
+							//TODO
+							
+							l += subdivisionsAdded;
+						}
+						Rational duration = locations.getLast().minus(locations.getFirst());
+						while(duration.compareTo(Rational.ZERO) > 0) {
+							Rational headLength = Rational.ONE;
+							if(duration.compareTo(Rational.ONE) > 0) {
+								// Get the base head length (1, 2, 4, 8, ...)
+								while(headLength.times(Rational.TWO).compareTo(duration) <= 0) {
+									headLength = headLength.times(Rational.TWO);
+								}
+								// Add dots
+								for(int d = 1; d <= maxNumberOfDotsAllowed; d++) {
+									if(headLength.times(Rational.ONE_AND_HALF).compareTo(duration) <= 0) {
+										headLength = headLength.times(Rational.ONE_AND_HALF);
+									} else {
+										break;
+									}
+								}
+							} else if(duration.compareTo(Rational.ONE) < 0) {
+								// Get the base head length (1, 1/2, 1/4, 1/8, ...)
+								while(headLength.times(Rational.HALF).compareTo(duration) >= 0) {
+									headLength = headLength.times(Rational.HALF);
+								}
+								// Add dots
+								for(int d = 1; d <= maxNumberOfDotsAllowed; d++) {
+									if(headLength.times(Rational.ONE_AND_HALF).compareTo(duration) <= 0) {
+										headLength = headLength.times(Rational.ONE_AND_HALF);
+									} else {
+										break;
+									}
+								}
+							}
+							
+							locations.addLast(locations.getLast().plus(headLength));
+							duration = duration.minus(headLength);
+						}
+						
+						//TODO finish this
+					}
+					lastChangedNoteLocs[i][j] = scd.LOCATION;
+				}
+			}
+
+		}
+	}
+	
+	/**
+	 * Run a gamut of tests to make sure the given Score is consistent.
+	 * 
+	 * @param s
+	 */
+	public static void testScore(Score s) {
+		fillEnharmonics(s);
 		
 		// Iterate forward through the Score to read its contents
-		itr = s.scoreIterator(Rational.ZERO);
+		Iterator<ScoreDelta> itr = s.scoreIterator(Rational.ZERO);
 		while(itr.hasNext()) {
 			ScoreDelta scd = itr.next();
 			assert(scd.STAVES.length == s.getNumStaves());

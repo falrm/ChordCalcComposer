@@ -17,8 +17,11 @@ package com.jonlatane.composer.music;
  *************************************************************************/
 
 public class Rational implements Comparable<Rational> {
-    public static Rational ZERO = new Rational(0, 1);
-    public static Rational ONE = new Rational(1, 1);
+    public static final Rational ZERO = new Rational(0, 1);
+    public static final Rational HALF = new Rational(1, 2);
+    public static final Rational ONE = new Rational(1, 1);
+    public static final Rational ONE_AND_HALF = new Rational(3, 2);
+    public static final Rational TWO = new Rational(2, 1);
 	
     private int num;   // the numerator
     private int den;   // the denominator

@@ -40,6 +40,31 @@ public class Clef {
 	}
 	
 	/**
+	 * Get the number of steps
+	 * @param noteName
+	 * @return
+	 */
+	public int getHeptatonicStepsFromCenter(String noteName) {
+		int distFromTrebleCenter;
+		switch(noteName.charAt(0)) {
+			case 'B': distFromTrebleCenter = 0; break;
+			case 'C': distFromTrebleCenter = -6; break;
+			case 'D': distFromTrebleCenter = -5; break;
+			case 'E': distFromTrebleCenter = -4; break;
+			case 'F': distFromTrebleCenter = -3; break;
+			case 'G': distFromTrebleCenter = -2; break;
+			case 'A': distFromTrebleCenter = -1; break;
+			default: throw new Error();
+		}
+		int octave = Character.getNumericValue(noteName.charAt(noteName.length() - 1));
+		distFromTrebleCenter += 7 * ( octave - 4);
+		
+		distFromTrebleCenter += TYPE;
+		
+		return distFromTrebleCenter;
+	}
+	
+	/**
 	 * Returns a pair <lower, upper> representing the total span in Heptatonic steps
 	 * from the center of this Clef.  For instance, "A4, C5" on a Treble Clef will return
 	 * the pair <-1, 1>, because A4 and C5 are respective one step below and above B4, 
@@ -54,6 +79,8 @@ public class Clef {
 		String bottomNoteName = ps.NOTENAMES[0];
 		String topNoteName = ps.NOTENAMES[ps.NOTENAMES.length - 1];
 		
+		return new Pair<Integer, Integer>(getHeptatonicStepsFromCenter(bottomNoteName), getHeptatonicStepsFromCenter(topNoteName));
+		/*
 		// To be easy, let's just solve this for the Treble clef.
 		int bottomNoteValueFromTreble, topNoteValueFromTreble;
 		switch(bottomNoteName.charAt(0)) {
@@ -83,6 +110,6 @@ public class Clef {
 		bottomNoteValueFromTreble += TYPE;
 		topNoteValueFromTreble += TYPE;
 		
-		return new Pair<Integer, Integer>(bottomNoteValueFromTreble, topNoteValueFromTreble);
+		return new Pair<Integer, Integer>(bottomNoteValueFromTreble, topNoteValueFromTreble);*/
 	}
 }

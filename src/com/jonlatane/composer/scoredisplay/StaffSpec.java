@@ -460,9 +460,9 @@ public class StaffSpec {
 		// Iterate from the top note down.
 		for(int i = ps.NOTENAMES.length - 1; i >=0; i--) {
 			String name = ps.NOTENAMES[i];
-			if(name.charAt(1) == '#' || name.charAt(1) == 'b' || name.charAt(1) == Enharmonics.flat.charAt(0)) {
+			if(name.charAt(1) == '#' || name.charAt(1) == 'b' || name.charAt(1) == Enharmonics.FLAT) {
 				// Double flats require two columns to draw properly
-				if(name.charAt(2) == 'b' || name.charAt(1) == Enharmonics.flat.charAt(0)) {
+				if(name.charAt(2) == 'b' || name.charAt(1) == Enharmonics.FLAT) {
 					for( int j = 0; j < lastAccidentalLocationPerColumn.length; j++) {
 						if( (lastAccidentalLocationPerColumn[j] == null || Math.abs(Modulus.absoluteHeptDistance(name, lastAccidentalLocationPerColumn[j])) >= 5) 
 								&& (lastAccidentalLocationPerColumn[j+1] == null || Math.abs(Modulus.absoluteHeptDistance(name, lastAccidentalLocationPerColumn[j+1])) >= 5) ) {

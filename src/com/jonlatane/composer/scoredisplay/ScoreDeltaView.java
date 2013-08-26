@@ -167,6 +167,10 @@ class ScoreDeltaView extends LinearLayout {
 			_actualVerticalStaffSpec = ss;
 			requestLayout();
 		}
+
+		public Score.Staff.StaffDelta getStaffDelta() {
+			return _staffDelta;
+		}
 	}
 	
 	public ScoreDeltaView(Context context, ScoreLayout parent ) {

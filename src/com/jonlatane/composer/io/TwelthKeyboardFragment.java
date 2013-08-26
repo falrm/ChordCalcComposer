@@ -31,6 +31,10 @@ public class TwelthKeyboardFragment extends Fragment {
 	private static final String TAG = "TwelthKeyboardFragment";
 	private Integer _initialRhythmAreaWidth;
 	private KeyboardScroller _keyboardScroller;
+	public KeyboardScroller getKeyboardScroller() {
+		return _keyboardScroller;
+	}
+
 	private KeyboardIOHandler _myKbdIO;
 	private HorizontalScrollView _chordScroller;
 	private Key _keyToNameFrom = Key.CMajor;
@@ -52,7 +56,7 @@ public class TwelthKeyboardFragment extends Fragment {
 		//Set up the keyboardScroller itself
 		_keyboardScroller = (KeyboardScroller)result.findViewById(R.id.kbScroller);
 		_keyboardScroller.setKeyboardIOHander(_myKbdIO);
-		
+				
         return result;
     }
 	

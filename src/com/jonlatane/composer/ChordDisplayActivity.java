@@ -78,7 +78,20 @@ public class ChordDisplayActivity extends Activity
 		
 		// Set up the keyboard
 		_myKeyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.chordDisplayActivityKb);
-		
+		_myKeyboard.disableRhythmicMode();
+		_myKeyboard.getKeyboardScroller().enableScrolling();
+		new Thread() {
+			@Override
+			public void run() {
+		        try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+				} finally {
+
+					_myKeyboard.getKeyboardScroller().smoothScrollBy(400, 0);
+				}
+		    }
+		}.start();
 		// Set up lead sheet display
 		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
         //listview.setAdapter(_adapter);
@@ -125,22 +138,24 @@ public class ChordDisplayActivity extends Activity
 	@Override
 	  public boolean onOptionsItemSelected(MenuItem item) {
 	    switch (item.getItemId()) {
-	    case R.id.toggleRhythmAB:
+	    //TODO Uncomment these
+	    /*case R.id.toggleRhythmAB:
 	    	_myKeyboard.toggleRhythmicMode();
 	    	break;
 	    case R.id.toggleChordsAB:
 	    	_myKeyboard.toggleHarmonicMode();
-	    	break;
+	    	break;*/
 	    case R.id.toggleKeyboardAB:
 	    	_myKeyboard.toggleKeyboardFragment();
 	    	break;
+	    /*
 	    case R.id.debugFunction1:
 	    	//((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
 	    	//((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
 	    	break;
 	    case R.id.debugFunction2:
 	    	//((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
-	    	break;
+	    	break;*/
 	    default:
 	      break;
 	    }

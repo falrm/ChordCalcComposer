@@ -7,9 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.jonlatane.composer.music.*;
+import com.jonlatane.composer.music.coverings.Clef;
 import com.jonlatane.composer.music.harmony.Key;
+import com.jonlatane.composer.music.harmony.PitchSet;
 import com.jonlatane.composer.music.Score.ScoreDelta;
 import com.jonlatane.composer.music.Score.Staff.StaffDelta;
+import com.jonlatane.composer.music.Score.Staff.Voice.VoiceDelta;
 import com.jonlatane.composer.music.harmony.Chord;
 import com.jonlatane.composer.scoredisplay.ScoreDeltaView.StaffDeltaView;
 import com.jonlatane.composer.scoredisplay.ScoreDrawingSurface.SystemHeaderView.StaffHeaderView;
@@ -21,6 +24,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -232,7 +236,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 			//TODO
 			int result = (int)(BRACES_AREA_PX * _parent.getScalingFactor());
 			
-			return result + 70;
+			return (int)(result + 70*_parent.getScalingFactor());
 		}
 	}
 	
@@ -243,6 +247,14 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 		_holder = _surface.getHolder();
 		_holder.addCallback(this);
 		addView(_surface,0);
+		
+		// Set up notehead Paint
+		__noteheadPaint.setTypeface(Typeface.createFromAsset(context.getAssets(), "fonts/NoteHedz170.ttf"));
+		__orange.setColor(Color.argb(255, 255, 182, 10));
+		__orange.setStyle(Style.STROKE);
+		__black.setStyle(Style.STROKE);
+		__blue.setColor(Color.BLUE);
+		__blue.setStyle(Style.STROKE);
 	}
 	
 	public int systemHeaderWidth(ScoreDelta scoreD) {
@@ -288,19 +300,14 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 		_surface.layout(l, t, r, b);
 	}
 	
-	Paint __orange = new Paint();
-	Paint __black = new Paint();
-	Paint __blue = new Paint();
+	private final Paint __orange = new Paint();
+	private final Paint __black = new Paint();
+	private final Paint __blue = new Paint();
 	@Override 
     protected void onDraw(Canvas canvas){
 		super.onDraw(canvas);
         Log.w(TAG, "onDraw Called in ViewGroup");
 		Canvas c = _holder.lockCanvas();
-		__orange.setColor(Color.argb(255, 255, 182, 10));
-		__orange.setStyle(Style.STROKE);
-		__black.setStyle(Style.STROKE);
-		__blue.setColor(Color.BLUE);
-		__blue.setStyle(Style.STROKE);
 		if(c != null) {
 			c.drawColor(Color.WHITE);
 			
@@ -366,4 +373,34 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 			_holder.unlockCanvasAndPost(c);
 		}
     }
+	
+	private final Paint __noteheadPaint = new Paint();
+	private void drawNoteHeads( StaffDeltaView v, Rect rect ) {
+		StaffDelta d = v.getStaffDelta();
+		Clef c = d.ESTABLISHED.CLEF;
+		for(VoiceDelta vd : d.VOICES) {
+			PitchSet pitchSetToDraw = null;
+			Rational durationToDraw = null;
+			if(vd.CHANGED.NOTES != null) {
+				pitchSetToDraw = vd.CHANGED.NOTES;
+				durationToDraw = pitchSetToDraw.NOTEHEADLOCS[1].minus(pitchSetToDraw.NOTEHEADLOCS[0]);
+				for(String noteName : vd.CHANGED.NOTES.NOTENAMES) {
+					int stepsFromCenter = c.getHeptatonicStepsFromCenter(noteName);
+				}
+			} else if(vd.ESTABLISHED.NOTES.NOTEHEADLOCS.length > 2) {
+				for(int r = 1; r < vd.ESTABLISHED.NOTES.NOTEHEADLOCS.length - 1; r++) {
+					if(vd.ESTABLISHED.NOTES.NOTEHEADLOCS[r].equals(d.LOCATION)) {
+						pitchSetToDraw = vd.ESTABLISHED.NOTES;
+						durationToDraw = pitchSetToDraw.NOTEHEADLOCS[r + 1].minus(pitchSetToDraw.NOTEHEADLOCS[r]);
+					}
+				}
+			}
+			
+			if(pitchSetToDraw != null) {
+				for(String noteName : pitchSetToDraw.NOTENAMES) {
+					int stepsFromCenter = c.getHeptatonicStepsFromCenter(noteName);
+				}
+			}
+		}
+	}
 }

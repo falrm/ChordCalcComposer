@@ -28,8 +28,8 @@ public final class Key extends Scale
 	
 	// These two arrays provide us with a list of the names we personally prefer for each of the major and minor keys.
 	// When a Key is constructed, it will assume this is the root name, though that can be overridden.
-	private static final String[] majorKeys = { "C", "D"+Enharmonics.flat, "D", "E"+Enharmonics.flat, "E", "F", "G"+Enharmonics.flat, "G", "A"+Enharmonics.flat, "A", "B"+Enharmonics.flat, "B" };
-	private static final String[] minorKeys = { "C", "C#", "D", "E"+Enharmonics.flat, "E", "F", "F#", "G", "G#", "A", "B"+Enharmonics.flat, "B" };
+	private static final String[] majorKeys = { "C", "D"+Enharmonics.FLAT, "D", "E"+Enharmonics.FLAT, "E", "F", "G"+Enharmonics.FLAT, "G", "A"+Enharmonics.FLAT, "A", "B"+Enharmonics.FLAT, "B" };
+	private static final String[] minorKeys = { "C", "C#", "D", "E"+Enharmonics.FLAT, "E", "F", "F#", "G", "G#", "A", "B"+Enharmonics.FLAT, "B" };
 	
 	// ALL THE MAJOR/MINOR KEYS.  The above arrays define their default names, but they may be overridden.
 	public static final Key CMajor = new Key(new MajorScale(0));
@@ -109,8 +109,8 @@ public final class Key extends Scale
 		heptatonicInverse.put('B',6);
 		
 		FsMajor.setRootName("F#");
-		AbMinor.setRootName("A" + Enharmonics.flat);
-		CbMajor.setRootName("C" + Enharmonics.flat);
+		AbMinor.setRootName("A" + Enharmonics.FLAT);
+		CbMajor.setRootName("C" + Enharmonics.FLAT);
 		CsMajor.setRootName("C#");
 		DsMinor.setRootName("D#");
 		AsMinor.setRootName("A#");
@@ -225,7 +225,7 @@ public final class Key extends Scale
 			char letterName = heptatonicNotes[(rootCharIndex + p.first-1) % 7];
 			result += letterName;
 			if( i < twelveToneInverse.get(letterName)) {
-				result += Enharmonics.flat;
+				result += Enharmonics.FLAT;
 			}
 			if( i > twelveToneInverse.get(letterName)) {
 				result += '#';
@@ -241,7 +241,7 @@ public final class Key extends Scale
 				
 				// Check for flats
 				if( i < twelveToneInverse.get(letterName)) {
-					result += Enharmonics.flat;
+					result += Enharmonics.FLAT;
 				}
 				
 				// Check for sharps/double-sharps
@@ -263,10 +263,10 @@ public final class Key extends Scale
 				
 				// Check for flats/double flats
 				if( i < twelveToneInverse.get(letterName)) {
-					result += Enharmonics.flat;
+					result += Enharmonics.FLAT;
 				}
 				if( i < twelveToneInverse.get(letterName)-1) {
-					result += Enharmonics.flat;
+					result += Enharmonics.FLAT;
 				}
 			}
 			
