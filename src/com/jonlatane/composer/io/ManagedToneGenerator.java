@@ -107,7 +107,7 @@ public class ManagedToneGenerator {
 				for (int k = 0; k < numFrames; ++k) {
 					sample[k] = 0;
 					for(int i = 0; i < overtonesNormalized.length; i++)
-						sample[k] += overtonesNormalized[i] *  Math.sin(i * 2 * Math.PI * (k) / (sampleRate / freq));
+						sample[k] += overtonesNormalized[i] *  Math.sin((i+1) * 2 * Math.PI * (k) / (sampleRate / freq));
 				}
 				
 				// convert to 16 bit pcm sound array
@@ -220,6 +220,8 @@ public class ManagedToneGenerator {
 	}
 	
 	private static Double[] _defaultOvertones = {70., 30., 30., 10., 10., 20., 20., 1.};
+	//private static Double[] _defaultOvertones = {70., 0., 0., 0., 0., 0., 0., 0. };
+	
 	private Double[] _myOverTones;
 	
 	public ManagedToneGenerator(Double... overtones) {
