@@ -133,8 +133,11 @@ public class ManagedToneGenerator {
 								AudioTrack.MODE_STATIC, _audioSession);
 						track.write(generatedSnd, 0, generatedSnd.length);
 						track.setLoopPoints(0, numFrames, -1);
+						if(track.getState() != AudioTrack.STATE_INITIALIZED)
+							throw new Exception();
 					} catch (Throwable e) {
 						if(track != null) {
+							track.flush();
 							track.release();
 							track = null;
 						}
@@ -169,7 +172,9 @@ public class ManagedToneGenerator {
 			boolean result = true;
 			try {
 				Pair<Integer, Integer> lruNote = _recentlyUsedNotes.removeLast();
-				_data.get(lruNote.first).get(lruNote.second).release();
+				AudioTrack goodbyeCruelWorld = _data.get(lruNote.first).get(lruNote.second);
+				goodbyeCruelWorld.flush();
+				goodbyeCruelWorld.release();
 				_data.get(lruNote.first).remove(lruNote.second);
 			} catch( Throwable e ) {
 				result = false;

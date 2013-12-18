@@ -73,6 +73,9 @@ public class ChordDisplayActivity extends Activity
 		Log.d(TAG, Arrays.toString(cB3.NOTENAMES) + cB3.toString());
 		Log.d(TAG, Arrays.toString(cB4.NOTENAMES) + cB4.toString());
 		
+		for (int i = -25; i < 25; i++)
+			Log.i(TAG, "Octavetest: " + i + " > " + Chord.TWELVETONE.octave(i));
+		
 		// Load layout
 		setContentView(R.layout.chorddisplayactivity);
 		

@@ -48,21 +48,25 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 	private static final String TAG = "ScoreDrawer";
 	private static final int BRACES_AREA_PX = 10;
 
-	private static final Paint NORMALPAINT = new Paint();
-	private static final Paint SELECTEDPAINT = new Paint();
-		
+	//private static final Paint NORMALPAINT = new Paint();
+	//private static final Paint SELECTEDPAINT = new Paint();
+	private static Typeface noteHedz = null;
 	private final ScoreLayout _parent;
 	final SurfaceView _surface;
 	private final SurfaceHolder _holder;
 	
-	static {
+	private final Paint __orange = new Paint();
+	private final Paint __black = new Paint();
+	private final Paint __blue = new Paint();
+	
+	/*static {
 		NORMALPAINT.setARGB(255, 0, 0, 0);
 		NORMALPAINT.setStyle(Paint.Style.STROKE);
 		NORMALPAINT.setStrokeWidth(2);
 		SELECTEDPAINT.setARGB(255, 0, 0, 255);
 		SELECTEDPAINT.setStyle(Paint.Style.STROKE);
 		SELECTEDPAINT.setStrokeWidth(2);
-	}
+	}*/
 	
 	public static enum StaffNames { Full, Partial, None }
 	
@@ -247,14 +251,21 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 		_holder = _surface.getHolder();
 		_holder.addCallback(this);
 		addView(_surface,0);
-		
+		if(noteHedz == null)
+			noteHedz = Typeface.createFromAsset(context.getAssets(),"fonts/NoteHedz170.ttf");
 		// Set up notehead Paint
 		__noteheadPaint.setTypeface(Typeface.createFromAsset(context.getAssets(), "fonts/NoteHedz170.ttf"));
 		__orange.setColor(Color.argb(255, 255, 182, 10));
-		__orange.setStyle(Style.STROKE);
-		__black.setStyle(Style.STROKE);
+		__orange.setTypeface(noteHedz);
+		__orange.setStyle(Style.FILL_AND_STROKE);
+		__orange.setAntiAlias(true);
+		__black.setStyle(Style.FILL_AND_STROKE);
+		__black.setTypeface(noteHedz);
+		__black.setAntiAlias(true);
 		__blue.setColor(Color.BLUE);
-		__blue.setStyle(Style.STROKE);
+		__blue.setStyle(Style.FILL_AND_STROKE);
+		__blue.setTypeface(noteHedz);
+		__blue.setAntiAlias(true);
 	}
 	
 	public int systemHeaderWidth(ScoreDelta scoreD) {
@@ -299,10 +310,6 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
 		_surface.layout(l, t, r, b);
 	}
-	
-	private final Paint __orange = new Paint();
-	private final Paint __black = new Paint();
-	private final Paint __blue = new Paint();
 	@Override 
     protected void onDraw(Canvas canvas){
 		super.onDraw(canvas);
@@ -347,7 +354,8 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				scoreDV.getHitRect(scoreDVRect);
 				Log.i(TAG,"ScoreRect:" + scoreDVRect);
 				
-				c.drawRect(scoreDVRect, __blue);
+				// Draw a blue rectangle around the whole ScoreDeltaView
+				//c.drawRect(scoreDVRect, __blue);
 				for(int j = 0; j < scoreDV.getChildCount(); j++) {
 					StaffDeltaView staffDV = (StaffDeltaView) scoreDV.getChildAt(j);
 					Rect staffDVRect = new Rect();
@@ -355,19 +363,39 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 					staffDVRect.offsetTo(scoreDVRect.left, scoreDVRect.top + staffDVRect.top);
 					staffDVRect.intersect(scoreDVRect);
 					Log.i(TAG,"StaffRect:" + staffDVRect);
-
-					c.drawRect(staffDVRect, __blue);
+					
+					// Draw a blue rectangle around the whole StaffDeltaView
+					//c.drawRect(staffDVRect, __blue);
 					
 					Rect staffAreaRect = new Rect();
 					staffDV._staffArea.getHitRect(staffAreaRect);
 					staffAreaRect.offsetTo(staffDVRect.left, staffDVRect.top + staffAreaRect.top);
 					staffAreaRect.intersect(staffDVRect);
-					c.drawRect(staffAreaRect, __blue);
+					
+					// Draw a blue rectangle around the staff area, where the staff is to be centered
+					//c.drawRect(staffAreaRect, __blue);
 					
 					int staffCenterOffset = staffDV.getActualVerticalStaffSpec().ABOVE_CENTER_PX;
 					
-					c.drawLine(staffAreaRect.left, staffAreaRect.top + staffCenterOffset,
-							staffAreaRect.right, staffAreaRect.top + staffCenterOffset, __blue);
+					// Draw a blue line through the center of the staff
+					//c.drawLine(staffAreaRect.left, staffAreaRect.top + staffCenterOffset,
+					//		staffAreaRect.right, staffAreaRect.top + staffCenterOffset, __blue);
+					
+					// Draw a notehead through the center of the staff
+					int x = staffAreaRect.right - (int)(40 * _parent.getScalingFactor());
+					int y = staffAreaRect.top + staffCenterOffset;
+					__black.setAlpha((int)(scoreDV.getVisibilityRatio()*255));
+					__black.setTextSize((float)(14 * _parent.getScalingFactor()));
+					//c.drawText("%", x, y, __black);
+					
+					StaffDelta std = staffDV.getStaffDelta();
+					for(VoiceDelta vd : std.VOICES) {
+						if(vd.CHANGED.NOTES != null)
+							for(String noteName : vd.CHANGED.NOTES.NOTENAMES) {
+								int y2 = y - (int)((std.ESTABLISHED.CLEF.getHeptatonicStepsFromCenter(noteName) - 1) * StaffSpec.HEPTATONICSTEP_PX * _parent.getScalingFactor());
+								c.drawText("%", x, y2, __black);
+							}
+					}
 				}
 			}
 			_holder.unlockCanvasAndPost(c);

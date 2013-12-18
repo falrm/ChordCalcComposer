@@ -697,6 +697,7 @@ public class Score {
 		
 		Staff s1 = result.newStaff();
 		Staff s2 = result.newStaff();
+		s2._clefs.setDefaultValue(Clef.bass());
 		
 		//s1._keys.put(new Rational(1,1), new Key(Key.CMajor));
 		
@@ -771,6 +772,8 @@ public class Score {
 		Iterator<ScoreDelta> itr = s.reverseScoreIterator(s.getFine(), false);
 		while(itr.hasNext()) {
 			ScoreDelta scd = itr.next();
+			if(scd.LOCATION.equals(new Rational(13, 1)))
+					Log.i(TAG,"hi debugger");
 			for(int i = 0; i < scd.STAVES.length; i++) {
 				StaffDelta sd = scd.STAVES[i];
 				Key key = sd.ESTABLISHED.KEY;
@@ -970,7 +973,7 @@ public class Score {
 			}
 			lineRepr += "||";
 			
-			Log.d(TAG, lineRepr);
+			Log.i(TAG, lineRepr);
 		}
 	}
 }

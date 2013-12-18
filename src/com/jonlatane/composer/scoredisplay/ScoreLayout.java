@@ -76,7 +76,7 @@ import android.view.ViewGroup;
  */
 public class ScoreLayout extends ViewGroup {
 	private static final String TAG = "ScoreLayout";
-	private static final double MAX_SCALE = 2, MIN_SCALE = .35;
+	private static final double MAX_SCALE = 5, MIN_SCALE = .35;
     
     Score _score;
 
@@ -106,6 +106,7 @@ public class ScoreLayout extends ViewGroup {
 	    
 	    Score s = Score.twinkleTwinkle();
 	    Score.fillEnharmonics(s);
+	    Score.testScore(s);
 	    openScore(s);
     }
     

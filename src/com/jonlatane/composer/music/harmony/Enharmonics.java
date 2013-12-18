@@ -40,7 +40,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 
 	public static final char FLAT = '\u266D';
 	public static final char NATURAL = '\u266E';
-	private Enharmonics() {
+	/*private Enharmonics() {
 	}
 
 	public static Enharmonics from(PitchSet ps1, Chord c1, PitchSet ps2, Chord c2) {
@@ -50,7 +50,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 		for(int i = 0; i < initialNoteMap.length; i++)
 			initialNoteMap[i] = 0;
 		return result;
-	}
+	}*/
 	
 	/**
 	 * Fill in the NOTENAMES field for ps2 (if ps2.NOTENAMES is null - otherwise assume the values are accurate).
@@ -75,7 +75,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 			fillEnharmonics(c2Named, k[0]);
 		
 		// Fill in ps2's notenames if needed
-		fillEnharmonics(ps2,c1, k);
+		fillEnharmonics(ps2, c2Named, k);
 		
 		// Fill in c1
 		fillEnharmonics(c1, c2Named);
@@ -87,7 +87,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 	public static void fillEnharmonics(PitchSet ps, Chord cNamed, Key... k) {
 		if(Chord.NO_CHORD.equals(cNamed)) {
 			if(k.length == 0)
-				throw new Error("");
+				throw new Error("No Chord, no Key, no service!");
 			fillEnharmonics(ps, k[0]);
 			return;
 		}
@@ -98,7 +98,7 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 			for(int note : ps) {
 				if(cNamed.contains(note)) {
 					String noteName = cNamed.NOTENAMES[cNamed.headSet(cNamed.MODULUS.mod(note)).size()];
-					ps.NOTENAMES[idx] = noteName;
+					ps.NOTENAMES[idx] = noteName + Chord.TWELVETONE.octave(note);
 				} else {
 					String pitchClassName = null;
 					
@@ -140,11 +140,12 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 					}
 					
 					// Fallback to the Key if necessary.
-					if(pitchClassName == null && k.length > 0) {
-						ps.NOTENAMES[idx] = k[0].getNoteName(note) + Chord.TWELVETONE.octave(note);
-					}
-					
-					ps.NOTENAMES[idx] = pitchClassName + Chord.TWELVETONE.octave(note);
+					//if(pitchClassName == null && k.length > 0) {
+					//	ps.NOTENAMES[idx] = k[0].getNoteName(note) + Chord.TWELVETONE.octave(note);
+					//} else {
+						ps.NOTENAMES[idx] = pitchClassName + Chord.TWELVETONE.octave(note);
+					//}
+					Log.i(TAG, "derivednotename deri" + ps.NOTENAMES[idx]);
 				}
 				
 				idx++;

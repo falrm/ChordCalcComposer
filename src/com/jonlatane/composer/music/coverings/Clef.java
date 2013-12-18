@@ -1,5 +1,6 @@
 package com.jonlatane.composer.music.coverings;
 
+import android.util.Log;
 import android.util.Pair;
 
 import com.jonlatane.composer.music.harmony.PitchSet;
@@ -15,6 +16,7 @@ import com.jonlatane.composer.music.harmony.PitchSet;
  *
  */
 public class Clef {
+	private static final String TAG = "Clef";
 	public static final int TREBLE = 0;
 	public static final int TREBLETENOR=7;
 	public static final int BASS = 12;
@@ -56,10 +58,12 @@ public class Clef {
 			case 'A': distFromTrebleCenter = -1; break;
 			default: throw new Error();
 		}
-		int octave = Character.getNumericValue(noteName.charAt(noteName.length() - 1));
+		int octave = Character.getNumericValue(noteName.charAt(noteName.length()-1));
 		distFromTrebleCenter += 7 * ( octave - 4);
 		
 		distFromTrebleCenter += TYPE;
+		if(noteName.length() > 2)
+			Log.i(TAG, noteName + "evaluated to " + distFromTrebleCenter);
 		
 		return distFromTrebleCenter;
 	}
