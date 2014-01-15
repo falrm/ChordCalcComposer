@@ -48,8 +48,6 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 	private static final String TAG = "ScoreDrawer";
 	private static final int BRACES_AREA_PX = 10;
 
-	//private static final Paint NORMALPAINT = new Paint();
-	//private static final Paint SELECTEDPAINT = new Paint();
 	private static Typeface noteHedz = null;
 	private final ScoreLayout _parent;
 	final SurfaceView _surface;
@@ -59,16 +57,6 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 	private final Paint __black = new Paint();
 	private final Paint __blue = new Paint();
 	
-	/*static {
-		NORMALPAINT.setARGB(255, 0, 0, 0);
-		NORMALPAINT.setStyle(Paint.Style.STROKE);
-		NORMALPAINT.setStrokeWidth(2);
-		SELECTEDPAINT.setARGB(255, 0, 0, 255);
-		SELECTEDPAINT.setStyle(Paint.Style.STROKE);
-		SELECTEDPAINT.setStrokeWidth(2);
-	}*/
-	
-	public static enum StaffNames { Full, Partial, None }
 	
 	/**
 	 * A SystemHeader defines where the ScoreDrawingSurface will draw the staves on
@@ -270,6 +258,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 	
 	public int systemHeaderWidth(ScoreDelta scoreD) {
 		int result = StaffSpec.CLEF_WIDTH_PX + StaffSpec.TIMESIGNATURE_WIDTH_PX; 
+		//TODO this don't work
 		int maxNumAccidentals = 0;
 		for(StaffDelta staffD : scoreD.STAVES) {
 			Key k = staffD.ESTABLISHED.KEY;

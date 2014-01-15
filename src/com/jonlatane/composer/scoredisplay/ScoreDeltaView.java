@@ -6,6 +6,7 @@ import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -31,6 +32,7 @@ class ScoreDeltaView extends LinearLayout {
 	public static final String TAG = "ScoreDeltaView";
 	private final ScoreLayout _parent;
 	Score.ScoreDelta _scoreDelta;
+	private static long DOUBLE_TAP_INTERVAL_MS = 100;
 	private HorizontalStaffSpec _perfectHorizontalStaffSpec, _actualHorizontalStaffSpec;
 	
 	
@@ -45,6 +47,31 @@ class ScoreDeltaView extends LinearLayout {
     }
 	
 	public final WidthEvaluator EVALUATOR = new WidthEvaluator();
+	
+	private abstract class DoubleTapView extends View {
+		private long FIRST_DOWN = -1;
+		private boolean IN_DOUBLE_TAP_MODE = false;
+		public DoubleTapView(Context context) {
+			super(context);
+		}
+		
+		@Override
+		public boolean onTouchEvent(MotionEvent e) {
+			if(e.getActionMasked() == MotionEvent.ACTION_DOWN) {
+				if(FIRST_DOWN == -1) {
+					FIRST_DOWN = System.currentTimeMillis();
+				} else if(System.currentTimeMillis() - FIRST_DOWN < DOUBLE_TAP_INTERVAL_MS) {
+					IN_DOUBLE_TAP_MODE = true;
+				}
+			}
+			if(e.getPointerCount() == 1 && e.getActionMasked() == MotionEvent.ACTION_UP)
+				IN_DOUBLE_TAP_MODE = false;
+			return super.onTouchEvent(e);
+		}
+		
+		public abstract boolean onDoubleTapDown(MotionEvent e);
+		public abstract boolean onMoveAfterDoubleTap(MotionEvent e);
+	}
 	
 	public class StaffDeltaView extends LinearLayout {
 		private Score.Staff.StaffDelta _staffDelta;
@@ -93,6 +120,9 @@ class ScoreDeltaView extends LinearLayout {
 					setMeasuredDimension(_actualHorizontalStaffSpec.TIMESIG_PX, _actualVerticalStaffSpec.getTotalHeight());
 				}
 			};
+			
+			_accidentalArea.setBackgroundColor(0xBBF2F294);
+			_noteHeadArea.setBackgroundColor(0xBB38C0F4);
 
 			
 			// Set up the area for accidentals, notes, time signature changes and key signature changes.

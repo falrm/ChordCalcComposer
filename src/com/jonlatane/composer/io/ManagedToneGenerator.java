@@ -53,10 +53,14 @@ public class ManagedToneGenerator {
 		private static LinkedList<Pair<Integer,Integer>> _recentlyUsedNotes = new LinkedList<Pair<Integer,Integer>>();
 				
 		/**
-		 * Get a looping AudioTrack exactly one period long for the given note
+		 * Get a looping AudioTrack exactly one period long for the given note.  This may be generated,
+		 * or it may come from the cache. The track requested will become the MRU element.
+		 * 
 		 * @param n the fundamental frequency
-		 * @param overtones an array from which overtones will be added
-		 * @return
+		 * @param overtones an array from which overtones will be added.
+		 * 		overtones[0] is the strength of the fundamental frequency, [1..n] is that of all others.
+		 * 		The track volume will be normalized so values only relate to each other.
+		 * @return the requested AudioTrack
 		 */
 		public static AudioTrack getAudioTrackForNote(int n, Double[] overtones) {
 			// Find the hashcode of the overtone series
@@ -156,7 +160,7 @@ public class ManagedToneGenerator {
 		/**
 		 * Release all AudioTracks created by this cache
 		 * 
-		 * @return
+		 * @return false unless there was an error
 		 */
 		public static boolean releaseAll() {
 			boolean result = releaseOne();
@@ -167,7 +171,11 @@ public class ManagedToneGenerator {
 			return result;
 		}
 		
-		
+		/**
+		 * Release the least recently used AudioTrack resource to free up resources
+		 * 
+		 * @return true if a track was successfully removed
+		 */
 		public static boolean releaseOne() {
 			boolean result = true;
 			try {
@@ -226,6 +234,11 @@ public class ManagedToneGenerator {
 	
 	private static Double[] _defaultOvertones = {70., 30., 30., 10., 10., 20., 20., 1.};
 	//private static Double[] _defaultOvertones = {70., 0., 0., 0., 0., 0., 0., 0. };
+	
+	/*
+	 * Methods below are related to the use of an instance of ManagedToneGenerator.  Instances
+	 * are primarily useful as virtual instruments.
+	 */
 	
 	private Double[] _myOverTones;
 	

@@ -71,10 +71,9 @@ public class ScoreDeltaView extends ViewGroup {
 		 * @param r
 		 * @return an array containing the positions of the noteheads per voice
 		 */
-		public Coord[] drawTo(Canvas c, Rect r) {
-			Coord[] result = new Coord[_staffDelta.VOICES.length];
-			//TODO
-			
+		@Override
+		protected void onDraw(Canvas c) {
+			super.onDraw(c);
 			// Do invalidation stuff
 			if(WIDTH < REQ_WIDTH) {
 				WIDTH += 1;
@@ -88,22 +87,10 @@ public class ScoreDeltaView extends ViewGroup {
 				SPACE_BELOW += 1;
 				invalidate();
 			}
-			return result;
 		}
 		
 		@Override protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 			setMeasuredDimension(WIDTH, SPACE_ABOVE + SPACE_BELOW);
-		}
-	}
-	
-	public void drawTo(Canvas c, Rect r) {
-		Rect tmp = new Rect();
-		c.drawRect(r, _red);
-		for(int i = 0; i < _scoreDelta.STAVES.length; i++) {
-			StaffDeltaView sdv = (StaffDeltaView) getChildAt(i);
-			sdv.getHitRect(tmp);
-			tmp.offsetTo(r.left, r.top + tmp.top);
-			sdv.drawTo(c, tmp);
 		}
 	}
 	

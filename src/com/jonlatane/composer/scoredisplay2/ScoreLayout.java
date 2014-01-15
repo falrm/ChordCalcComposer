@@ -12,7 +12,7 @@ public class ScoreLayout extends ViewGroup {
 	
 	Score SCORE;
     float SCALINGFACTOR = 1;
-	SystemHeaderView[] HEADERS = new SystemHeaderView[10];
+	SystemView[] HEADERS = new SystemView[10];
 
 	public ScoreLayout(Context context) {
 		super(context);

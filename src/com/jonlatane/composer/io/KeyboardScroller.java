@@ -1,5 +1,6 @@
 package com.jonlatane.composer.io;
 
+import com.jonlatane.composer.NonDelayedHorizontalScrollView;
 import com.jonlatane.composer.R;
 
 import android.content.Context;
@@ -10,9 +11,11 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.widget.HorizontalScrollView;
 
-public class KeyboardScroller extends HorizontalScrollView {
+public class KeyboardScroller extends NonDelayedHorizontalScrollView {
 	private static String TAG = "KBScroller";
 	private KeyboardIOHandler _io = null;	
+	
+	public static int MARGIN = 40;
 	
 	public KeyboardScroller(Context context) {
 		super(context);
@@ -41,15 +44,22 @@ public class KeyboardScroller extends HorizontalScrollView {
 	}
 
 	@Override public boolean onTouchEvent(MotionEvent event) {
-		if(_enableScrolling && event.getPointerCount() < 2) {
-				super.onTouchEvent(event);
-			return false;
-		} else {
-			return false ;//super.onTouchEvent(event);
-		}
+		if(event.getX() < MARGIN || event.getX() > getWidth() - MARGIN)
+			enableScrolling();
+		
+		if(_enableScrolling && event.getPointerCount() < 2)
+			super.onTouchEvent(event);
+		
+		if(event.getActionMasked() == event.ACTION_UP && event.getPointerCount() < 2)
+			disableScrolling();
+		return true;
 	}
 	@Override public boolean onInterceptTouchEvent(MotionEvent event) {
-		return onTouchEvent(event);
+		boolean result = onTouchEvent(event);
+		if(event.getActionMasked() == event.ACTION_DOWN 
+				&& event.getX() < MARGIN || event.getX() > getWidth() - MARGIN)
+			return true;
+		return false;
 	}
 	
 	private boolean _enableScrolling = false;

@@ -87,39 +87,16 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	public boolean isHarmonic() {
 		return _harmonicMode;
 	}
-
-	/*void normalizeVolume() {
-		float max = AudioTrack.getMaxVolume();
-		float min = AudioTrack.getMinVolume();
-		float span = max - min;
-		
-		for(int n : _currentlyPressed) {
-			AudioTrack t = ManagedToneGenerator.getAudioTrackForNote(n);
-			
-			// Lower notes are amped up so turn them down a bit with this factor
-			float arctanCurveFactor = (float) (.05 * Math.atan((float)(n+5)/88.0) + .9);
-			//if( n < 0 )
-				//arctanCurveFactor = 1;
-			// This number between 0 and 1 by which we will increase volume
-			float totalNumNotesRedFactor = (float)( 1 / (float)_currentlyPressed.size());
-			//if( n < 0 )
-				//totalNumNotesRedFactor = 1;
-			
-			float adjusted = min 
-					+ (float)( span * arctanCurveFactor * totalNumNotesRedFactor );
-			
-			Log.i(TAG,max + " " + min + "Normalizing volume to " + adjusted);
-			t.setStereoVolume(adjusted, adjusted);
-		}
-	}*/
 	
 	void liftNote(int n) {
-		if( _harmonicMode ) {
-			//Log.i(TAG, "Harmonic Root:")
-			if(_cancelHarmonicLongPressRootSelection && _currentlyPressed.size() == 1)
-				_cancelHarmonicLongPressRootSelection = false;
+		synchronized(_currentlyPressed) {
+			if( _harmonicMode ) {
+				//Log.i(TAG, "Harmonic Root:")
+				if(_cancelHarmonicLongPressRootSelection && _currentlyPressed.size() == 1)
+					_cancelHarmonicLongPressRootSelection = false;
+			}
+			_currentlyPressed.remove(n);
 		}
-		_currentlyPressed.remove(n);
 
 		if(getHarmonicRoot() != null && _currentlyPressed.size() == 0) {
 			clearHarmonicRoot();
@@ -128,24 +105,27 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		AudioTrack t = _myToneGenerator.getCustomAudioTrackForNote(n);
 		t.pause();
 		ManagedToneGenerator.normalizeVolumes();
-		t.setPlaybackHeadPosition(0);
+		//t.setPlaybackHeadPosition(0);
+		//t.reloadStaticData();
 	}
 	void pressNote(int n) {
-		if( _harmonicMode ) {
-			if(getHarmonicRoot() == null) {
-				if(_currentlyPressed.size() == 0)
-					_cancelHarmonicLongPressRootSelection = false;
-				else
-					_cancelHarmonicLongPressRootSelection = true;
+		synchronized(_currentlyPressed) {
+			if( _harmonicMode ) {
+				if(getHarmonicRoot() == null) {
+					if(_currentlyPressed.size() == 0)
+						_cancelHarmonicLongPressRootSelection = false;
+					else
+						_cancelHarmonicLongPressRootSelection = true;
+				}
+				Log.i(TAG, "Got key Press " + harmonicInfo());
+			} else {
+				// Melodic mode, one note at a time!
+				for( int m : _currentlyPressed ) {
+					liftNote(m);
+				}
 			}
-			Log.i(TAG, "Got key Press " + harmonicInfo());
-		} else {
-			// Melodic mode, one note at a time!
-			for( int m : _currentlyPressed ) {
-				liftNote(m);
-			}
+			_currentlyPressed.add(n);
 		}
-		_currentlyPressed.add(n);
 		_myToneGenerator.getCustomAudioTrackForNote(n).play();
 		ManagedToneGenerator.normalizeVolumes();
 		//_recentlyUsedNotes.remove((Integer)n);

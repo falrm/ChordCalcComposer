@@ -82,7 +82,7 @@ public class ChordDisplayActivity extends Activity
 		// Set up the keyboard
 		_myKeyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.chordDisplayActivityKb);
 		_myKeyboard.disableRhythmicMode();
-		_myKeyboard.getKeyboardScroller().enableScrolling();
+		//_myKeyboard.getKeyboardScroller().enableScrolling();
 		new Thread() {
 			@Override
 			public void run() {
@@ -100,6 +100,7 @@ public class ChordDisplayActivity extends Activity
         //listview.setAdapter(_adapter);
 	}
 	
+	// Handles all Volume key presses as media volume control
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		AudioManager audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
