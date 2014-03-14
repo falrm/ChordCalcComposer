@@ -8,6 +8,7 @@ import java.util.Map;
 
 import com.jonlatane.composer.music.*;
 import com.jonlatane.composer.music.coverings.Clef;
+import com.jonlatane.composer.music.coverings.TimeSignature;
 import com.jonlatane.composer.music.harmony.Key;
 import com.jonlatane.composer.music.harmony.PitchSet;
 import com.jonlatane.composer.music.Score.ScoreDelta;
@@ -56,6 +57,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 	private final Paint __orange = new Paint();
 	private final Paint __black = new Paint();
 	private final Paint __blue = new Paint();
+	private final Paint __noteheadPaint = new Paint();
 	
 	
 	/**
@@ -391,7 +393,80 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 		}
     }
 	
-	private final Paint __noteheadPaint = new Paint();
+	/**
+	 * Return the correct string (notehead and dots) to render from the NoteHedz font.
+	 * 
+	 * @param vd
+	 * @return
+	 */
+	private static final Rational[] NOTEHEAD_ABSOLUTE_VALUES = new Rational[] {Rational.SIXTYFOURTH, Rational.THIRTYSECOND, Rational.SIXTEENTH, Rational.EIGHTH, Rational.FOURTH, Rational.HALF, Rational.ONE, Rational.TWO};
+	private static String noteHedFor(VoiceDelta vd, TimeSignature ts) {
+		char dot = '\u00f6';
+
+		String result;
+		
+		// Find whether there should be a notehead represented here
+		Rational duration = null;
+		Boolean isRest = null;
+		if(vd.CHANGED.NOTES != null) {
+			assert(vd.CHANGED.NOTES == vd.ESTABLISHED.NOTES);
+			assert(vd.CHANGED.NOTES.NOTEHEADLOCS != null);
+			assert(vd.LOCATION.equals(vd.CHANGED.TIME) && vd.LOCATION.equals(vd.CHANGED.NOTES.NOTEHEADLOCS[0]));
+			duration = vd.CHANGED.NOTES.NOTEHEADLOCS[1].minus(vd.CHANGED.NOTES.NOTEHEADLOCS[0]);
+			isRest = vd.CHANGED.NOTES.isEmpty();
+		} else if(vd.ESTABLISHED.NOTES != null) {
+			Rational now = vd.LOCATION;
+			for(int i = 0; i < vd.ESTABLISHED.NOTES.NOTEHEADLOCS.length; i++) {
+				Rational r = vd.ESTABLISHED.NOTES.NOTEHEADLOCS[i];
+				if(r.equals(now)) {
+					assert( (i+1) < vd.ESTABLISHED.NOTES.NOTEHEADLOCS.length);
+					duration = vd.ESTABLISHED.NOTES.NOTEHEADLOCS[i+1].minus(r);
+				}
+			}
+			isRest = vd.ESTABLISHED.NOTES.isEmpty();
+			assert(duration != null);
+		}
+
+		if(duration == null)
+			return null;
+		
+		// Pick out the notehead
+		Rational normalized = duration.times(new Rational(1, ts.BOTTOM));
+		if(normalized.compareTo(Rational.TWO) >= 0) //Double whole note
+			result = "_0_";
+		else if(normalized.compareTo(Rational.ONE) >= 0) //Whole note
+			result = "0";
+		else if(normalized.compareTo(Rational.HALF) >= 0) //Half note
+			result = "5";
+		else// if(normalized.compareTo(Rational.FOURTH) >= 0) //Quarter note
+			result = "%";
+		/*else if(normalized.compareTo(Rational.EIGHTH) >= 0) //Eighth note
+			result = "%";
+		else if(normalized.compareTo(Rational.SIXTEENTH) >= 0) //Sixteenth note
+			result = "%";
+		else if(normalized.compareTo(Rational.THIRTYSECOND) >= 0) //Thirty-second note
+			result = "%";
+		else if(normalized.compareTo(Rational.SIXTYFOURTH) >= 0) //Sixty-fourth note
+			result = "%";*/
+		
+		// Add dots
+		Rational represented = null;
+		for( Rational r : NOTEHEAD_ABSOLUTE_VALUES) {
+			if(r.compareTo(normalized) <= 0)
+				represented = r;
+			else
+				break;
+		}
+		
+		while(represented.compareTo(normalized) < 0) {
+			result += dot;
+			represented = represented.times(Rational.ONE_AND_HALF);
+		}
+		
+		return result;
+	}
+	
+	/*
 	private void drawNoteHeads( StaffDeltaView v, Rect rect ) {
 		StaffDelta d = v.getStaffDelta();
 		Clef c = d.ESTABLISHED.CLEF;
@@ -419,5 +494,5 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 				}
 			}
 		}
-	}
+	}*/
 }

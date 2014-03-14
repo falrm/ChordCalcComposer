@@ -142,26 +142,25 @@ public class ChordDisplayActivity extends Activity
 	@Override
 	  public boolean onOptionsItemSelected(MenuItem item) {
 	    switch (item.getItemId()) {
-	    //TODO Uncomment these
-	    /*case R.id.toggleRhythmAB:
-	    	_myKeyboard.toggleRhythmicMode();
-	    	break;
-	    case R.id.toggleChordsAB:
-	    	_myKeyboard.toggleHarmonicMode();
-	    	break;*/
-	    case R.id.toggleKeyboardAB:
-	    	_myKeyboard.toggleKeyboardFragment();
-	    	break;
-	    /*
-	    case R.id.debugFunction1:
-	    	//((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
-	    	//((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
-	    	break;
-	    case R.id.debugFunction2:
-	    	//((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
-	    	break;*/
-	    default:
-	      break;
+		    //TODO Uncomment these
+//		    case R.id.toggleRhythmAB:
+//		    	_myKeyboard.toggleRhythmicMode();
+//		    	break;
+//		    case R.id.toggleChordsAB:
+//		    	_myKeyboard.toggleHarmonicMode();
+//		    	break;*/
+//		    case R.id.toggleKeyboardAB:
+//		    	_myKeyboard.toggleKeyboardFragment();
+//		    	break;
+//		    case R.id.debugFunction1:
+//		    	((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
+//		    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
+//		    	break;
+//		    case R.id.debugFunction2:
+//		    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
+//		    	break;
+		    default:
+		      break;
 	    }
 
 	    return true;

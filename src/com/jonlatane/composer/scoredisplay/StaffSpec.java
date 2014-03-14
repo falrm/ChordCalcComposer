@@ -221,8 +221,8 @@ public class StaffSpec {
 		 */
 		public static final HorizontalStaffSpec DEFAULT = new HorizontalStaffSpec(10, 50, 0, 10, 10);
 		
-		
-		public static class ScDVWidthEvaluator implements TypeEvaluator<Integer> {
+		//TODO use this class!1
+		private static class ScDVWidthEvaluator implements TypeEvaluator<Integer> {
 			private ScoreDeltaView _sdv;
 			public ScDVWidthEvaluator(ScoreDeltaView sd) { _sdv = sd; }
 			@Override

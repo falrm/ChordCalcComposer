@@ -70,7 +70,6 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 			});
 		}
 		_kbs = ((KeyboardScroller)v.findViewById(R.id.kbScroller));
-		_kbs.setKeyboardIOHander(this);
 	}
 	
 	public void harmonicModeOn() {

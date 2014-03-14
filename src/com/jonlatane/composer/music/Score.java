@@ -177,6 +177,7 @@ public class Score {
 				 */
 				public class VoiceDeltaStuff {
 					public PitchSet NOTES = null;
+					public Rational TIME = null;
 				}
 				
 				public VoiceDeltaStuff ESTABLISHED = new VoiceDeltaStuff();
@@ -187,8 +188,11 @@ public class Score {
 				VoiceDelta result = new VoiceDelta();
 				result.LOCATION = r;
 				result.ESTABLISHED.NOTES = _notes.getObjectAt(r);
+				result.ESTABLISHED.TIME = _notes._data.floorKey(r);
 				
 				result.CHANGED.NOTES = _notes._data.get(r);
+				if(result.CHANGED.NOTES != null)
+					result.CHANGED.TIME = r;
 				
 				return result;
 			}

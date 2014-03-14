@@ -1,19 +1,19 @@
 package com.jonlatane.composer.io;
 
 import com.jonlatane.composer.NonDelayedHorizontalScrollView;
-import com.jonlatane.composer.R;
 
+import android.animation.IntEvaluator;
+import android.animation.ValueAnimator;
 import android.content.Context;
-import android.os.AsyncTask;
+import android.graphics.Canvas;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.widget.HorizontalScrollView;
+import android.view.View;
+import android.view.ViewGroup;
 
 public class KeyboardScroller extends NonDelayedHorizontalScrollView {
-	private static String TAG = "KBScroller";
-	private KeyboardIOHandler _io = null;	
+	@SuppressWarnings("unused") private static String TAG = "KBScroller";
+	//private KeyboardIOHandler _io = null;	
 	
 	public static int MARGIN = 40;
 	
@@ -38,10 +38,6 @@ public class KeyboardScroller extends NonDelayedHorizontalScrollView {
 	public boolean shouldDelayChildPressedState() {
 		return false;
 	}
-	
-	public void setKeyboardIOHander(KeyboardIOHandler kio) {
-		_io = kio;
-	}
 
 	@Override public boolean onTouchEvent(MotionEvent event) {
 		if(event.getX() < MARGIN || event.getX() > getWidth() - MARGIN)
@@ -50,16 +46,56 @@ public class KeyboardScroller extends NonDelayedHorizontalScrollView {
 		if(_enableScrolling && event.getPointerCount() < 2)
 			super.onTouchEvent(event);
 		
-		if(event.getActionMasked() == event.ACTION_UP && event.getPointerCount() < 2)
+		if(event.getActionMasked() == MotionEvent.ACTION_UP && event.getPointerCount() < 2)
 			disableScrolling();
 		return true;
 	}
 	@Override public boolean onInterceptTouchEvent(MotionEvent event) {
-		boolean result = onTouchEvent(event);
-		if(event.getActionMasked() == event.ACTION_DOWN 
+		if(event.getActionMasked() == MotionEvent.ACTION_DOWN 
 				&& event.getX() < MARGIN || event.getX() > getWidth() - MARGIN)
 			return true;
 		return false;
+	}
+	
+	/*
+	 * onDraw and these types and variables are used to render the drop shadows on the right and left.
+	 */
+	private int _leftShadowAlpha = 255, _rightShadowAlpha = 255;
+	private class LeftShadowEvaluator extends IntEvaluator {
+	    private KeyboardScroller v;
+	    public LeftShadowEvaluator(KeyboardScroller v) {
+	        this.v = v;
+	    }
+		@Override
+	    public Integer evaluate(float fraction, Integer startValue, Integer endValue) {
+	        int num = (Integer)super.evaluate(fraction, startValue, endValue);
+	        v._leftShadowAlpha = num;
+	        return num;
+	    }
+	}
+	private class RightShadowEvaluator extends IntEvaluator {
+	    private KeyboardScroller v;
+	    public RightShadowEvaluator(KeyboardScroller v) {
+	        this.v = v;
+	    }
+		@Override
+	    public Integer evaluate(float fraction, Integer startValue, Integer endValue) {
+	        int num = (Integer)super.evaluate(fraction, startValue, endValue);
+	        v._rightShadowAlpha = num;
+	        return num;
+	    }
+	}
+	@Override protected void onDraw(Canvas c) {
+		super.onDraw(c);
+		
+		if(canScrollHorizontally(-1))
+			ValueAnimator.ofObject(new LeftShadowEvaluator(this), _leftShadowAlpha, 255).start();
+		else
+			ValueAnimator.ofObject(new LeftShadowEvaluator(this), _leftShadowAlpha, 255).start();
+		if(canScrollHorizontally(1))
+			ValueAnimator.ofObject(new RightShadowEvaluator(this), _rightShadowAlpha, 255).start();
+		else
+			ValueAnimator.ofObject(new RightShadowEvaluator(this), _rightShadowAlpha, 255).start();
 	}
 	
 	private boolean _enableScrolling = false;
@@ -69,75 +105,4 @@ public class KeyboardScroller extends NonDelayedHorizontalScrollView {
 	public void disableScrolling() {
 		_enableScrolling = false;
 	}
-	
-	// Scrolling handling.  When the user is pressing lots of keys, we may want to disable scrolling
-	//
-	/*private int _scrollPosition = 0;
-	private boolean _scrollingEnabled = true;
-	public void disableScrolling() {
-		Log.i(TAG, "Disabled Scrolling");
-		_scrollPosition = getScrollX();
-		setOnTouchListener( new OnTouchListener(){ 
-		    @Override
-		    public boolean onTouch(View v, MotionEvent event) {
-		    	//logUpDown(event);
-		    	//smartToggleScrolling();
-		        return true; 
-		    }
-		});
-		_scrollPosition = getScrollX();
-    	scrollTo(_scrollPosition, 0);
-		_scrollingEnabled = false;
-	}
-	public void enableScrolling() {
-		Log.i(TAG, "Enabled Scrolling");
-		setOnTouchListener(null);
-    	scrollTo(_scrollPosition, 0);
-		_scrollingEnabled = true;
-	}
-	boolean smartToggleScrolling() {
-		Log.d(TAG,"smartToggleScrolling");
-		if(!_scrollingEnabled) {
-			if( getUpDownFrequency(1000) < 6.0 ) {
-				//enableScrolling();
-			}
-		} else {
-			if( getUpDownFrequency(1000) > 0.25 ) {
-				disableScrolling();
-			}
-		}
-		
-		return _scrollingEnabled;
-	}
-	
-	private LinkedList<Long> previousUpDowns = new LinkedList<Long>();
-	private float getUpDownFrequency(long window) {
-		long now = System.currentTimeMillis();
-		
-		Iterator<Long> itr = previousUpDowns.iterator();
-		int numPressesInWindow = 0;
-		while(itr.hasNext()) {
-			long l = itr.next();
-			if( now - l > window ) {
-				itr.remove();
-			} else {
-				numPressesInWindow++;
-			}
-		}
-		if(numPressesInWindow < 2)
-			return 0;
-		return (float)numPressesInWindow/((float)window/1000);
-	}
-	void logUpDown(MotionEvent e) {
-		if(e.getActionMasked() == MotionEvent.ACTION_DOWN || e.getActionMasked() == MotionEvent.ACTION_UP) {
-			previousUpDowns.add(System.currentTimeMillis());
-		}
-	}
-	@Override
-	public boolean onTouchEvent(MotionEvent e) {
-			boolean result = super.onTouchEvent(e);
-			//logUpDown(e);
-			//smartToggleScrolling();
-			return result;
-	}*/
 }

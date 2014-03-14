@@ -12,6 +12,7 @@ import com.jonlatane.composer.music.harmony.Key;
 import android.animation.IntEvaluator;
 import android.animation.ValueAnimator;
 import android.app.Fragment;
+import android.graphics.Typeface;
 import android.os.*;
 import android.util.Log;
 import android.view.*;
@@ -55,8 +56,11 @@ public class TwelthKeyboardFragment extends Fragment {
         
 		//Set up the keyboardScroller itself
 		_keyboardScroller = (KeyboardScroller)result.findViewById(R.id.kbScroller);
-		_keyboardScroller.setKeyboardIOHander(_myKbdIO);
-				
+		
+		//Set fonts
+		//((TextView)_chordScroller.findViewById(R.id.bestChord)).setTypeface(Typeface.createFromAsset(result.getContext().getAssets(),"fonts/NoteHedz170.ttf"));
+		
+		
         return result;
     }
 	
@@ -92,7 +96,7 @@ public class TwelthKeyboardFragment extends Fragment {
 					if( idx >= _slots.length) break;
 					
 					TextView v = (TextView)getView().findViewById(_slots[idx++]);
-					v.setText(s);
+					v.setText(s.toString());
 				}
 				_chordScroller.scrollTo(0,0);
 			}
