@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="tonecontroller_addremove_buttons_width">40dp</dimen>
+    <dimen name="tonecontroller_height">160dp</dimen>
+    <dimen name="tonecontroller_element_padding">3dp</dimen>
+</resources>
+

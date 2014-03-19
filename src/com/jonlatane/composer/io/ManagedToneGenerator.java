@@ -51,7 +51,11 @@ public class ManagedToneGenerator {
 	private static class Cache {
 		private static SparseArray<SparseArray<AudioTrack>> _data = new SparseArray<SparseArray<AudioTrack>>();
 		private static LinkedList<Pair<Integer,Integer>> _recentlyUsedNotes = new LinkedList<Pair<Integer,Integer>>();
-				
+		
+		static int tonesHashCode(Double[] overtones) {
+			return Arrays.hashCode(overtones);
+		}
+		
 		/**
 		 * Get a looping AudioTrack exactly one period long for the given note.  This may be generated,
 		 * or it may come from the cache. The track requested will become the MRU element.
@@ -62,9 +66,9 @@ public class ManagedToneGenerator {
 		 * 		The track volume will be normalized so values only relate to each other.
 		 * @return the requested AudioTrack
 		 */
-		public static AudioTrack getAudioTrackForNote(int n, Double[] overtones) {
+		static AudioTrack getAudioTrackForNote(int n, Double[] overtones) {
 			// Find the hashcode of the overtone series
-			int tonesHashCode = Arrays.hashCode(overtones);
+			int tonesHashCode = tonesHashCode(overtones);
 			
 			// cacheLocation.first tells us the instrument/overtone series (via the hash of the Double[])
 			// cacheLocation.second tells us the specific note
@@ -172,6 +176,31 @@ public class ManagedToneGenerator {
 		}
 		
 		/**
+		 * Release all AudioTracks using the given overtone series
+		 * 
+		 * @param overtones
+		 * @return true on success
+		 */
+		public static boolean releaseAll(Double[] overtones) {
+			SparseArray<AudioTrack> instrumentNotes = _data.get(tonesHashCode(overtones));
+			if(instrumentNotes == null)
+				return true;
+			boolean result = true;
+			for(int i=0; i < instrumentNotes.size(); i++) {
+				try {
+					AudioTrack goodbyeCruelWorld = instrumentNotes.valueAt(i);
+					goodbyeCruelWorld.stop();
+					goodbyeCruelWorld.flush();
+					goodbyeCruelWorld.release();
+				} catch( Throwable e ) {
+					result = false;
+				}
+			}
+			instrumentNotes.clear();
+			return result;
+		}
+		
+		/**
 		 * Release the least recently used AudioTrack resource to free up resources
 		 * 
 		 * @return true if a track was successfully removed
@@ -235,18 +264,19 @@ public class ManagedToneGenerator {
 	private static Double[] _defaultOvertones = {70., 30., 30., 10., 10., 20., 20., 1.};
 	//private static Double[] _defaultOvertones = {70., 0., 0., 0., 0., 0., 0., 0. };
 	
-	/*
-	 * Methods below are related to the use of an instance of ManagedToneGenerator.  Instances
-	 * are primarily useful as virtual instruments.
+	Double[] _overtones;
+	
+	/**
+	 * An instance of a ManagedToneGenerator shares the same cache as all others.  Its only unique property is the overtone series
+	 * used to generate its tambre.  Most useful instance methods access static methods using the overtone series provided.
+	 * 
+	 * @param overtones
 	 */
-	
-	private Double[] _myOverTones;
-	
 	public ManagedToneGenerator(Double... overtones) {
 		if(overtones.length == 0)
 			overtones = _defaultOvertones.clone();
 		
-		_myOverTones = _defaultOvertones;
+		_overtones = _defaultOvertones;
 	}
 
 	public static AudioTrack getAudioTrackForNote(int n) {
@@ -254,7 +284,11 @@ public class ManagedToneGenerator {
 	}
 	
 	public AudioTrack getCustomAudioTrackForNote(int n) {
-		return Cache.getAudioTrackForNote(n, _myOverTones);
+		return Cache.getAudioTrackForNote(n, _overtones);
+	}
+	
+	public void releaseAllMyTracks() {
+		Cache.releaseAll(_overtones);
 	}
 	
 	public static AudioTrack getAudioTrackForNote(int n, Double... overtones) {

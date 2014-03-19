@@ -49,7 +49,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	private Chord _harmonicChord = null;
 	
 	private Set<Integer> _currentlyPressed = Collections.synchronizedSet(new HashSet<Integer>());
-	private ManagedToneGenerator _myToneGenerator = new ManagedToneGenerator();
+	ManagedToneGenerator _toneGenerator = new ManagedToneGenerator();
 	private TwelthKeyboardFragment _myFragment;
 	
 	public KeyboardIOHandler(TwelthKeyboardFragment f, View v) {
@@ -101,7 +101,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 			clearHarmonicRoot();
 		}
 		
-		AudioTrack t = _myToneGenerator.getCustomAudioTrackForNote(n);
+		AudioTrack t = _toneGenerator.getCustomAudioTrackForNote(n);
 		t.pause();
 		ManagedToneGenerator.normalizeVolumes();
 		//t.setPlaybackHeadPosition(0);
@@ -125,7 +125,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 			}
 			_currentlyPressed.add(n);
 		}
-		_myToneGenerator.getCustomAudioTrackForNote(n).play();
+		_toneGenerator.getCustomAudioTrackForNote(n).play();
 		ManagedToneGenerator.normalizeVolumes();
 		//_recentlyUsedNotes.remove((Integer)n);
 		//_recentlyUsedNotes.addFirst((Integer)n);

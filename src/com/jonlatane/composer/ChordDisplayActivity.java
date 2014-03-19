@@ -22,7 +22,7 @@ import android.view.*;
  */
 public class ChordDisplayActivity extends Activity
 {
-	private TwelthKeyboardFragment _myKeyboard;
+	private TwelthKeyboardFragment _keyboard;
 	//private KeyboardIOHandler _myKbdIO;
 	//private KeyboardScroller _keyboardScroller;
 	//private HorizontalScrollView _chordScroller;
@@ -80,21 +80,13 @@ public class ChordDisplayActivity extends Activity
 		setContentView(R.layout.chorddisplayactivity);
 		
 		// Set up the keyboard
-		_myKeyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.chordDisplayActivityKb);
-		_myKeyboard.disableRhythmicMode();
-		//_myKeyboard.getKeyboardScroller().enableScrolling();
-		new Thread() {
-			@Override
-			public void run() {
-		        try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-				} finally {
-
-					_myKeyboard.getKeyboardScroller().smoothScrollBy(400, 0);
-				}
-		    }
-		}.start();
+		_keyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.kbFragment);
+		_keyboard.disableRhythmicMode();
+		
+		// Attach the tone controller to the keyboard
+		ToneControllerFragment tc = (ToneControllerFragment) getFragmentManager().findFragmentById(R.id.toneControllerFragment);
+		tc.attachToneGenerator(_keyboard.getToneGenerator());
+		
 		// Set up lead sheet display
 		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
         //listview.setAdapter(_adapter);
@@ -121,7 +113,7 @@ public class ChordDisplayActivity extends Activity
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		_myKeyboard.onSaveInstanceState(outState);
+		_keyboard.onSaveInstanceState(outState);
 	}
 	
 	@Override

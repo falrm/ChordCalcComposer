@@ -36,7 +36,7 @@ public class TwelthKeyboardFragment extends Fragment {
 		return _keyboardScroller;
 	}
 
-	private KeyboardIOHandler _myKbdIO;
+	private KeyboardIOHandler _kbdIO;
 	private HorizontalScrollView _chordScroller;
 	private Key _keyToNameFrom = Key.CMajor;
 	
@@ -50,8 +50,8 @@ public class TwelthKeyboardFragment extends Fragment {
         //Set up basic stuff from layout
         _initialRhythmAreaWidth = result.findViewById(R.id.rhythmButtonArea).getLayoutParams().width;
         _keyboardScroller = (KeyboardScroller)result.findViewById(R.id.kbScroller);
-		_myKbdIO = new KeyboardIOHandler(this, result);
-		_myKbdIO.harmonicModeOn();
+		_kbdIO = new KeyboardIOHandler(this, result);
+		_kbdIO.harmonicModeOn();
 		_chordScroller = (HorizontalScrollView)result.findViewById(R.id.chordScroller);
         
 		//Set up the keyboardScroller itself
@@ -105,7 +105,7 @@ public class TwelthKeyboardFragment extends Fragment {
 
 	 }
 	public void updateChordDisplay() {
-		new UpdateChordDisplay().execute(_myKbdIO.getChord());
+		new UpdateChordDisplay().execute(_kbdIO.getChord());
 	}
 	
 	private class WidthEvaluator extends IntEvaluator {
@@ -125,6 +125,9 @@ public class TwelthKeyboardFragment extends Fragment {
 	    }
 	}
 	
+	public ManagedToneGenerator getToneGenerator() {
+		return _kbdIO._toneGenerator;
+	}
 
 	public boolean rhythmicModeIsEnabled() {
 		LinearLayout l = (LinearLayout)getView().findViewById(R.id.rhythmButtonArea);
@@ -163,7 +166,7 @@ public class TwelthKeyboardFragment extends Fragment {
 	private void enableHarmonicMode(View r) {
 		final View v = r.findViewById(R.id.chordScroller);
 		v.animate().translationY(0);
-		_myKbdIO.harmonicModeOn();
+		_kbdIO.harmonicModeOn();
 	}
 	public void enableHarmonicMode() {
 		//final View v = getView().findViewById(R.id.chordScroller);
@@ -175,7 +178,7 @@ public class TwelthKeyboardFragment extends Fragment {
 	private void disableHarmonicMode(View r) {
 		final View v = r.findViewById(R.id.chordScroller);
 		v.animate().translationY(v.getHeight());
-		_myKbdIO.harmonicModeOff();
+		_kbdIO.harmonicModeOff();
 	}
 	public void disableHarmonicMode() {
 		//final View v = getView().findViewById(R.id.chordScroller);
@@ -185,11 +188,11 @@ public class TwelthKeyboardFragment extends Fragment {
 	}
 	public boolean toggleHarmonicMode() {
 		//if(getView().findViewById(R.id.chordScroller).getHeight() != 0)
-		if(_myKbdIO.isHarmonic())
+		if(_kbdIO.isHarmonic())
 			disableHarmonicMode();
 		else
 			enableHarmonicMode();
-		return _myKbdIO.isHarmonic();
+		return _kbdIO.isHarmonic();
 	}
 	
 	public boolean keyboardIsEnabled() {
@@ -211,10 +214,10 @@ public class TwelthKeyboardFragment extends Fragment {
 	}
 	
 	public void highlightChord(Chord c) {
-		_myKbdIO.setHarmonicChord(c);
+		_kbdIO.setHarmonicChord(c);
 	}
 	public void clearChordHighlights() {
-		_myKbdIO.setHarmonicChord(null);
+		_kbdIO.setHarmonicChord(null);
 	}
 
 	public Key getKeyToNameFrom() {
