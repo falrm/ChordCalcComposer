@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    
+    <include android:id="@+id/chordScroller" layout="@layout/chord_scroller" />
+    
+    <LinearLayout
+        style="@style/Keyboard"
+        android:orientation="horizontal"
+        android:layout_width="match_parent">
+    
+	    <LinearLayout 
+	        android:id="@+id/rhythmButtonArea"
+	        android:orientation="vertical"
+			style="@style/RhythmButtonArea">
+		    <Button 
+		        android:id="@+id/rhythmButton1"
+			    android:layout_width="match_parent"
+			    android:layout_height="0dp"
+			    android:layout_weight="1"/>
+		    <Button 
+		        android:id="@+id/rhythmButton2"
+			    android:layout_width="match_parent"
+			    android:layout_height="0dp"
+			    android:layout_weight="3"/>
+	    </LinearLayout>
+		<com.jonlatane.composer.io.KeyboardScroller
+		    android:id="@+id/kbScroller"
+		    android:layout_width="match_parent"
+		    android:layout_height="match_parent" >
+		
+		    <RelativeLayout
+		        android:id="@+id/keyboard"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+			     android:descendantFocusability="beforeDescendants" 
+			     android:focusableInTouchMode="true" >
+				<!-- Octave 0 -->
+				<!-- White keys -->
+				<Button
+		            style="@style/A0"
+		            android:id="@+id/keyA0"/>
+		        <Button
+		            android:id="@+id/keyB0"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyA0" />
+		        <!-- Black keys -->
+		        <Button
+		            android:id="@+id/keyAS0"
+		            style="@style/AS0" />
+		        
+		        <!-- Octave 1 -->
+		        <!-- White keys -->
+		        <Button
+		            android:id="@+id/keyC1"
+		            android:text="1"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyB0" />
+		        <Button
+		            android:id="@+id/keyD1"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyC1" />
+		        <Button
+		            android:id="@+id/keyE1"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyD1" />
+		        <Button
+		            android:id="@+id/keyF1"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyE1" />
+		        <Button
+		            android:id="@+id/keyG1"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyF1" />
+		        <Button
+		            android:id="@+id/keyA1"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyG1" />
+		        <Button
+		            android:id="@+id/keyB1"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyA1" />
+		
+		        
+		
+		        <!-- Black keys -->
+		        <Button
+		            android:id="@+id/keyCS1"
+		            style="@style/CSharp"
+		            android:layout_toRightOf="@id/keyAS0" />
+		        <Button
+		            android:id="@+id/keyDS1"
+		            style="@style/DSharp"
+		            android:layout_toRightOf="@id/keyCS1" />
+		        <Button
+		            android:id="@+id/keyFS1"
+		            style="@style/FSharp"
+		            android:layout_toRightOf="@id/keyDS1" />
+		        <Button
+		            android:id="@+id/keyGS1"
+		            style="@style/GSharp"
+		            android:layout_toRightOf="@id/keyFS1" />
+		        <Button
+		            android:id="@+id/keyAS1"
+		            style="@style/ASharp"
+		            android:layout_toRightOf="@id/keyGS1" />
+		
+		        <!-- Octave 2 -->
+		        <!-- White keys -->
+		        <Button
+		            android:id="@+id/keyC2"
+		            android:text="2"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyB1" />
+		        <Button
+		            android:id="@+id/keyD2"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyC2" />
+		        <Button
+		            android:id="@+id/keyE2"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyD2" />
+		        <Button
+		            android:id="@+id/keyF2"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyE2" />
+		        <Button
+		            android:id="@+id/keyG2"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyF2" />
+		        <Button
+		            android:id="@+id/keyA2"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyG2" />
+		        <Button
+		            android:id="@+id/keyB2"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyA2" />
+		
+		        
+		
+		        <!-- Black keys -->
+		        <Button
+		            android:id="@+id/keyCS2"
+		            style="@style/CSharp"
+		            android:layout_toRightOf="@id/keyAS1" />
+		        <Button
+		            android:id="@+id/keyDS2"
+		            style="@style/DSharp"
+		            android:layout_toRightOf="@id/keyCS2" />
+		        <Button
+		            android:id="@+id/keyFS2"
+		            style="@style/FSharp"
+		            android:layout_toRightOf="@id/keyDS2" />
+		        <Button
+		            android:id="@+id/keyGS2"
+		            style="@style/GSharp"
+		            android:layout_toRightOf="@id/keyFS2" />
+		        <Button
+		            android:id="@+id/keyAS2"
+		            style="@style/ASharp"
+		            android:layout_toRightOf="@id/keyGS2" />
+		        
+		        <!-- Octave 3 -->
+		        <!-- White keys -->
+		        <Button
+		            android:id="@+id/keyC3"
+		            android:text="3"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyB2" />
+		        <Button
+		            android:id="@+id/keyD3"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyC3" />
+		        <Button
+		            android:id="@+id/keyE3"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyD3" />
+		        <Button
+		            android:id="@+id/keyF3"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyE3" />
+		        <Button
+		            android:id="@+id/keyG3"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyF3" />
+		        <Button
+		            android:id="@+id/keyA3"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyG3" />
+		        <Button
+		            android:id="@+id/keyB3"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyA3" />
+		
+		        
+		
+		        <!-- Black keys -->
+		        <Button
+		            android:id="@+id/keyCS3"
+		            style="@style/CSharp"
+		            android:layout_toRightOf="@id/keyAS2" />
+		        <Button
+		            android:id="@+id/keyDS3"
+		            style="@style/DSharp"
+		            android:layout_toRightOf="@id/keyCS3" />
+		        <Button
+		            android:id="@+id/keyFS3"
+		            style="@style/FSharp"
+		            android:layout_toRightOf="@id/keyDS3" />
+		        <Button
+		            android:id="@+id/keyGS3"
+		            style="@style/GSharp"
+		            android:layout_toRightOf="@id/keyFS3" />
+		        <Button
+		            android:id="@+id/keyAS3"
+		            style="@style/ASharp"
+		            android:layout_toRightOf="@id/keyGS3" />
+		        
+		        <!-- Octave 4 -->
+		        <!-- White keys -->
+		        <Button
+		            android:id="@+id/keyC4"
+		            android:text="4"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyB3" />
+		        <Button
+		            android:id="@+id/keyD4"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyC4" />
+		        <Button
+		            android:id="@+id/keyE4"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyD4" />
+		        <Button
+		            android:id="@+id/keyF4"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyE4" />
+		        <Button
+		            android:id="@+id/keyG4"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyF4" />
+		        <Button
+		            android:id="@+id/keyA4"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyG4" />
+		        <Button
+		            android:id="@+id/keyB4"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyA4" />
+		
+		        
+		
+		        <!-- Black keys -->
+		        <Button
+		            android:id="@+id/keyCS4"
+		            style="@style/CSharp"
+		            android:layout_toRightOf="@id/keyAS3" />
+		        <Button
+		            android:id="@+id/keyDS4"
+		            style="@style/DSharp"
+		            android:layout_toRightOf="@id/keyCS4" />
+		        <Button
+		            android:id="@+id/keyFS4"
+		            style="@style/FSharp"
+		            android:layout_toRightOf="@id/keyDS4" />
+		        <Button
+		            android:id="@+id/keyGS4"
+		            style="@style/GSharp"
+		            android:layout_toRightOf="@id/keyFS4" />
+		        <Button
+		            android:id="@+id/keyAS4"
+		            style="@style/ASharp"
+		            android:layout_toRightOf="@id/keyGS4" />
+		        
+		        <!-- Octave 5 -->
+		        <!-- White keys -->
+		        <Button
+		            android:id="@+id/keyC5"
+		            android:text="5"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyB4" />
+		        <Button
+		            android:id="@+id/keyD5"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyC5" />
+		        <Button
+		            android:id="@+id/keyE5"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyD5" />
+		        <Button
+		            android:id="@+id/keyF5"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyE5" />
+		        <Button
+		            android:id="@+id/keyG5"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyF5" />
+		        <Button
+		            android:id="@+id/keyA5"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyG5" />
+		        <Button
+		            android:id="@+id/keyB5"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyA5" />
+		
+		        
+		
+		        <!-- Black keys -->
+		        <Button
+		            android:id="@+id/keyCS5"
+		            style="@style/CSharp"
+		            android:layout_toRightOf="@id/keyAS4" />
+		        <Button
+		            android:id="@+id/keyDS5"
+		            style="@style/DSharp"
+		            android:layout_toRightOf="@id/keyCS5" />
+		        <Button
+		            android:id="@+id/keyFS5"
+		            style="@style/FSharp"
+		            android:layout_toRightOf="@id/keyDS5" />
+		        <Button
+		            android:id="@+id/keyGS5"
+		            style="@style/GSharp"
+		            android:layout_toRightOf="@id/keyFS5" />
+		        <Button
+		            android:id="@+id/keyAS5"
+		            style="@style/ASharp"
+		            android:layout_toRightOf="@id/keyGS5" />
+		        
+		        <!-- Octave 6 -->
+		        <!-- White keys -->
+		        <Button
+		            android:id="@+id/keyC6"
+		            android:text="6"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyB5" />
+		        <Button
+		            android:id="@+id/keyD6"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyC6" />
+		        <Button
+		            android:id="@+id/keyE6"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyD6" />
+		        <Button
+		            android:id="@+id/keyF6"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyE6" />
+		        <Button
+		            android:id="@+id/keyG6"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyF6" />
+		        <Button
+		            android:id="@+id/keyA6"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyG6" />
+		        <Button
+		            android:id="@+id/keyB6"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyA6" />
+		
+		        
+		
+		        <!-- Black keys -->
+		        <Button
+		            android:id="@+id/keyCS6"
+		            style="@style/CSharp"
+		            android:layout_toRightOf="@id/keyAS5" />
+		        <Button
+		            android:id="@+id/keyDS6"
+		            style="@style/DSharp"
+		            android:layout_toRightOf="@id/keyCS6" />
+		        <Button
+		            android:id="@+id/keyFS6"
+		            style="@style/FSharp"
+		            android:layout_toRightOf="@id/keyDS6" />
+		        <Button
+		            android:id="@+id/keyGS6"
+		            style="@style/GSharp"
+		            android:layout_toRightOf="@id/keyFS6" />
+		        <Button
+		            android:id="@+id/keyAS6"
+		            style="@style/ASharp"
+		            android:layout_toRightOf="@id/keyGS6" />
+		        
+		        <!-- Octave 7 -->
+		        <!-- White keys -->
+		        <Button
+		            android:id="@+id/keyC7"
+		            android:text="7"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyB6" />
+		        <Button
+		            android:id="@+id/keyD7"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyC7" />
+		        <Button
+		            android:id="@+id/keyE7"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyD7" />
+		        <Button
+		            android:id="@+id/keyF7"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyE7" />
+		        <Button
+		            android:id="@+id/keyG7"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyF7" />
+		        <Button
+		            android:id="@+id/keyA7"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyG7" />
+		        <Button
+		            android:id="@+id/keyB7"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyA7" />
+		
+		        
+		
+		        <!-- Black keys -->
+		        <Button
+		            android:id="@+id/keyCS7"
+		            style="@style/CSharp"
+		            android:layout_toRightOf="@id/keyAS6" />
+		        <Button
+		            android:id="@+id/keyDS7"
+		            style="@style/DSharp"
+		            android:layout_toRightOf="@id/keyCS7" />
+		        <Button
+		            android:id="@+id/keyFS7"
+		            style="@style/FSharp"
+		            android:layout_toRightOf="@id/keyDS7" />
+		        <Button
+		            android:id="@+id/keyGS7"
+		            style="@style/GSharp"
+		            android:layout_toRightOf="@id/keyFS7" />
+		        <Button
+		            android:id="@+id/keyAS7"
+		            style="@style/ASharp"
+		            android:layout_toRightOf="@id/keyGS7" />
+		        
+		        
+		        
+		        
+		        <!-- Octave 8 - finally!-->
+		        <!-- White keys -->
+		        <Button
+		            android:id="@+id/keyC8"
+		            android:text="8"
+		            style="@style/WhiteKey"
+		            android:layout_toRightOf="@id/keyB7" />
+		        
+		        
+		        
+		        
+		       
+		    </RelativeLayout>
+		    
+		
+		</com.jonlatane.composer.io.KeyboardScroller>
+	</LinearLayout>
+</LinearLayout><!-- From: file:/Users/jonlatane/Development/jon-latane/ComposerProject2/res/layout/twelthkeyboard.xml -->

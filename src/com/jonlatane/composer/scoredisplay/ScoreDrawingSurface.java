@@ -69,7 +69,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 	 * @author Jon Latane
 	 *
 	 */
-	class SystemHeaderView extends ViewGroup {
+	class SystemHeaderView extends android.view.ViewGroup {
 		private double _partialVisibilityRatio = 0d;
 		private ScoreDeltaView _partialScoreDelta = null;
 		private ScoreDeltaView _completeScoreDelta = null;

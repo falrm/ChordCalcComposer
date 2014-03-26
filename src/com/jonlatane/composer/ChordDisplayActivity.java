@@ -141,9 +141,9 @@ public class ChordDisplayActivity extends Activity
 //		    case R.id.toggleChordsAB:
 //		    	_myKeyboard.toggleHarmonicMode();
 //		    	break;*/
-//		    case R.id.toggleKeyboardAB:
-//		    	_myKeyboard.toggleKeyboardFragment();
-//		    	break;
+		    case R.id.toggleKeyboardAB:
+		    	_keyboard.toggleKeyboardFragment();
+		    	break;
 //		    case R.id.debugFunction1:
 //		    	((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
 //		    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();

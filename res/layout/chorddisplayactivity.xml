@@ -4,11 +4,11 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 	
-    <!-- <com.jonlatane.composer.scoredisplay.ScoreLayout 
+    <com.jonlatane.composer.scoredisplay.ScoreLayout
         android:id="@+id/scoreLayout"
         android:layout_alignParentTop="true"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" /> -->
+        android:layout_height="wrap_content" />
         
     <fragment
         android:id="@+id/kbFragment"
