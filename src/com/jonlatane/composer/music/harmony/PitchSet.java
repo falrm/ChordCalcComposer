@@ -12,7 +12,10 @@ import com.jonlatane.composer.music.Rational;
 * may store it in these fields and invalidate them by setting them to null.
 */
 public class PitchSet extends TreeSet<Integer> {
-	public class Voicing extends TreeSet<Integer> {
+    public static final char FLAT = '\u266D';
+    public static final char NATURAL = '\u266E';
+
+    public class Voicing extends TreeSet<Integer> {
 		private static final long serialVersionUID = 7889990288839184253L;};
 	private static final long serialVersionUID = -3127526528166358783L;
 

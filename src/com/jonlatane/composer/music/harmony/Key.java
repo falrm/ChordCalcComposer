@@ -4,7 +4,6 @@ import android.util.Log;
 import android.util.Pair;
 import android.util.SparseArray;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
@@ -23,13 +22,13 @@ public final class Key extends Scale
 	private static final String TAG = "Key";
 	private static final char[] heptatonicNotes = { 'C', 'D', 'E', 'F', 'G', 'A', 'B' };
 	private static final HashMap<Character,Integer> heptatonicInverse = new HashMap<Character,Integer>();
-	private static final SparseArray<Character> twelveToneNames = new SparseArray<Character>();
-	static final HashMap<Character,Integer> twelveToneInverse = new HashMap<Character,Integer>();
+	public static final SparseArray<Character> TWELVE_TONE_NAMES = new SparseArray<Character>();
+	public static final HashMap<Character,Integer> TWELVE_TONE_INVERSE = new HashMap<Character,Integer>();
 	
 	// These two arrays provide us with a list of the names we personally prefer for each of the major and minor keys.
 	// When a Key is constructed, it will assume this is the root name, though that can be overridden.
-	private static final String[] majorKeys = { "C", "D"+Enharmonics.FLAT, "D", "E"+Enharmonics.FLAT, "E", "F", "G"+Enharmonics.FLAT, "G", "A"+Enharmonics.FLAT, "A", "B"+Enharmonics.FLAT, "B" };
-	private static final String[] minorKeys = { "C", "C#", "D", "E"+Enharmonics.FLAT, "E", "F", "F#", "G", "G#", "A", "B"+Enharmonics.FLAT, "B" };
+	private static final String[] majorKeys = { "C", "D"+ FLAT, "D", "E"+ FLAT, "E", "F", "G"+ FLAT, "G", "A"+ FLAT, "A", "B"+ FLAT, "B" };
+	private static final String[] minorKeys = { "C", "C#", "D", "E"+ FLAT, "E", "F", "F#", "G", "G#", "A", "B"+ FLAT, "B" };
 	
 	// ALL THE MAJOR/MINOR KEYS.  The above arrays define their default names, but they may be overridden.
 	public static final Key CMajor = new Key(new MajorScale(0));
@@ -77,28 +76,28 @@ public final class Key extends Scale
 	public static final Key CChromatic = new Key(new ChromaticScale(0));
 	
 	static{		
-		twelveToneNames.put(0, 'C');
-		twelveToneNames.put(2, 'D');
-		twelveToneNames.put(4, 'E');
-		twelveToneNames.put(5, 'F');
-		twelveToneNames.put(7, 'G');
-		twelveToneNames.put(9, 'A');
-		twelveToneNames.put(11,'B');
+		TWELVE_TONE_NAMES.put(0, 'C');
+		TWELVE_TONE_NAMES.put(2, 'D');
+		TWELVE_TONE_NAMES.put(4, 'E');
+		TWELVE_TONE_NAMES.put(5, 'F');
+		TWELVE_TONE_NAMES.put(7, 'G');
+		TWELVE_TONE_NAMES.put(9, 'A');
+		TWELVE_TONE_NAMES.put(11, 'B');
 		
-		twelveToneInverse.put('C',0);
-		twelveToneInverse.put('D',2);
-		twelveToneInverse.put('E',4);
-		twelveToneInverse.put('F',5);
-		twelveToneInverse.put('G',7);
-		twelveToneInverse.put('A',9);
-		twelveToneInverse.put('B',11);
-		twelveToneInverse.put('c',0);
-		twelveToneInverse.put('d',2);
-		twelveToneInverse.put('e',4);
-		twelveToneInverse.put('f',5);
-		twelveToneInverse.put('g',7);
-		twelveToneInverse.put('a',9);
-		twelveToneInverse.put('b',11);
+		TWELVE_TONE_INVERSE.put('C', 0);
+		TWELVE_TONE_INVERSE.put('D', 2);
+		TWELVE_TONE_INVERSE.put('E', 4);
+		TWELVE_TONE_INVERSE.put('F', 5);
+		TWELVE_TONE_INVERSE.put('G', 7);
+		TWELVE_TONE_INVERSE.put('A', 9);
+		TWELVE_TONE_INVERSE.put('B', 11);
+		TWELVE_TONE_INVERSE.put('c', 0);
+		TWELVE_TONE_INVERSE.put('d', 2);
+		TWELVE_TONE_INVERSE.put('e', 4);
+		TWELVE_TONE_INVERSE.put('f', 5);
+		TWELVE_TONE_INVERSE.put('g', 7);
+		TWELVE_TONE_INVERSE.put('a', 9);
+		TWELVE_TONE_INVERSE.put('b', 11);
 		
 		heptatonicInverse.put('C',0);
 		heptatonicInverse.put('D',1);
@@ -109,8 +108,8 @@ public final class Key extends Scale
 		heptatonicInverse.put('B',6);
 		
 		FsMajor.setRootName("F#");
-		AbMinor.setRootName("A" + Enharmonics.FLAT);
-		CbMajor.setRootName("C" + Enharmonics.FLAT);
+		AbMinor.setRootName("A" + FLAT);
+		CbMajor.setRootName("C" + FLAT);
 		CsMajor.setRootName("C#");
 		DsMinor.setRootName("D#");
 		AsMinor.setRootName("A#");
@@ -224,10 +223,10 @@ public final class Key extends Scale
 		if(p.first == p.second) {
 			char letterName = heptatonicNotes[(rootCharIndex + p.first-1) % 7];
 			result += letterName;
-			if( i < twelveToneInverse.get(letterName)) {
-				result += Enharmonics.FLAT;
+			if( i < TWELVE_TONE_INVERSE.get(letterName)) {
+				result += FLAT;
 			}
-			if( i > twelveToneInverse.get(letterName)) {
+			if( i > TWELVE_TONE_INVERSE.get(letterName)) {
 				result += '#';
 			}
 		} else {
@@ -240,15 +239,15 @@ public final class Key extends Scale
 				result += letterName;
 				
 				// Check for flats
-				if( i < twelveToneInverse.get(letterName)) {
-					result += Enharmonics.FLAT;
+				if( i < TWELVE_TONE_INVERSE.get(letterName)) {
+					result += FLAT;
 				}
 				
 				// Check for sharps/double-sharps
-				if( i > twelveToneInverse.get(letterName)) {
+				if( i > TWELVE_TONE_INVERSE.get(letterName)) {
 					result += '#';
 				}
-				if( i > (twelveToneInverse.get(letterName)+1)) {
+				if( i > (TWELVE_TONE_INVERSE.get(letterName)+1)) {
 					result += '#';
 				}
 			//represent as a flat/double-flat/sharp
@@ -257,16 +256,16 @@ public final class Key extends Scale
 				result += letterName;
 				
 				// Check for sharps
-				if( i > twelveToneInverse.get(letterName)) {
+				if( i > TWELVE_TONE_INVERSE.get(letterName)) {
 					result += '#';
 				}
 				
 				// Check for flats/double flats
-				if( i < twelveToneInverse.get(letterName)) {
-					result += Enharmonics.FLAT;
+				if( i < TWELVE_TONE_INVERSE.get(letterName)) {
+					result += FLAT;
 				}
-				if( i < twelveToneInverse.get(letterName)-1) {
-					result += Enharmonics.FLAT;
+				if( i < TWELVE_TONE_INVERSE.get(letterName)-1) {
+					result += FLAT;
 				}
 			}
 			

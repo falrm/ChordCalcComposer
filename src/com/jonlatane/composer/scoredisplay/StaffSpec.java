@@ -1,6 +1,5 @@
 package com.jonlatane.composer.scoredisplay;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +13,6 @@ import com.jonlatane.composer.music.Score.Staff.StaffDelta;
 import com.jonlatane.composer.music.Score.Staff.Voice.VoiceDelta;
 import com.jonlatane.composer.music.coverings.Clef;
 import com.jonlatane.composer.music.coverings.TimeSignature;
-import com.jonlatane.composer.music.harmony.Chord;
-import com.jonlatane.composer.music.harmony.Enharmonics;
 import com.jonlatane.composer.music.harmony.Key;
 import com.jonlatane.composer.music.harmony.PitchSet;
 import com.jonlatane.composer.music.harmony.Chord.Modulus;
@@ -460,9 +457,9 @@ public class StaffSpec {
 		// Iterate from the top note down.
 		for(int i = ps.NOTENAMES.length - 1; i >=0; i--) {
 			String name = ps.NOTENAMES[i];
-			if(name.charAt(1) == '#' || name.charAt(1) == 'b' || name.charAt(1) == Enharmonics.FLAT) {
+			if(name.charAt(1) == '#' || name.charAt(1) == 'b' || name.charAt(1) == PitchSet.FLAT) {
 				// Double flats require two columns to draw properly
-				if(name.charAt(2) == 'b' || name.charAt(1) == Enharmonics.FLAT) {
+				if(name.charAt(2) == 'b' || name.charAt(1) == PitchSet.FLAT) {
 					for( int j = 0; j < lastAccidentalLocationPerColumn.length; j++) {
 						if( (lastAccidentalLocationPerColumn[j] == null || Math.abs(Modulus.absoluteHeptDistance(name, lastAccidentalLocationPerColumn[j])) >= 5) 
 								&& (lastAccidentalLocationPerColumn[j+1] == null || Math.abs(Modulus.absoluteHeptDistance(name, lastAccidentalLocationPerColumn[j+1])) >= 5) ) {

@@ -1,58 +1,15 @@
 package com.jonlatane.composer.music.harmony;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
 
-import com.jonlatane.composer.music.Score;
-import com.jonlatane.composer.music.Score.Staff;
-import com.jonlatane.composer.music.Score.Staff.StaffDelta;
-import com.jonlatane.composer.music.Score.Staff.Voice;
-import com.jonlatane.composer.music.harmony.Chord.Modulus;
-
 import android.util.Log;
-import android.util.Pair;
 
 public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 	private static final long serialVersionUID = 5672524358L;
 	public static String TAG = "VoiceLeading";
-	private static Enharmonics DominantSeven = new Enharmonics();
-	
-	static {
-		LinkedList<Integer[]> domSevenOnes = new LinkedList<Integer[]>();
-		domSevenOnes.add(new Integer[] {0});
-		domSevenOnes.add(new Integer[] {-7});
-		domSevenOnes.add(new Integer[] {5});
-		LinkedList<Integer[]> domSevenThrees = new LinkedList<Integer[]>();
-		domSevenThrees.add(new Integer[] {0, 1});
-		LinkedList<Integer[]> domSevenFives = new LinkedList<Integer[]>();
-		domSevenFives.add(new Integer[] {0, 0, 2 });
-		domSevenFives.add(new Integer[] {0, 0, -2 });
-		LinkedList<Integer[]> domSevenSevens = new LinkedList<Integer[]>();
-		domSevenSevens.add(new Integer[] {0, 0, 0, 2 });
-		domSevenSevens.add(new Integer[] {0, 0, 0, -1 });
-		DominantSeven.add(domSevenOnes);
-		DominantSeven.add(domSevenThrees);
-		DominantSeven.add(domSevenFives);
-		DominantSeven.add(domSevenSevens);
 
-	}
-
-	public static final char FLAT = '\u266D';
-	public static final char NATURAL = '\u266E';
-	/*private Enharmonics() {
-	}
-
-	public static Enharmonics from(PitchSet ps1, Chord c1, PitchSet ps2, Chord c2) {
-		Enharmonics result = new Enharmonics();
-		//TODO
-		int[] initialNoteMap = new int[ps1.size()];
-		for(int i = 0; i < initialNoteMap.length; i++)
-			initialNoteMap[i] = 0;
-		return result;
-	}*/
-	
-	/**
+    /**
 	 * Fill in the NOTENAMES field for ps2 (if ps2.NOTENAMES is null - otherwise assume the values are accurate).
 	 * Use this to determine the note names for c1 and ps1 on the assumption that moving notes should change in
 	 * the heptatonic scale in a "readable" way.
@@ -258,15 +215,15 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 	 * @return
 	 */
 	public static String tryToName(char heptatonicName, int targetTwelveTonePitchClass, boolean doubleAccidentals) {
-		int s = Key.twelveToneInverse.get(heptatonicName);
+		int s = Key.TWELVE_TONE_INVERSE.get(heptatonicName);
 		switch(Chord.TWELVETONE.mod(s - targetTwelveTonePitchClass)) {
 			case 0: return "" + heptatonicName;
 			case 11: return heptatonicName + "#";
 			case 10: if(!doubleAccidentals) return null;
 					 else return heptatonicName + "##";
-			case 1: return new String(new char[] {heptatonicName, FLAT}); // heptatonicName + flat; 
+			case 1: return new String(new char[] {heptatonicName, PitchSet.FLAT}); // heptatonicName + flat;
 			case 2: if(!doubleAccidentals) return null;
-					else return new String(new char[] {heptatonicName, FLAT, FLAT});
+					else return new String(new char[] {heptatonicName, PitchSet.FLAT, PitchSet.FLAT});
 			default: return null;
 		}
 	}
@@ -280,10 +237,10 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 	public static int noteNameToInt(String noteName) {
 		assert(noteName.length() <= 5);
 		char[] chars = noteName.toCharArray();
-		int result = Key.twelveToneInverse.get(chars[0]);
+		int result = Key.TWELVE_TONE_INVERSE.get(chars[0]);
 		
 		for( int i = 1; i < chars.length; i = i+1) {
-			if( chars[i] == 'b' || chars[i] == FLAT )
+			if( chars[i] == 'b' || chars[i] == PitchSet.FLAT )
 				result = result - 1;
 			else if( chars[i] == '#' )
 				result = result + 1;
@@ -303,9 +260,9 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 	 */
 	public boolean isFlat(String noteName) {
 		if(noteName.length() > 1) {
-			if(noteName.charAt(1) == 'b' || noteName.charAt(1) == FLAT) {
+			if(noteName.charAt(1) == 'b' || noteName.charAt(1) == PitchSet.FLAT) {
 				if(noteName.length() > 2) {
-					if(noteName.charAt(2) == 'b' || noteName.charAt(2) == FLAT)
+					if(noteName.charAt(2) == 'b' || noteName.charAt(2) == PitchSet.FLAT)
 						return false;
 					else
 						return true;
@@ -325,8 +282,8 @@ public class Enharmonics extends LinkedList<LinkedList<Integer[]>>{
 	 */
 	public boolean isDoubleFlat(String noteName) {
 		if(noteName.length() > 2 
-				&& (noteName.charAt(1) == 'b' || noteName.charAt(1) == FLAT)
-				&& (noteName.charAt(2) == 'b' || noteName.charAt(2) == FLAT))
+				&& (noteName.charAt(1) == 'b' || noteName.charAt(1) == PitchSet.FLAT)
+				&& (noteName.charAt(2) == 'b' || noteName.charAt(2) == PitchSet.FLAT))
 			return true;
 		else return false;
 	}
