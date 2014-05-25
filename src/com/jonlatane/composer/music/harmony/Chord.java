@@ -875,7 +875,7 @@ public class Chord extends PitchSet {
 
 				// m3-5M7 (diminished major 7 type chord)
 				if (c.contains(root + 11)) {
-					certainty += 6;
+					certainty += 5;
 					name = name + diminished;
 					// m3-5M7M9
 					if (c.contains(root + 2)) {
