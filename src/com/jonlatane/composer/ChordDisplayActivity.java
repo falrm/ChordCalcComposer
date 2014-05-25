@@ -3,9 +3,8 @@ package com.jonlatane.composer;
 import java.util.Arrays;
 
 import com.jonlatane.composer.io.*;
-import com.jonlatane.composer.music.Score;
 import com.jonlatane.composer.music.harmony.*;
-import com.jonlatane.composer.scoredisplay.ScoreLayout;
+import com.jonlatane.composer.music.harmony.Enharmonics;
 
 import android.app.*;
 import android.content.Context;
@@ -86,7 +85,9 @@ public class ChordDisplayActivity extends Activity
 		// Attach the tone controller to the keyboard
 		ToneControllerFragment tc = (ToneControllerFragment) getFragmentManager().findFragmentById(R.id.toneControllerFragment);
 		tc.attachToneGenerator(_keyboard.getToneGenerator());
-		
+
+        _keyboard.linkView(tc.getView());
+
 		// Set up lead sheet display
 		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
         //listview.setAdapter(_adapter);
