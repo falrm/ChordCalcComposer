@@ -1,5 +1,6 @@
 package com.jonlatane.composer.io;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,11 @@ import android.widget.TextView;
 public class TwelthKeyboardFragment extends Fragment {
 	private static final int[] _slots = {R.id.bestChord, R.id.second, R.id.third, R.id.fourth, R.id.fifth, R.id.sixth, R.id.seventh, R.id.eighth, R.id.ninth, R.id.tenth, R.id.eleventh};
 	private static final String TAG = "TwelthKeyboardFragment";
+
 	private Integer _initialRhythmAreaWidth;
 	private KeyboardScroller _keyboardScroller;
+    private Collection<View> _linkedViews = new LinkedList<View>();
+
 	public KeyboardScroller getKeyboardScroller() {
 		return _keyboardScroller;
 	}
@@ -194,18 +198,40 @@ public class TwelthKeyboardFragment extends Fragment {
 			enableHarmonicMode();
 		return _kbdIO.isHarmonic();
 	}
-	
+
+    /**
+     * Allows hiding/showing to stack views atop the keyboard.  The first view to be linked should
+     * be the view most directly above the Fragment.
+     *
+     * @param v
+     */
+    public void linkView(View v) {
+        _linkedViews.add(v);
+    }
+    public void unlinkView(View v) {
+        _linkedViews.remove(v);
+    }
+
 	public boolean keyboardIsEnabled() {
 		return getView().getTranslationY() == 0;
 	}
 	public void hideKeyboardFragment() {
 		final View v = getView();
-		v.animate().translationY(v.getHeight());
+        int netHeight = v.getHeight();
+		v.animate().translationY(netHeight);
+        for(View linked : _linkedViews) {
+            netHeight += linked.getHeight();
+            linked.animate().translationY(netHeight);
+        }
 	}
 	public void showKeyboardFragment() {
 		final View v = getView();
 		v.animate().translationY(0);
+        for(View linked : _linkedViews) {
+            linked.animate().translationY(0);
+        }
 	}
+
 	public void toggleKeyboardFragment() {
 		if(!keyboardIsEnabled())
 			showKeyboardFragment();
