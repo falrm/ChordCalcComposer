@@ -29,7 +29,7 @@ import android.widget.TextView;
  *
  */
 public class TwelthKeyboardFragment extends Fragment {
-	private static final int[] _slots = {R.id.bestChord, R.id.second, R.id.third, R.id.fourth, R.id.fifth, R.id.sixth, R.id.seventh, R.id.eighth, R.id.ninth, R.id.tenth, R.id.eleventh};
+	private static final int[] _slots = {R.id.bestChord, R.id.second, R.id.third, R.id.fourth, R.id.fifth, R.id.sixth, R.id.seventh, R.id.eighth, R.id.ninth, R.id.tenth, R.id.eleventh, R.id.twelfth};
 	private static final String TAG = "TwelthKeyboardFragment";
 
 	private Integer _initialRhythmAreaWidth;
@@ -57,8 +57,15 @@ public class TwelthKeyboardFragment extends Fragment {
 		_kbdIO = new KeyboardIOHandler(this, result);
 		_kbdIO.harmonicModeOn();
 		_chordScroller = (HorizontalScrollView)result.findViewById(R.id.chordScroller);
-        
-		//Set up the keyboardScroller itself
+
+        //Use a properly-rendering font for the chord display area
+        Typeface face=Typeface.createFromAsset(result.getContext().getAssets(), "fonts/DroidSansFallback.ttf");
+        for(int i : _slots) {
+            TextView tv = (TextView) result.findViewById(i);
+            tv.setTypeface(face);
+        }
+
+        //Set up the keyboardScroller itself
 		_keyboardScroller = (KeyboardScroller)result.findViewById(R.id.kbScroller);
 		
 		//Set fonts
