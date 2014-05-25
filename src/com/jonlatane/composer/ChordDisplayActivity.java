@@ -83,10 +83,10 @@ public class ChordDisplayActivity extends Activity
 		_keyboard.disableRhythmicMode();
 		
 		// Attach the tone controller to the keyboard
-		//ToneControllerFragment tc = (ToneControllerFragment) getFragmentManager().findFragmentById(R.id.toneControllerFragment);
-		//tc.attachToneGenerator(_keyboard.getToneGenerator());
+		ToneControllerFragment tc = (ToneControllerFragment) getFragmentManager().findFragmentById(R.id.toneControllerFragment);
+		tc.attachToneGenerator(_keyboard.getToneGenerator());
 
-        //_keyboard.linkView(tc.getView());
+        _keyboard.linkView(tc.getView());
 
 		// Set up lead sheet display
 		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
@@ -142,9 +142,9 @@ public class ChordDisplayActivity extends Activity
 //		    case R.id.toggleChordsAB:
 //		    	_myKeyboard.toggleHarmonicMode();
 //		    	break;*/
-//		    case R.id.toggleKeyboardAB:
-//		    	_keyboard.toggleKeyboardFragment();
-//		    	break;
+		    case R.id.toggleKeyboardAB:
+		    	_keyboard.toggleKeyboardFragment();
+		    	break;
 //		    case R.id.debugFunction1:
 //		    	((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
 //		    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
