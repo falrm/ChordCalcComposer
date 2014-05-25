@@ -1,18 +1,13 @@
 package com.jonlatane.composer.music;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.NoSuchElementException;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import android.provider.ContactsContract.CommonDataKinds.Note;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
