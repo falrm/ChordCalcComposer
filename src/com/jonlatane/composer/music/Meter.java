@@ -1,8 +1,8 @@
 package com.jonlatane.composer.music;
 
-import java.util.*;
-
 import com.jonlatane.composer.music.coverings.TimeSignature;
+
+import java.util.Map;
 
 /**
  * A Meter keeps track of time signatures.  If it is empty, it is freeform.
@@ -14,17 +14,26 @@ public class Meter extends RhythmMap<TimeSignature> {
 		super();
 	}
 	
+	/**
+	 * Return the next downbeat (beat 1) after the given point
+	 * @param r
+	 * @return
+	 */
 	public Rational nextDownBeat(Rational r) {
-		Rational meterEstablishedAt = _data.lowerKey(r);
+		Rational meterEstablishedAt = _data.floorKey(r);
 		TimeSignature ts = _data.get(meterEstablishedAt);
 		Rational result = meterEstablishedAt;
-		Rational inc = new Rational(ts.TOP, 1);
+		Rational inc = Rational.get(ts.TOP);
 		while(result.compareTo(r) <= 0) {
 			result = result.plus( inc );
 		}
+		
+		// Look ahead - if a new Time Signature overrode our
+		// old time signature before it completed a measure
+		// we need to compensate for that.
 		Rational higher = _data.higherKey(r);
 		
-		if(result.compareTo(higher) > 0)
+		if(higher != null && result.compareTo(higher) > 0)
 			result = higher;
 
 		return result;
@@ -35,12 +44,17 @@ public class Meter extends RhythmMap<TimeSignature> {
 		if(ts == null) {
 			return null;
 		}
-		Rational meterEstablishedAt = _data.lowerKey(r);
+		Rational meterEstablishedAt = _data.floorKey(r);
 		if(meterEstablishedAt == null)
 			return null;
-		Rational n = r.minus(meterEstablishedAt);
-		Integer i = Double.valueOf( n.toDouble() ).intValue() % ts.TOP;
-		return n.minus( new Rational(ts.TOP, 1).times(new Rational(i, 1)) );
+
+        Rational newResult = r.minus(meterEstablishedAt).mod(new Rational(ts.TOP)).plus(Rational.ONE);
+        return newResult;
+
+		//Rational n = r.minus(meterEstablishedAt);
+		//Integer i = Double.valueOf( n.toDouble() ).intValue() % ts.TOP;
+		//Rational result = n.minus( new Rational(ts.TOP, 1).times(new Rational(i, 1)) );
+		//return result;
 	}
 	
 	public Integer getMeasureOf(Rational r) {

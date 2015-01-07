@@ -4,6 +4,9 @@
    <item android:id="@+id/toggleKeyboardAB"
           android:title="KB"
           android:showAsAction="ifRoom" />
+    <item android:id="@+id/toggleFX"
+        android:title="FX"
+        android:showAsAction="ifRoom" />
     <!--<item android:id="@+id/toggleRhythmAB"
           android:title="Rhythm"
           android:showAsAction="ifRoom" />

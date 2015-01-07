@@ -1,25 +1,28 @@
 package com.jonlatane.composer.io;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import android.animation.IntEvaluator;
+import android.animation.ValueAnimator;
+import android.app.Fragment;
+import android.graphics.Typeface;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.jonlatane.composer.R;
 import com.jonlatane.composer.music.harmony.Chord;
 import com.jonlatane.composer.music.harmony.Key;
 
-import android.animation.IntEvaluator;
-import android.animation.ValueAnimator;
-import android.app.Fragment;
-import android.graphics.Typeface;
-import android.os.*;
-import android.util.Log;
-import android.view.*;
-import android.widget.HorizontalScrollView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * This is the widget for the keyboard input system.  This is a Fragment that can be added to the bottom of any layout to provide
@@ -234,9 +237,9 @@ public class TwelthKeyboardFragment extends Fragment {
 	public void showKeyboardFragment() {
 		final View v = getView();
 		v.animate().translationY(0);
-        for(View linked : _linkedViews) {
-            linked.animate().translationY(0);
-        }
+//        for(View linked : _linkedViews) {
+//            linked.animate().translationY(0);
+//        }
 	}
 
 	public void toggleKeyboardFragment() {

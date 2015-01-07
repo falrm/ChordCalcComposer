@@ -9,4 +9,8 @@ public class TimeSignature {
 		this.TOP = beatsPerMeasure;
 		this.BOTTOM = noteTypeForBeat;
 	}
+    @Override
+    public String toString() {
+        return Integer.toString(TOP) + "|" + Integer.toString(BOTTOM);
+    }
 }

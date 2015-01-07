@@ -1,13 +1,5 @@
 package com.jonlatane.composer.music;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
@@ -17,7 +9,21 @@ import com.jonlatane.composer.music.Score.Staff.Voice;
 import com.jonlatane.composer.music.Score.Staff.Voice.VoiceDelta;
 import com.jonlatane.composer.music.coverings.Clef;
 import com.jonlatane.composer.music.coverings.TimeSignature;
-import com.jonlatane.composer.music.harmony.*;
+import com.jonlatane.composer.music.harmony.Chord;
+import com.jonlatane.composer.music.harmony.Enharmonics;
+import com.jonlatane.composer.music.harmony.Key;
+import com.jonlatane.composer.music.harmony.PitchSet;
+import com.jonlatane.composer.music.harmony.Scale;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * A Score is an object that is most usefully accessed/rendered via ScoreDeltas through its iterator.  It
@@ -173,10 +179,45 @@ public class Score {
 				public class VoiceDeltaStuff {
 					public PitchSet NOTES = null;
 					public Rational TIME = null;
+                    @Override
+                    public String toString() {
+                        StringBuffer result = new StringBuffer("{");
+                        result.append(NOTES);
+                        result.append("@");
+                        result.append(TIME);
+                        return result.toString();
+                    }
 				}
 				
 				public VoiceDeltaStuff ESTABLISHED = new VoiceDeltaStuff();
 				public VoiceDeltaStuff CHANGED = new VoiceDeltaStuff();
+				
+				public Rational getNoteheadAtLocation() {
+					Rational result = null;
+					if(CHANGED.NOTES != null) {
+						result = CHANGED.NOTES.TYING[0];
+					} else if(ESTABLISHED.NOTES != null) {
+						for(int idx = 0; idx < ESTABLISHED.NOTES.TYING.length - 1; idx++){
+							Rational r = ESTABLISHED.TIME.plus(ESTABLISHED.NOTES.TYING[idx]);
+							if(LOCATION.equals(r)) {
+								result = ESTABLISHED.NOTES.TYING[idx + 1] .minus( ESTABLISHED.NOTES.TYING[idx] );
+							}
+						}
+					}
+					
+					return result;
+				}
+
+                @Override
+                public String toString() {
+                    StringBuffer result = new StringBuffer();
+                    result.append("CHANGED:");
+                    result.append(CHANGED);
+                    result.append("\n");
+                    result.append("ESTABLISHED:");
+                    result.append(ESTABLISHED);
+                    return result.toString();
+                }
 			}
 			
 			public VoiceDelta voiceDeltaAt(Rational r) {
@@ -224,12 +265,38 @@ public class Score {
 				public Clef CLEF = null;
 				public Key KEY = null;
 				public Chord CHORD = null;
+                @Override
+                public String toString() {
+                    StringBuffer result = new StringBuffer();
+                    result.append("CLEF: ");
+                    result.append(CLEF);
+                    result.append("\n");
+                    result.append("KEY: ");
+                    result.append(KEY);
+                    result.append("\n");
+                    result.append("CHORD: ");
+                    result.append(CHORD);
+                    return result.toString();
+                }
 			}
 			
 			public StaffDeltaStuff ESTABLISHED = new StaffDeltaStuff();
 			public StaffDeltaStuff CHANGED = new StaffDeltaStuff();
 			
 			public Voice.VoiceDelta[] VOICES;
+            @Override
+            public String toString() {
+                StringBuffer result = new StringBuffer();
+                result.append("CHANGED:\n");
+                result.append(CHANGED);
+                result.append("\n\n");
+                result.append("ESTABLISHED:\n");
+                result.append(ESTABLISHED);
+                result.append("\n\n");
+                result.append("VOICES:\n");
+                result.append(Arrays.toString(VOICES));
+                return result.toString();
+            }
 		}
 		
 		/**
@@ -281,11 +348,7 @@ public class Score {
 		
 		/**
 		 * Try to pick the best chord name for the given passage.  
-		 * 
-		 * @param start
-		 * @param end
-		 * @param howMany
-		 * @return
+		 *
 		 */
 		public TreeMap<Integer,List<String>> guessChord(Rational start, Rational end, int preferredCharacteristicLength) {
 			TreeMap<Integer,List<String>> result = new TreeMap<Integer,List<String>>();
@@ -402,6 +465,7 @@ public class Score {
 		 * @param start
 		 * @param end
 		 */
+		@Deprecated
 		public void realizeEnharmonics(Rational start, Rational end) {
 			Iterator<StaffDelta> backwards = reverseStaffIterator(end);
 			
@@ -470,11 +534,30 @@ public class Score {
 		 */
 		public class ScoreDeltaStuff {
 			public TimeSignature TS = null;
+            @Override
+            public String toString() {
+                return "TS: " + String.valueOf(TS);
+            }
 		}
 		public ScoreDeltaStuff ESTABLISHED = new ScoreDeltaStuff();
 		public ScoreDeltaStuff CHANGED = new ScoreDeltaStuff();
 		
 		public Staff.StaffDelta[] STAVES;
+
+        @Override
+        public String toString() {
+            StringBuffer result = new StringBuffer();
+            result.append("{" + String.valueOf(LOCATION) + ", beat " + String.valueOf(BEATNUMBER) + " of measure}\n");
+            result.append("CHANGED:");
+            result.append(CHANGED);
+            result.append("\n");
+            result.append("ESTABLISHED:\n");
+            result.append(ESTABLISHED);
+            result.append("\n\n");
+            result.append("STAVES:\n");
+            result.append(Arrays.toString(STAVES));
+            return result.toString();
+        }
 	}
 	
 	public ScoreDelta scoreDeltaAt(Rational r) {
@@ -526,7 +609,7 @@ public class Score {
 	}
 	
 	/**
-	 * Return a ScoreDelta iterator that goes forewards from the supplied point
+	 * Return a ScoreDelta iterator that goes forward from the supplied point
 	 * 
 	 * @param start the point to iterate  from
 	 * @return
@@ -594,9 +677,9 @@ public class Score {
 				result.addAll(v._notes.getRhythm());
 				for(Map.Entry<Rational, PitchSet> e : v._notes._data.entrySet()) {
 					result.add(e.getKey());
-					if(e.getValue() != null && e.getValue().NOTEHEADLOCS != null)
-						for(Rational r : e.getValue().NOTEHEADLOCS) {
-							result.add(r);
+					if(e.getValue() != null && e.getValue().TYING != null)
+						for(Rational tiedNoteheadPosition : e.getValue().TYING) {
+							result.add(e.getKey().plus(tiedNoteheadPosition));
 						}
 				}
 			}
@@ -646,19 +729,36 @@ public class Score {
 		
 	}
 
-	
+    /**
+     * Return the array of Staves present in the Score
+     * @return
+     */
 	public Staff[] getStaves() {
 		return _staves;
 	}
-	
+
+    /**
+     * Get the Staff at a given index
+     * @param n
+     * @return
+     */
 	public Staff getStaff(int n) {
 		return _staves[n];
 	}
-	
+
+    /**
+     * Get the number of Staves in this Score
+     * @return
+     */
 	public int getNumStaves() {
 		return _staves.length;
 	}
-	
+
+    /**
+     * Remove the Staff at the given index
+     * @param n
+     * @return
+     */
 	public Staff removeStaff(int n) {
 		Staff result = _staves[n];
 		Staff[] newStaves = new Staff[_staves.length-1];
@@ -671,7 +771,12 @@ public class Score {
 		}
 		return result;
 	}
-	
+
+    /**
+     * Swap two Staves
+     * @param a
+     * @param b
+     */
 	public void swapStaves(int a, int b) {
 		Staff staffA = _staves[a];
 		_staves[a] = _staves[b];
@@ -797,7 +902,7 @@ public class Score {
 				c2Named[i] = chord;
 				
 				// If there's a key change, notes should be named from THAT key rather
-				// then voice leadings as we work our way backwards.
+				// than voice leadings as we work our way backwards.
 				if( sd.CHANGED.KEY != null) {
 					for(int j = 0; j < s._staves[i]._voices.length; j++) {
 						ps2Named[i][j] = null;
@@ -816,6 +921,8 @@ public class Score {
 	
 	public static void resolveTies(Score s, int maxNumberOfDotsAllowed) {
 		Iterator<ScoreDelta> itr = s.reverseScoreIterator(s.getFine(), false);
+		
+		//Array ordering: Rational[STAFFNUMBER][VOICENUMBER]
 		Rational[][] lastChangedNoteLocs = new Rational[s.getNumStaves()][];
 		for(int i = 0; i < s.getNumStaves(); i++) {
 			lastChangedNoteLocs[i] = new Rational[s.getStaff(i).getNumVoices()];
@@ -830,6 +937,8 @@ public class Score {
 				for(int j = 0; j < s._staves[i]._voices.length; j++) {
 					VoiceDelta vd = sd.VOICES[j];
 					if(vd.CHANGED.NOTES != null) {
+						// This is a list of all the places a note MUST
+						// be divided, i.e. barlines etc
 						LinkedList<Rational> locations = new LinkedList<Rational>();
 						
 						// Divide the note up by the number of bars it's in first.
@@ -885,6 +994,16 @@ public class Score {
 							locations.addLast(locations.getLast().plus(headLength));
 							duration = duration.minus(headLength);
 						}
+						Collections.sort(locations);
+						vd.CHANGED.NOTES.TYING = new Rational[locations.size()+1];
+						Rational headLocation = vd.LOCATION;
+						int idx = 0;
+						for(Rational location : locations) {
+							Rational noteheadDuration = location.minus(headLocation);
+							vd.CHANGED.NOTES.TYING[idx++] = noteheadDuration;
+							headLocation = headLocation.plus(noteheadDuration);
+						}
+						vd.CHANGED.NOTES.TYING[idx] = lastChangedNoteLocs[i][j].minus(headLocation);
 						
 						//TODO finish this
 					}
@@ -902,6 +1021,7 @@ public class Score {
 	 */
 	public static void testScore(Score s) {
 		fillEnharmonics(s);
+		resolveTies(s);
 		
 		// Iterate forward through the Score to read its contents
 		Iterator<ScoreDelta> itr = s.scoreIterator(Rational.ZERO);

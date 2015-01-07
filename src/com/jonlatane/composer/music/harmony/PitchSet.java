@@ -1,8 +1,10 @@
 package com.jonlatane.composer.music.harmony;
 
-import java.util.*;
-
 import com.jonlatane.composer.music.Rational;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.TreeSet;
 
 /**
 * A PitchSet represents a set of pitches.  In this model, middle C (C4) is 0.
@@ -28,16 +30,19 @@ public class PitchSet extends TreeSet<Integer> {
 	public String[] NOTENAMES = null;
 	
 	/**
-	 * An array of at minimum two elements from which the rendering layer may choose to draw noteheads.
-	 * The first element, in the context of a StaffDelta, should always be the corresponding LOCATION.
-	 * The last element should always be the LOCATION of the next StaffDelta with a CHANGED PitchSet.
-	 * For example, the NOTEHEADLOCS [1, 2, 2 1/4] would represent a quarter tied to a sixteenth.
-	 * [1, 2 1/4, 2 3/4] would represent a dotted quarter tied to a sixteenth, identical otherwise to
-	 * [1, 2 3/4] a double-dotted note.
-	 * 
-	 * (The above examples assume a TimeSignature has BOTTOM = 4.) 
+	 * An array of at minimum one element representing how to draw a note.  PitchSets do not manage these,
+	 * they are managed by a caching layer based on context.
+	 * <p>
+	 * In 4/4 time:
+	 * </p>
+	 * <ul>
+	 * 	<li>[1] is a quarter note</li>
+	 *  <li>[1, 1 1/4] is a quarter note tied to a sixteenth</li>
+	 *  <li>[1, 1 1/2, 1 3/4] is a quarter note tied to an eighth tied to a sixteenth</li>
+	 *  <li>[1 3/4] is a double dotted quarter note, equivalent musically to the previous entry</li>
+	 * </ul> 
 	 */
-	public Rational[] NOTEHEADLOCS = null;
+	public Rational[] TYING = null;
 	
 	
 	public PitchSet() {
@@ -55,7 +60,6 @@ public class PitchSet extends TreeSet<Integer> {
 	
 	/**
 	 * It is imperative to use this and NOT a null pointer to represent a rest.
-	 * Null pointers indicate the end of the score.
 	 */
 	public static final PitchSet REST = new PitchSet();
 	
@@ -94,4 +98,15 @@ public class PitchSet extends TreeSet<Integer> {
 		}
 		return result;
 	}
+
+    @Override
+    public String toString() {
+        StringBuffer result = new StringBuffer();
+        if(NOTENAMES != null) {
+            result.append(Arrays.toString(NOTENAMES));
+            result.append(" ");
+        }
+        result.append(super.toString());
+        return result.toString();
+    }
 }

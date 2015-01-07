@@ -4,25 +4,34 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 	
-    <com.jonlatane.composer.scoredisplay.ScoreLayout
+    <!--<com.jonlatane.composer.scoredisplay.ScoreLayout
         android:id="@+id/scoreLayout"
         android:layout_alignParentTop="true"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-        
+        android:layout_height="wrap_content" /> -->
+    <com.jonlatane.composer.scoredisplay3.SystemRecyclerView
+        android:id="@+id/systemRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="700px" />
+    <com.jonlatane.composer.scoredisplay3.SystemRecyclerView
+        android:id="@+id/systemRecyclerView2"
+        android:layout_width="match_parent"
+        android:layout_height="700px"
+        android:layout_below="@id/systemRecyclerView"/>
+
     <fragment
-        android:id="@+id/kbFragment"
+        android:id="@+id/toneControllerFragment"
+        android:name="com.jonlatane.composer.io.ToneControllerFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/kbFragment"
+        tools:layout="@layout/tonecontroller" />
+    <fragment
+        android:id="@id/kbFragment"
         android:name="com.jonlatane.composer.io.TwelthKeyboardFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         tools:layout="@layout/twelthkeyboard" />
-	<fragment
-        android:id="@+id/toneControllerFragment"
-        android:name="com.jonlatane.composer.io.ToneControllerFragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/kbFragment"
-        tools:layout="@layout/tonecontroller" />
 
 </RelativeLayout>

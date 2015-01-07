@@ -1,22 +1,21 @@
 package com.jonlatane.composer.io;
 
-import java.util.Arrays;
-import java.util.Collections;
-
-import com.jonlatane.composer.R;
-import com.jonlatane.composer.VerticalSeekBar;
-
 import android.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.LinearLayout;
+
+import com.jonlatane.composer.R;
+import com.jonlatane.composer.VerticalSeekBar;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 public class ToneControllerFragment extends Fragment {
 	public static final String TAG = "ToneControllerFragment";
@@ -123,4 +122,24 @@ public class ToneControllerFragment extends Fragment {
 		}
 		return result;
 	}
+
+    public boolean toneControllerEnabled() {
+        return getView().getTranslationY() == 0;
+    }
+    public void hideToneController() {
+        final View v = getView();
+        int netHeight = v.getHeight();
+        v.animate().translationY(netHeight);
+    }
+    public void showToneController() {
+        final View v = getView();
+		v.animate().translationY(0);
+    }
+
+    public void toggleToneController() {
+        if(!toneControllerEnabled())
+            showToneController();
+        else
+            hideToneController();
+    }
 }

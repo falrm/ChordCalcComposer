@@ -410,17 +410,17 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 		Boolean isRest = null;
 		if(vd.CHANGED.NOTES != null) {
 			assert(vd.CHANGED.NOTES == vd.ESTABLISHED.NOTES);
-			assert(vd.CHANGED.NOTES.NOTEHEADLOCS != null);
-			assert(vd.LOCATION.equals(vd.CHANGED.TIME) && vd.LOCATION.equals(vd.CHANGED.NOTES.NOTEHEADLOCS[0]));
-			duration = vd.CHANGED.NOTES.NOTEHEADLOCS[1].minus(vd.CHANGED.NOTES.NOTEHEADLOCS[0]);
+			assert(vd.CHANGED.NOTES.TYING != null);
+			assert(vd.LOCATION.equals(vd.CHANGED.TIME) && vd.LOCATION.equals(vd.CHANGED.NOTES.TYING[0]));
+			duration = vd.CHANGED.NOTES.TYING[1].minus(vd.CHANGED.NOTES.TYING[0]);
 			isRest = vd.CHANGED.NOTES.isEmpty();
 		} else if(vd.ESTABLISHED.NOTES != null) {
 			Rational now = vd.LOCATION;
-			for(int i = 0; i < vd.ESTABLISHED.NOTES.NOTEHEADLOCS.length; i++) {
-				Rational r = vd.ESTABLISHED.NOTES.NOTEHEADLOCS[i];
+			for(int i = 0; i < vd.ESTABLISHED.NOTES.TYING.length; i++) {
+				Rational r = vd.ESTABLISHED.NOTES.TYING[i];
 				if(r.equals(now)) {
-					assert( (i+1) < vd.ESTABLISHED.NOTES.NOTEHEADLOCS.length);
-					duration = vd.ESTABLISHED.NOTES.NOTEHEADLOCS[i+1].minus(r);
+					assert( (i+1) < vd.ESTABLISHED.NOTES.TYING.length);
+					duration = vd.ESTABLISHED.NOTES.TYING[i+1].minus(r);
 				}
 			}
 			isRest = vd.ESTABLISHED.NOTES.isEmpty();

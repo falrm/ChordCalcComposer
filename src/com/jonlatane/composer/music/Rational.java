@@ -31,7 +31,11 @@ public class Rational implements Comparable<Rational> {
 	
     private int num;   // the numerator
     private int den;   // the denominator
-	
+
+    public Rational(int integer) {
+        this(integer,1);
+    }
+
     // create and initialize a new Rational object
     public Rational(int numerator, int denominator) {
 		
@@ -234,4 +238,29 @@ public class Rational implements Comparable<Rational> {
 			return new Rational(sgn*intPart,1);
 		}
 	}
+
+    /**
+     * For instance, 2 mod 3/2 is 1/2.
+     * @param modulus a positive Rational number
+     * @return
+     */
+    public Rational mod(Rational modulus) {
+        Rational result = this;
+        while(result.compareTo(modulus) >= 0) {
+            result = result.minus(modulus);
+        }
+        while(result.compareTo(Rational.ZERO) < 0) {
+            result = result.plus(modulus);
+        }
+        return result;
+    }
+
+    public static Rational get(int num) {
+        return get(num, 1);
+    }
+
+    public static Rational get(int num, int den) {
+        return new Rational(num, den);
+    }
+
 }

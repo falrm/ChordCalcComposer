@@ -1,17 +1,27 @@
 package com.jonlatane.composer;
 
-import java.util.Arrays;
-
-import com.jonlatane.composer.io.*;
-import com.jonlatane.composer.music.harmony.*;
-import com.jonlatane.composer.music.harmony.Enharmonics;
-
-import android.app.*;
+import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
-import android.os.*;
-import android.util.*;
-import android.view.*;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+
+import com.jonlatane.composer.io.ManagedToneGenerator;
+import com.jonlatane.composer.io.ToneControllerFragment;
+import com.jonlatane.composer.io.TwelthKeyboardFragment;
+import com.jonlatane.composer.music.Score;
+import com.jonlatane.composer.music.harmony.Chord;
+import com.jonlatane.composer.music.harmony.Enharmonics;
+import com.jonlatane.composer.music.harmony.Key;
+import com.jonlatane.composer.music.harmony.PitchSet;
+import com.jonlatane.composer.scoredisplay3.ScoreDataAdapter;
+import com.jonlatane.composer.scoredisplay3.SystemRecyclerView;
+
+import java.util.Arrays;
 
 /**
  * The ScoreEditingActivity allows interaction with a Score.  You can scroll horizontally at all times.  To make a
@@ -21,7 +31,8 @@ import android.view.*;
  */
 public class ChordDisplayActivity extends Activity
 {
-	private TwelthKeyboardFragment _keyboard;
+	private TwelthKeyboardFragment keyboard;
+    private ToneControllerFragment toneController;
 	//private KeyboardIOHandler _myKbdIO;
 	//private KeyboardScroller _keyboardScroller;
 	//private HorizontalScrollView _chordScroller;
@@ -79,18 +90,26 @@ public class ChordDisplayActivity extends Activity
 		setContentView(R.layout.chorddisplayactivity);
 		
 		// Set up the keyboard
-		_keyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.kbFragment);
-		_keyboard.disableRhythmicMode();
+		keyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.kbFragment);
+		keyboard.disableRhythmicMode();
 		
 		// Attach the tone controller to the keyboard
-		ToneControllerFragment tc = (ToneControllerFragment) getFragmentManager().findFragmentById(R.id.toneControllerFragment);
-		tc.attachToneGenerator(_keyboard.getToneGenerator());
-
-        _keyboard.linkView(tc.getView());
+        toneController = (ToneControllerFragment) getFragmentManager().findFragmentById(R.id.toneControllerFragment);
+        toneController.attachToneGenerator(keyboard.getToneGenerator());
+        keyboard.linkView(toneController.getView());
 
 		// Set up lead sheet display
 		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
         //listview.setAdapter(_adapter);
+        // Test Code
+        SystemRecyclerView srv = (SystemRecyclerView)findViewById(R.id.systemRecyclerView);
+        SystemRecyclerView srv2 = (SystemRecyclerView)findViewById(R.id.systemRecyclerView2);
+        Score subject = Score.twinkleTwinkle();
+        Score.testScore(subject);
+        srv.setAdapter(new ScoreDataAdapter(subject));
+        srv2.setAdapter(new ScoreDataAdapter(subject));
+        srv.setViewBelow(srv2);
+        srv2.setViewAbove(srv);
 	}
 	
 	// Handles all Volume key presses as media volume control
@@ -114,7 +133,7 @@ public class ChordDisplayActivity extends Activity
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		_keyboard.onSaveInstanceState(outState);
+		keyboard.onSaveInstanceState(outState);
 	}
 	
 	@Override
@@ -143,8 +162,11 @@ public class ChordDisplayActivity extends Activity
 //		    	_myKeyboard.toggleHarmonicMode();
 //		    	break;*/
 		    case R.id.toggleKeyboardAB:
-		    	_keyboard.toggleKeyboardFragment();
+		    	keyboard.toggleKeyboardFragment();
 		    	break;
+            case R.id.toggleFX:
+                toneController.toggleToneController();
+                break;
 //		    case R.id.debugFunction1:
 //		    	((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
 //		    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();

@@ -42,7 +42,7 @@ public class Clef {
 	}
 	
 	/**
-	 * Get the number of steps
+	 * Get the number of steps from the center of the staff to the note with the given name
 	 * @param noteName
 	 * @return
 	 */
@@ -84,36 +84,15 @@ public class Clef {
 		String topNoteName = ps.NOTENAMES[ps.NOTENAMES.length - 1];
 		
 		return new Pair<Integer, Integer>(getHeptatonicStepsFromCenter(bottomNoteName), getHeptatonicStepsFromCenter(topNoteName));
-		/*
-		// To be easy, let's just solve this for the Treble clef.
-		int bottomNoteValueFromTreble, topNoteValueFromTreble;
-		switch(bottomNoteName.charAt(0)) {
-			case 'B': bottomNoteValueFromTreble = 0; break;
-			case 'C': bottomNoteValueFromTreble = -6; break;
-			case 'D': bottomNoteValueFromTreble = -5; break;
-			case 'E': bottomNoteValueFromTreble = -4; break;
-			case 'F': bottomNoteValueFromTreble = -3; break;
-			case 'G': bottomNoteValueFromTreble = -2; break;
-			case 'A': bottomNoteValueFromTreble = -1; break;
-			default: throw new Error();
-		}
-		switch(topNoteName.charAt(0)) {
-			case 'B': topNoteValueFromTreble = 0; break;
-			case 'C': topNoteValueFromTreble = -6; break;
-			case 'D': topNoteValueFromTreble = -5; break;
-			case 'E': topNoteValueFromTreble = -4; break;
-			case 'F': topNoteValueFromTreble = -3; break;
-			case 'G': topNoteValueFromTreble = -2; break;
-			case 'A': topNoteValueFromTreble = -1; break;
-			default: throw new Error();
-		}
-		int bottomNoteOctave = Character.getNumericValue( bottomNoteName.charAt(bottomNoteName.length()-1) );
-		bottomNoteValueFromTreble += 7 * ( Character.getNumericValue( bottomNoteName.charAt(bottomNoteName.length()-1) ) - 4);
-		topNoteValueFromTreble += 7 * ( Character.getNumericValue( topNoteName.charAt(topNoteName.length()-1) ) - 4);
-		
-		bottomNoteValueFromTreble += TYPE;
-		topNoteValueFromTreble += TYPE;
-		
-		return new Pair<Integer, Integer>(bottomNoteValueFromTreble, topNoteValueFromTreble);*/
 	}
+
+    public String toString() {
+        switch(TYPE) {
+            case TREBLE: return "Treble";
+            case BASS: return "Bass";
+            case TREBLETENOR: return "Tenor Treble";
+            case ALTO: return "Alto";
+            default: return Integer.toString(TYPE);
+        }
+    }
 }
