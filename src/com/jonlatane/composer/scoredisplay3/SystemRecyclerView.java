@@ -15,19 +15,22 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * This View lays out a horizontal list (via a ScoreDataAdapter) of ScoreDeltaViewInterfaces, and adjusts its height to auto-accommodate
+ * for the highest view ne
+ *
  * Created by jonlatane on 12/30/14.
  */
 public class SystemRecyclerView extends LinearLayout {
     public static final String TAG="SystemRecyclerView";
     private static final int DEFAULT_HEADER_DIMEN = 250;
 
-    public static final float NO_VISIBILITY = -1;
-
     private SurfaceView header;
     private RecyclerView noteArea;
 
     private SystemRecyclerView mAfter;
     private SystemRecyclerView mBefore;
+
+    private float heightScalingFactor = 1f;
 
     private boolean scrolledFromBefore = false;
     private boolean scrolledFromAfter = false;
@@ -43,26 +46,38 @@ public class SystemRecyclerView extends LinearLayout {
         @Override
         public void scrollToPositionWithOffset(int position, int offset) {
             super.scrollToPositionWithOffset(position, offset);
-            int resultOffset = getItemOffset(position);
-            int difference = Math.abs(resultOffset - offset);
-            if(difference != 0) {
-                Log.d(TAG, "Overscroll by " + difference + " pixels");
+            Log.d(TAG, "NEIGHBOR REQUEST--------------------------------");
+            Log.d(TAG, "Called to scroll by neighbor; view " + position + " to offset " + offset);
+            View requestedView = getViewAtAdapterPosition(position);
+            for(int retries = 1; requestedView == null && retries < 5; retries++) {
+                requestedView = getViewAtAdapterPosition(position);
+            }
 
+            if(requestedView != null) {
+                int resultOffset = getItemOffset(requestedView);
+                Log.d(TAG, "Found result offset for child of " + resultOffset);
+                int difference = Math.abs(resultOffset - offset);
+                if (difference > 5) {
+                    Log.d(TAG, "Overscroll by " + difference + " pixels");
+                    heightScalingFactor = (float) (noteArea.getWidth() - difference) / (float) noteArea.getWidth();
+                } else {
+                    heightScalingFactor = 1;
+                    noteArea.invalidate();
+                }
+            } else {
+                Log.d(TAG, "Couldn't compute overscroll");
             }
             scrollListener.onScrolled(noteArea, 0, 0);
         }
 
-        private int getItemOffset(int position) {
-            View v = getViewAtAdapterPosition(position);
-            if(v != null) {
-                int[] point = new int[2];
-                v.getLocationInWindow(point);
-                int xChild = point[0];
-                noteArea.getLocationInWindow(point);
-                int xNoteArea = point[0];
-                return xNoteArea - xChild;
-            }
-            return Integer.MIN_VALUE;
+        private int getItemOffset(View v) {
+            int[] point = new int[2];
+            v.getLocationInWindow(point);
+            int xChild = point[0];
+            noteArea.getLocationInWindow(point);
+            int xNoteArea = point[0];
+            Log.d(TAG, "xChild=" + xChild + ", xNoteArea=" + xNoteArea);
+            return xChild - xNoteArea;
         }
     };
 
@@ -73,38 +88,57 @@ public class SystemRecyclerView extends LinearLayout {
         @Override
         public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
             super.onScrolled(recyclerView, dx, dy);
-
+            Log.d(TAG, "onScrolled--------------------------------------");
             List<DummyScoreDeltaView> visibleViews = getVisibleScoreDeltaViews();
-            if(visibleViews.size() > 0) {
-                float visibilityOfFirstView = getVisibilityOfChildView(visibleViews.get(0));
-                float visibilityOfLastView = getVisibilityOfChildView(visibleViews.get(visibleViews.size() - 1));
-
-                Log.d(TAG, "First view visibility:" + visibilityOfFirstView);
-                Log.d(TAG, "Last view visibility:" + visibilityOfLastView);
-
-                // Set visibilities so views will update appearance
-                for (int i = 1; i < visibleViews.size() - 2; i++) {
-                    DummyScoreDeltaView scoreDeltaView = visibleViews.get(i);
-                    scoreDeltaView.setVisibility(1f);
-                }
-                visibleViews.get(0).setVisibility(visibilityOfFirstView);
-                visibleViews.get(visibleViews.size() - 1).setVisibility(visibilityOfLastView);
-
-                int minimumRequiredHeight = getMinimumRequiredHeight(visibleViews, visibilityOfFirstView, visibilityOfLastView);
-                Log.d(TAG, "Minimum Required Height: " + minimumRequiredHeight);
-
-                ViewGroup.LayoutParams layoutParams = getLayoutParams();
-                layoutParams.height = minimumRequiredHeight;
-                setLayoutParams(layoutParams);
-
-                if (mAfter != null && !scrolledFromAfter) {
-                    scrollViewBelow(visibleViews, visibilityOfLastView);
-                }
-                if (mBefore != null && !scrolledFromBefore) {
-                    scrollViewAbove(visibleViews, visibilityOfFirstView);
+            while(visibleViews.isEmpty()) {
+                try {
+                    visibleViews = getVisibleScoreDeltaViews();
+                } catch(Throwable t) {
+                    continue;
                 }
             }
-            postInvalidate();
+            float visibilityOfFirstView = getVisibilityOfChildView(visibleViews.get(0));
+            float visibilityOfLastView = getVisibilityOfChildView(visibleViews.get(visibleViews.size() - 1));
+
+            Log.d(TAG, "First view visibility:" + visibilityOfFirstView);
+            Log.d(TAG, "Last view visibility:" + visibilityOfLastView);
+
+            // Set visibilities so views will update appearance
+            for (int i = 1; i < visibleViews.size() - 1; i++) {
+                DummyScoreDeltaView scoreDeltaView = visibleViews.get(i);
+                scoreDeltaView.setVisibility(1f);
+            }
+            visibleViews.get(0).setVisibility(visibilityOfFirstView);
+            visibleViews.get(visibleViews.size() - 1).setVisibility(visibilityOfLastView);
+
+            int minimumRequiredHeight = getMinimumRequiredHeight(visibleViews, visibilityOfFirstView, visibilityOfLastView);
+            Log.d(TAG, "Minimum Required Height: " + minimumRequiredHeight);
+            //TODO fix this.  It should scale the height based on the heightScalingFactor
+//            if(heightScalingFactor != 1) {
+//                minimumRequiredHeight = Math.round(heightScalingFactor * minimumRequiredHeight);
+//                Log.d(TAG, "Scaled Minimum Required Height: " + minimumRequiredHeight);
+//            }
+
+            //Scale the bookend if this is the last row in the score
+            if(mAfter == null) {
+                //((ScoreDataAdapter)getAdapter()).setEndingBookendDimensions(noteArea.getWidth() * 2, 150, SystemRecyclerView.this);
+            }
+            if(mBefore == null) {
+                //((ScoreDataAdapter)getAdapter()).setBeginningBookendDimensions(noteArea.getWidth() * 2, 150, SystemRecyclerView.this);
+
+            }
+
+            ViewGroup.LayoutParams layoutParams = getLayoutParams();
+            layoutParams.height = minimumRequiredHeight;
+            setLayoutParams(layoutParams);
+
+            if (mAfter != null && !scrolledFromAfter) {
+                scrollViewBelow(visibleViews, visibilityOfLastView);
+            }
+            if (mBefore != null && !scrolledFromBefore) {
+                scrollViewAbove(visibleViews, visibilityOfFirstView);
+            }
+            invalidate();
             Log.d(TAG, "END---------------------------------------------");
         }
     };
@@ -150,6 +184,9 @@ public class SystemRecyclerView extends LinearLayout {
      * @return
      */
     public float getVisibilityOfChildView(View v) {
+        if(v == null) {
+            Log.d(TAG, "debugger");
+        }
         int[] point = new int[2];
         v.getLocationInWindow(point);
         int vWidth = v.getWidth();
@@ -186,14 +223,11 @@ public class SystemRecyclerView extends LinearLayout {
         int idx = 0;
         for(ChildViewType view : visibleViews) {
             int requiredHeight = view.getHeight();
-//            Log.d(TAG, "View " + idx + " has height" + requiredHeight);
-//            if(idx == 0) {
-//                requiredHeight = Math.round(visibilityOfFirstView * requiredHeight);
-//                Log.d(TAG, "        Scaled to " + requiredHeight + " for visibility");
-//            } else if( idx == visibleViews.size() - 1) {
-//                requiredHeight = Math.round(visibilityOfLastView * requiredHeight);
-//                Log.d(TAG, "        Scaled to " + requiredHeight + " for visibility");
-//            }
+            if(idx == 0) {
+                requiredHeight = Math.round(visibilityOfFirstView * requiredHeight);
+            } else if( idx == visibleViews.size() - 1) {
+                requiredHeight = Math.round(visibilityOfLastView * requiredHeight);
+            }
             result = Math.max(result, requiredHeight);
             idx++;
         }

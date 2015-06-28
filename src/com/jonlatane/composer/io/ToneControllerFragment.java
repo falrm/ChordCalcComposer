@@ -19,7 +19,7 @@ import java.util.Collections;
 
 public class ToneControllerFragment extends Fragment {
 	public static final String TAG = "ToneControllerFragment";
-	private ManagedToneGenerator _toneGenerator = null;
+	private ManagedToneGenerator toneGenerator = null;
 
 
 	@Override
@@ -87,18 +87,18 @@ public class ToneControllerFragment extends Fragment {
 	}
 	
 	public void attachToneGenerator(ManagedToneGenerator g) {
-		_toneGenerator = g;
-		double max = Collections.max(Arrays.asList(g._overtones));
+		toneGenerator = g;
+		double max = Collections.max(Arrays.asList(g.overtones));
 		
 		LinearLayout ll = (LinearLayout) getView().findViewById(R.id.toneControllerOvertoneList);
-		while(ll.getChildCount() > g._overtones.length)
+		while(ll.getChildCount() > g.overtones.length)
 			removeElement();
 		
-		for(int i = 0; i < g._overtones.length; i++) {
+		for(int i = 0; i < g.overtones.length; i++) {
 			if(ll.getChildCount() - 1 < i)
 				addElement();
 			VerticalSeekBar vsb = (VerticalSeekBar)ll.getChildAt(i).findViewById(R.id.seekBar);
-			int progress = (int) (vsb.getMax() * g._overtones[i]/max);
+			int progress = (int) (vsb.getMax() * g.overtones[i]/max);
 			vsb.setProgress(progress);
 		}
 		
@@ -107,9 +107,9 @@ public class ToneControllerFragment extends Fragment {
 	
 	synchronized void writeOvertones() {
 		Log.i(TAG, "Writing overtones ");
-		if(_toneGenerator != null) {
-			_toneGenerator.releaseAllMyTracks();
-			_toneGenerator._overtones = getOvertones();
+		if(toneGenerator != null) {
+			toneGenerator.releaseAllMyTracks();
+			toneGenerator.overtones = getOvertones();
 		}
 	}
 	
@@ -131,14 +131,14 @@ public class ToneControllerFragment extends Fragment {
         int netHeight = v.getHeight();
         v.animate().translationY(netHeight);
     }
-    public void showToneController() {
+    public void showToneController(View parent) {
         final View v = getView();
-		v.animate().translationY(0);
+		v.animate().translationY(0 + parent.getTranslationY());
     }
 
-    public void toggleToneController() {
+    public void toggleToneController(View parent) {
         if(!toneControllerEnabled())
-            showToneController();
+            showToneController(parent);
         else
             hideToneController();
     }

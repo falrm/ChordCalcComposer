@@ -2,6 +2,7 @@ package com.jonlatane.composer;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,17 +10,15 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.jonlatane.composer.io.ManagedToneGenerator;
 import com.jonlatane.composer.io.ToneControllerFragment;
 import com.jonlatane.composer.io.TwelthKeyboardFragment;
-import com.jonlatane.composer.music.Score;
 import com.jonlatane.composer.music.harmony.Chord;
 import com.jonlatane.composer.music.harmony.Enharmonics;
 import com.jonlatane.composer.music.harmony.Key;
 import com.jonlatane.composer.music.harmony.PitchSet;
-import com.jonlatane.composer.scoredisplay3.ScoreDataAdapter;
-import com.jonlatane.composer.scoredisplay3.SystemRecyclerView;
 
 import java.util.Arrays;
 
@@ -87,7 +86,7 @@ public class ChordDisplayActivity extends Activity
 			Log.i(TAG, "Octavetest: " + i + " > " + Chord.TWELVETONE.octave(i));
 		
 		// Load layout
-		setContentView(R.layout.chorddisplayactivity);
+		setContentView(R.layout.activity_interactive);
 		
 		// Set up the keyboard
 		keyboard = (TwelthKeyboardFragment)getFragmentManager().findFragmentById(R.id.kbFragment);
@@ -96,20 +95,31 @@ public class ChordDisplayActivity extends Activity
 		// Attach the tone controller to the keyboard
         toneController = (ToneControllerFragment) getFragmentManager().findFragmentById(R.id.toneControllerFragment);
         toneController.attachToneGenerator(keyboard.getToneGenerator());
+		toneController.getView().setVisibility(View.GONE);
         keyboard.linkView(toneController.getView());
+        keyboard.hideKeyboardFragment();
+        getWindow().getDecorView().findViewById(android.R.id.content).addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View view, int i, int i2, int i3, int i4, int i5, int i6, int i7, int i8) {
+                //keyboard.hideKeyboardFragment();
+                getWindow().getDecorView().findViewById(android.R.id.content).removeOnLayoutChangeListener(this);
+            }
+        });
+
 
 		// Set up lead sheet display
-		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);  
+		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);
         //listview.setAdapter(_adapter);
         // Test Code
-        SystemRecyclerView srv = (SystemRecyclerView)findViewById(R.id.systemRecyclerView);
-        SystemRecyclerView srv2 = (SystemRecyclerView)findViewById(R.id.systemRecyclerView2);
-        Score subject = Score.twinkleTwinkle();
-        Score.testScore(subject);
-        srv.setAdapter(new ScoreDataAdapter(subject));
-        srv2.setAdapter(new ScoreDataAdapter(subject));
-        srv.setViewBelow(srv2);
-        srv2.setViewAbove(srv);
+//        SystemRecyclerView srv = (SystemRecyclerView)findViewById(R.id.systemRecyclerView);
+//        SystemRecyclerView srv2 = (SystemRecyclerView)findViewById(R.id.systemRecyclerView2);
+//        Score subject = Score.twinkleTwinkle();
+//        Score.testScore(subject);
+//        srv.setAdapter(new ScoreDataAdapter(subject));
+//        srv2.setAdapter(new ScoreDataAdapter(subject));
+//        srv.setViewBelow(srv2);
+//        srv2.setViewAbove(srv);
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 	}
 	
 	// Handles all Volume key presses as media volume control
@@ -131,21 +141,9 @@ public class ChordDisplayActivity extends Activity
 	}
 	
 	@Override
-	public void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-		keyboard.onSaveInstanceState(outState);
-	}
-	
-	@Override
-	public void onRestoreInstanceState(Bundle savedInstanceState) {
-		super.onRestoreInstanceState(savedInstanceState);
-		//_myKeyboard.onRestoreInstanceState(savedInstanceState);
-	}
-	
-	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
-	    inflater.inflate(R.menu.chorddisplaymenu, menu);
+	    //inflater.inflate(R.menu.chorddisplaymenu, menu);
 	    return true;
 	}
 	
@@ -154,7 +152,7 @@ public class ChordDisplayActivity extends Activity
 	@Override
 	  public boolean onOptionsItemSelected(MenuItem item) {
 	    switch (item.getItemId()) {
-		    //TODO Uncomment these
+		    //TODO Interact with UI elements here
 //		    case R.id.toggleRhythmAB:
 //		    	_myKeyboard.toggleRhythmicMode();
 //		    	break;
@@ -165,7 +163,7 @@ public class ChordDisplayActivity extends Activity
 		    	keyboard.toggleKeyboardFragment();
 		    	break;
             case R.id.toggleFX:
-                toneController.toggleToneController();
+                toneController.toggleToneController(keyboard.getView());
                 break;
 //		    case R.id.debugFunction1:
 //		    	((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
@@ -192,7 +190,7 @@ public class ChordDisplayActivity extends Activity
 	@Override
 	public void onResume()
 	{
-	    super.onResume();
+        super.onResume();
 	}
 	
 	

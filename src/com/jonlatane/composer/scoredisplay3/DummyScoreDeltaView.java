@@ -49,10 +49,14 @@ public class DummyScoreDeltaView extends ScrollView implements ScoreDeltaViewInt
      */
     @Override
     public void setVisibility(float f) {
-        TextView child = (TextView)getChildAt(0);
-        child.setTextColor(Color.argb(Math.round(f * 255), 0, 0, 0));
-        setBackgroundColor(Color.argb(Math.round(f * 255), 255, 255, 255));
-        child.postInvalidate();
-        postInvalidate();
+        TextView foreground = (TextView)getChildAt(0);
+        int foregroundColor = Color.argb( Math.round(f * 255),
+                Color.red(ScoreDataAdapter.FOREGROUND_COLOR_BASE),
+                Color.green(ScoreDataAdapter.FOREGROUND_COLOR_BASE),
+                Color.blue(ScoreDataAdapter.FOREGROUND_COLOR_BASE));
+        foreground.setTextColor(foregroundColor);
+//        setBackgroundColor(Color.argb(Math.round(f * 255), 255, 255, 255));
+//        child.invalidate();
+//        invalidate();
     }
 }

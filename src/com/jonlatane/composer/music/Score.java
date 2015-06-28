@@ -567,7 +567,8 @@ public class Score {
 		Rational nextInOverallRhythm = getOverallRhythm().higher(r);
 		if(nextInOverallRhythm != null) {
 			result.TIME_CHANGE_AFTER = _meter._data.get(nextInOverallRhythm);
-			result.IS_END_OF_MEASURE = _meter.getBeatOf(nextInOverallRhythm).compareTo( r ) < 0;
+            if(_meter.getBeatOf(nextInOverallRhythm) != null)
+			    result.IS_END_OF_MEASURE = _meter.getBeatOf(nextInOverallRhythm).compareTo( r ) < 0;
 		} else {
 			result.PRECEDES_FINE = true;
 		}

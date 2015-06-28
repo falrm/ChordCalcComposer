@@ -1,6 +1,5 @@
 package com.jonlatane.composer.io;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 import android.media.AudioFormat;
@@ -264,7 +263,7 @@ public class ManagedToneGenerator {
 	private static Double[] _defaultOvertones = {70., 30., 30., 10., 10., 20., 20., 1.};
 	//private static Double[] _defaultOvertones = {70., 0., 0., 0., 0., 0., 0., 0. };
 	
-	Double[] _overtones;
+	Double[] overtones;
 	
 	/**
 	 * An instance of a ManagedToneGenerator shares the same cache as all others.  Its only unique property is the overtone series
@@ -276,7 +275,7 @@ public class ManagedToneGenerator {
 		if(overtones.length == 0)
 			overtones = _defaultOvertones.clone();
 		
-		_overtones = _defaultOvertones;
+		this.overtones = _defaultOvertones;
 	}
 
 	public static AudioTrack getAudioTrackForNote(int n) {
@@ -284,11 +283,11 @@ public class ManagedToneGenerator {
 	}
 	
 	public AudioTrack getCustomAudioTrackForNote(int n) {
-		return Cache.getAudioTrackForNote(n, _overtones);
+		return Cache.getAudioTrackForNote(n, overtones);
 	}
 	
 	public void releaseAllMyTracks() {
-		Cache.releaseAll(_overtones);
+		Cache.releaseAll(overtones);
 	}
 	
 	public static AudioTrack getAudioTrackForNote(int n, Double... overtones) {

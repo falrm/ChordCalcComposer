@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:background="#424242"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 	
@@ -9,7 +10,7 @@
         android:layout_alignParentTop="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" /> -->
-    <com.jonlatane.composer.scoredisplay3.SystemRecyclerView
+    <!--<com.jonlatane.composer.scoredisplay3.SystemRecyclerView
         android:id="@+id/systemRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="700px" />
@@ -17,7 +18,7 @@
         android:id="@+id/systemRecyclerView2"
         android:layout_width="match_parent"
         android:layout_height="700px"
-        android:layout_below="@id/systemRecyclerView"/>
+        android:layout_below="@id/systemRecyclerView"/>-->
 
     <fragment
         android:id="@+id/toneControllerFragment"
