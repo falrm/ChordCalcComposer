@@ -3,5 +3,10 @@
     <dimen name="tonecontroller_addremove_buttons_width">40dp</dimen>
     <dimen name="tonecontroller_height">160dp</dimen>
     <dimen name="tonecontroller_element_padding">3dp</dimen>
+
+    <dimen name="key_height_white">145dp</dimen>
+    <dimen name="key_highlight_bottom_white">140dp</dimen> <!-- Gives a 5dp tall highlight -->
+    <dimen name="key_height_black">75dp</dimen>
+    <dimen name="key_highlight_bottom_black">70dp</dimen> <!-- Gives a 5dp tall highlight -->
 </resources>
 

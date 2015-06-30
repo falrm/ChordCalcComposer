@@ -7,9 +7,6 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 
 import com.jonlatane.composer.io.ManagedToneGenerator;
@@ -28,10 +25,10 @@ import java.util.Arrays;
  * at barlines so that ties can be effectively rendered (meaning dotted-quarter-half vs. half-dotted-quarter tie is up to the
  * renderer).  This is advantageous because adding 
  */
-public class ChordDisplayActivity extends Activity
+public class BaseKeyboardActivity extends Activity
 {
-	private TwelthKeyboardFragment keyboard;
-    private ToneControllerFragment toneController;
+	protected TwelthKeyboardFragment keyboard;
+	protected ToneControllerFragment toneController;
 	//private KeyboardIOHandler _myKbdIO;
 	//private KeyboardScroller _keyboardScroller;
 	//private HorizontalScrollView _chordScroller;
@@ -95,17 +92,12 @@ public class ChordDisplayActivity extends Activity
 		// Attach the tone controller to the keyboard
         toneController = (ToneControllerFragment) getFragmentManager().findFragmentById(R.id.toneControllerFragment);
         toneController.attachToneGenerator(keyboard.getToneGenerator());
-		toneController.getView().setVisibility(View.GONE);
         keyboard.linkView(toneController.getView());
-        keyboard.hideKeyboardFragment();
-        getWindow().getDecorView().findViewById(android.R.id.content).addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-            @Override
-            public void onLayoutChange(View view, int i, int i2, int i3, int i4, int i5, int i6, int i7, int i8) {
-                //keyboard.hideKeyboardFragment();
-                getWindow().getDecorView().findViewById(android.R.id.content).removeOnLayoutChangeListener(this);
-            }
-        });
 
+		if(getClass().equals(BaseKeyboardActivity.class)) {
+			toneController.getView().setVisibility(View.GONE);
+			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+		}
 
 		// Set up lead sheet display
 		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);
@@ -119,7 +111,6 @@ public class ChordDisplayActivity extends Activity
 //        srv2.setAdapter(new ScoreDataAdapter(subject));
 //        srv.setViewBelow(srv2);
 //        srv2.setViewAbove(srv);
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 	}
 	
 	// Handles all Volume key presses as media volume control
@@ -141,55 +132,13 @@ public class ChordDisplayActivity extends Activity
 	}
 	
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-	    MenuInflater inflater = getMenuInflater();
-	    //inflater.inflate(R.menu.chorddisplaymenu, menu);
-	    return true;
-	}
-	
-	
-	
-	@Override
-	  public boolean onOptionsItemSelected(MenuItem item) {
-	    switch (item.getItemId()) {
-		    //TODO Interact with UI elements here
-//		    case R.id.toggleRhythmAB:
-//		    	_myKeyboard.toggleRhythmicMode();
-//		    	break;
-//		    case R.id.toggleChordsAB:
-//		    	_myKeyboard.toggleHarmonicMode();
-//		    	break;*/
-		    case R.id.toggleKeyboardAB:
-		    	keyboard.toggleKeyboardFragment();
-		    	break;
-            case R.id.toggleFX:
-                toneController.toggleToneController(keyboard.getView());
-                break;
-//		    case R.id.debugFunction1:
-//		    	((ScoreLayout)findViewById(R.id.scoreLayout)).removeFirstElement();
-//		    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
-//		    	break;
-//		    case R.id.debugFunction2:
-//		    	((ScoreLayout)findViewById(R.id.scoreLayout)).fixLayout();
-//		    	break;
-		    default:
-		      break;
-	    }
-
-	    return true;
-	  } 
-
-	
-	@Override
-	public void onPause()
-	{
+	public void onPause() {
 		super.onPause();
 	    ManagedToneGenerator.releaseAudioResources();
 	}
 
 	@Override
-	public void onResume()
-	{
+	public void onResume() {
         super.onResume();
 	}
 	

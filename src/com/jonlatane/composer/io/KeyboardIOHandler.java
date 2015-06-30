@@ -183,19 +183,19 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 				boolean isInChord = c.contains(nClass);
 				if(isBlack) {
 					if(isRoot) {
-						b.setBackgroundResource(R.drawable.rootblackkey);
+						b.setBackgroundResource(R.drawable.key_black_highlighted_root);
 					} else if(isInChord) {
-						b.setBackgroundResource(R.drawable.highlightedblackkey);
+						b.setBackgroundResource(R.drawable.key_black_highlighted);
 					} else {
-						b.setBackgroundResource(R.drawable.blackkey);
+						b.setBackgroundResource(R.drawable.key_black);
 					}
 				} else {
 					if(isRoot) {
-						b.setBackgroundResource(R.drawable.rootwhitekey);
+						b.setBackgroundResource(R.drawable.key_white_highlighted_root);
 					} else if(isInChord) {
-						b.setBackgroundResource(R.drawable.highlightedwhitekey);
+						b.setBackgroundResource(R.drawable.key_white_highlighted);
 					} else {
-						b.setBackgroundResource(R.drawable.whitekey);
+						b.setBackgroundResource(R.drawable.key_white);
 					}
 				}
 			}
@@ -204,9 +204,9 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 			for(int id : _keys) {
 				int n = _keysInverse.get(id);
 				if(isBlack(n)) {
-					((Button)_myFragment.getView().findViewById(id)).setBackgroundResource(R.drawable.blackkey);
+					((Button)_myFragment.getView().findViewById(id)).setBackgroundResource(R.drawable.key_black);
 				} else {
-					((Button)_myFragment.getView().findViewById(id)).setBackgroundResource(R.drawable.whitekey);
+					((Button)_myFragment.getView().findViewById(id)).setBackgroundResource(R.drawable.key_white);
 				}
 			}
 		}

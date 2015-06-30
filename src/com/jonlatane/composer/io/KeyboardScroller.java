@@ -1,15 +1,13 @@
 package com.jonlatane.composer.io;
 
-import com.jonlatane.composer.NonDelayedHorizontalScrollView;
-
 import android.animation.IntEvaluator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
+
+import com.jonlatane.composer.NonDelayedHorizontalScrollView;
 
 public class KeyboardScroller extends NonDelayedHorizontalScrollView {
 	@SuppressWarnings("unused") private static String TAG = "KBScroller";
@@ -32,11 +30,6 @@ public class KeyboardScroller extends NonDelayedHorizontalScrollView {
 	}
 	
 	void onCreate(Context c){
-	}
-	
-	@Override
-	public boolean shouldDelayChildPressedState() {
-		return false;
 	}
 
 	@Override public boolean onTouchEvent(MotionEvent event) {

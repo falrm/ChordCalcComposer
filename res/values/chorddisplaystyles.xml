@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
     <style name = "GenericChord">
-        <item name="android:textIsSelectable">true</item>
+        <item name="android:textIsSelectable">false</item>
     </style>
     
     <style name="BestChord" parent="GenericChord"> 
@@ -12,6 +12,7 @@
     </style>
     <style name="OtherChord1" parent="GenericChord"> 
         <item name="android:textSize">50sp</item>
+        <item name="android:textColor">#F5F5F5</item>
         <item name="android:layout_marginLeft">30sp</item>
         <item name="android:layout_marginRight">30sp</item>
     </style>

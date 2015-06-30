@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
     <string name="app_name">ChordCalc</string>
+    <string name="chord_copied_to_clipboard">Chord copied to clipboard.</string>
     <string name="soprano_long">Soprano</string>
     <string name="soprano_short">S</string>
     <string name="alto_long">Alto</string>

@@ -3,6 +3,9 @@ package com.jonlatane.composer.io;
 import android.animation.IntEvaluator;
 import android.animation.ValueAnimator;
 import android.app.Fragment;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -13,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jonlatane.composer.R;
 import com.jonlatane.composer.music.harmony.Chord;
@@ -64,17 +68,24 @@ public class TwelthKeyboardFragment extends Fragment {
         //Use a properly-rendering font for the chord display area
         Typeface face=Typeface.createFromAsset(result.getContext().getAssets(), "fonts/DroidSansFallback.ttf");
         for(int i : _slots) {
-            TextView tv = (TextView) result.findViewById(i);
+            final TextView tv = (TextView) result.findViewById(i);
+			tv.setOnLongClickListener(new View.OnLongClickListener() {
+				@Override
+				public boolean onLongClick(View view) {
+					ClipboardManager clipboard = (ClipboardManager) (getActivity().getSystemService(Context.CLIPBOARD_SERVICE));
+					ClipData clip = ClipData.newPlainText("ChordCalc Chord", tv.getText());
+					clipboard.setPrimaryClip(clip);
+					Toast toast = Toast.makeText(getActivity(), R.string.chord_copied_to_clipboard, Toast.LENGTH_SHORT);
+					toast.show();
+					return true;
+				}
+			});
             tv.setTypeface(face);
         }
 
         //Set up the keyboardScroller itself
 		_keyboardScroller = (KeyboardScroller)result.findViewById(R.id.kbScroller);
-		
-		//Set fonts
-		//((TextView)_chordScroller.findViewById(R.id.bestChord)).setTypeface(Typeface.createFromAsset(result.getContext().getAssets(),"fonts/NoteHedz170.ttf"));
-		
-		
+
         return result;
     }
 	

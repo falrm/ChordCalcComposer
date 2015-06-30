@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+    <dimen name="key_height_white">290dp</dimen>
+    <dimen name="key_highlight_bottom_white">280dp</dimen> <!-- Gives a 10dp tall highlight -->
+    <dimen name="key_height_black">150dp</dimen>
+    <dimen name="key_highlight_bottom_black">140dp</dimen> <!-- Gives a 10dp tall highlight -->
 </resources>
