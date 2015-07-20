@@ -1,12 +1,9 @@
 package com.jonlatane.composer.io;
 
-import java.util.*;
-
-import com.jonlatane.composer.R;
-import com.jonlatane.composer.music.harmony.*;
-
+import android.content.Context;
 import android.media.AudioTrack;
 import android.os.AsyncTask;
+import android.os.Vibrator;
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.MotionEvent;
@@ -17,13 +14,23 @@ import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.widget.Button;
 
+import com.jonlatane.composer.R;
+import com.jonlatane.composer.audio.AudioTrackCache;
+import com.jonlatane.composer.audio.AudioTrackGenerator;
+import com.jonlatane.composer.audio.generator.HarmonicOvertoneSeriesGenerator;
+import com.jonlatane.composer.music.harmony.Chord;
+import com.jonlatane.composer.music.harmony.Key;
+import com.jonlatane.composer.music.harmony.PitchSet;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	private static String TAG = "KBDIO";
-	
-	// References to other things in this package
-	private final KeyboardScroller _kbs;
-	
-	private static int[] _keys = new int[] 
+
+	private static int[] KEY_IDS = new int[]
 			{ R.id.keyA0, R.id.keyAS0, R.id.keyB0,
 		R.id.keyC1, R.id.keyCS1, R.id.keyD1, R.id.keyDS1,R.id.keyE1, R.id.keyF1, R.id.keyFS1, R.id.keyG1,R.id.keyGS1, R.id.keyA1, R.id.keyAS1, R.id.keyB1,
 		R.id.keyC2, R.id.keyCS2, R.id.keyD2, R.id.keyDS2,R.id.keyE2, R.id.keyF2, R.id.keyFS2, R.id.keyG2,R.id.keyGS2, R.id.keyA2, R.id.keyAS2, R.id.keyB2,
@@ -34,27 +41,29 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		R.id.keyC7, R.id.keyCS7, R.id.keyD7, R.id.keyDS7,R.id.keyE7, R.id.keyF7, R.id.keyFS7, R.id.keyG7,R.id.keyGS7, R.id.keyA7, R.id.keyAS7, R.id.keyB7,
 		R.id.keyC8
 			};
-	private static SparseIntArray _keysInverse = new SparseIntArray();
+	private static SparseIntArray KEY_IDS_INVERSE = new SparseIntArray();
 	static {
-		for( int i = 0; i < _keys.length; i = i +  1 ) {
-			_keysInverse.put(_keys[i], i-39);
+		for( int i = 0; i < KEY_IDS.length; i = i +  1 ) {
+			KEY_IDS_INVERSE.put(KEY_IDS[i], i - 39);
 		}
 	}
 	
 	// Harmonic input-related fields
-	private boolean _harmonicMode = false;
-	private boolean _cancelHarmonicLongPressRootSelection = false;
+	private boolean harmonicMode = false;
+	private boolean cancelHarmonicLongPressRootSelection = false;
 	
 	//private Integer _harmonicRoot = null;
-	private Chord _harmonicChord = null;
+	private Chord harmonicChord = null;
 	
-	private Set<Integer> _currentlyPressed = Collections.synchronizedSet(new HashSet<Integer>());
-	ManagedToneGenerator _toneGenerator = new ManagedToneGenerator();
-	private TwelthKeyboardFragment _myFragment;
+	private Set<Integer> currentlyPressed = Collections.synchronizedSet(new HashSet<Integer>());
+	//ManagedToneGenerator _toneGenerator = new ManagedToneGenerator();
+	AudioTrackGenerator trackGenerator = new HarmonicOvertoneSeriesGenerator();
+	private TwelthKeyboardFragment keyboardFragment;
+	private final KeyboardScroller keyboardScroller;
 	
 	public KeyboardIOHandler(TwelthKeyboardFragment f, View v) {
-		_myFragment = f;
-		for(int k : _keys) {
+		keyboardFragment = f;
+		for(int k : KEY_IDS) {
 			Button b = (Button)(v.findViewById(k));
 			b.setOnTouchListener(this);
 			b.setOnLongClickListener(this);
@@ -69,78 +78,79 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 				}
 			});
 		}
-		_kbs = ((KeyboardScroller)v.findViewById(R.id.kbScroller));
+		keyboardScroller = ((KeyboardScroller)v.findViewById(R.id.kbScroller));
 	}
 	
 	public void harmonicModeOn() {
-		_harmonicMode = true;
-		_harmonicChord = null;
+		harmonicMode = true;
+		harmonicChord = null;
 	}
 	
 	
 	public void harmonicModeOff() {
 		clearHarmonicRoot();
-		_harmonicMode = false;
+		harmonicMode = false;
 	}
 	
 	public boolean isHarmonic() {
-		return _harmonicMode;
+		return harmonicMode;
 	}
 	
 	void liftNote(int n) {
-		synchronized(_currentlyPressed) {
-			if( _harmonicMode ) {
+		synchronized(currentlyPressed) {
+			if(harmonicMode) {
 				//Log.i(TAG, "Harmonic Root:")
-				if(_cancelHarmonicLongPressRootSelection && _currentlyPressed.size() == 1)
-					_cancelHarmonicLongPressRootSelection = false;
+				if(cancelHarmonicLongPressRootSelection && currentlyPressed.size() == 1)
+					cancelHarmonicLongPressRootSelection = false;
 			}
-			_currentlyPressed.remove(n);
+			currentlyPressed.remove(n);
 		}
 
-		if(getHarmonicRoot() != null && _currentlyPressed.size() == 0) {
+		if(getHarmonicRoot() != null && currentlyPressed.size() == 0) {
 			clearHarmonicRoot();
 		}
 		
-		AudioTrack t = _toneGenerator.getCustomAudioTrackForNote(n);
+		AudioTrack t = AudioTrackCache.getAudioTrackForNote(n, trackGenerator);
 		t.pause();
-		ManagedToneGenerator.normalizeVolumes();
+		AudioTrackCache.normalizeVolumes();
 		//t.setPlaybackHeadPosition(0);
 		//t.reloadStaticData();
 	}
 	void pressNote(int n) {
-		synchronized(_currentlyPressed) {
-			if( _harmonicMode ) {
+		synchronized(currentlyPressed) {
+			if(harmonicMode) {
 				if(getHarmonicRoot() == null) {
-					if(_currentlyPressed.size() == 0)
-						_cancelHarmonicLongPressRootSelection = false;
+					if(currentlyPressed.size() == 0)
+						cancelHarmonicLongPressRootSelection = false;
 					else
-						_cancelHarmonicLongPressRootSelection = true;
+						cancelHarmonicLongPressRootSelection = true;
 				}
 				Log.i(TAG, "Got key Press " + harmonicInfo());
 			} else {
 				// Melodic mode, one note at a time!
-				for( int m : _currentlyPressed ) {
+				for( int m : currentlyPressed) {
 					liftNote(m);
 				}
 			}
-			_currentlyPressed.add(n);
+			currentlyPressed.add(n);
 		}
-		_toneGenerator.getCustomAudioTrackForNote(n).play();
-		ManagedToneGenerator.normalizeVolumes();
-		//_recentlyUsedNotes.remove((Integer)n);
-		//_recentlyUsedNotes.addFirst((Integer)n);
-				
+		//_toneGenerator.getCustomAudioTrackForNote(n).play();
+		AudioTrackCache.getAudioTrackForNote(n, trackGenerator).play();
+		AudioTrackCache.normalizeVolumes();
+
 		// The magic
-		if( _harmonicMode ) {
-			_myFragment.updateChordDisplay();
+		if(harmonicMode) {
+			keyboardFragment.updateChordDisplay();
 		}
 	}
 	
 	@Override
-	public boolean onLongClick(View arg0) {
-		if(_harmonicMode && (getHarmonicRoot() == null)) {
-			if(!_cancelHarmonicLongPressRootSelection && _currentlyPressed.size() == 1) {
-				setHarmonicRoot(_keysInverse.get(arg0.getId()));
+	public boolean onLongClick(View view) {
+		if(harmonicMode && (getHarmonicRoot() == null)) {
+			if(!cancelHarmonicLongPressRootSelection && currentlyPressed.size() == 1) {
+				Vibrator v = (Vibrator) view.getContext().getSystemService(Context.VIBRATOR_SERVICE);
+				v.vibrate(50);
+				setHarmonicRoot(KEY_IDS_INVERSE.get(view.getId()));
 			}
 		}
 		return false;
@@ -170,13 +180,13 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	 * @param c
 	 */
 	public void setHarmonicChord(Chord c) {
-		_harmonicChord = c;
-		if(_harmonicChord != null) {
-			Log.i(TAG,"Highlighting chord " + Key.CMajor.getNoteName(_harmonicChord.getRoot()) + _harmonicChord.toString());
+		harmonicChord = c;
+		if(harmonicChord != null) {
+			Log.i(TAG,"Highlighting chord " + Key.CMajor.getNoteName(harmonicChord.getRoot()) + harmonicChord.toString());
 
-			for(int id : _keys) {
-				Button b = (Button)_myFragment.getView().findViewById(id);
-				int n = _keysInverse.get(id);
+			for(int id : KEY_IDS) {
+				Button b = (Button) keyboardFragment.getView().findViewById(id);
+				int n = KEY_IDS_INVERSE.get(id);
 				int nClass = Chord.TWELVETONE.mod(n);
 				boolean isRoot = (c.getRoot() != null && nClass == c.getRoot());
 				boolean isBlack = isBlack(n);
@@ -201,12 +211,12 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 			}
 		} else {
 			Log.i(TAG, "Clearing highlights");
-			for(int id : _keys) {
-				int n = _keysInverse.get(id);
+			for(int id : KEY_IDS) {
+				int n = KEY_IDS_INVERSE.get(id);
 				if(isBlack(n)) {
-					((Button)_myFragment.getView().findViewById(id)).setBackgroundResource(R.drawable.key_black);
+					((Button) keyboardFragment.getView().findViewById(id)).setBackgroundResource(R.drawable.key_black);
 				} else {
-					((Button)_myFragment.getView().findViewById(id)).setBackgroundResource(R.drawable.key_white);
+					((Button) keyboardFragment.getView().findViewById(id)).setBackgroundResource(R.drawable.key_white);
 				}
 			}
 		}
@@ -223,16 +233,16 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	}
 	
 	public Integer getHarmonicRoot() {
-		return (_harmonicChord == null) ? null : _harmonicChord.getRoot();
+		return (harmonicChord == null) ? null : harmonicChord.getRoot();
 	}
 	
 	// Utility method in case the keyboard is scrolled when keys are pressed.
 	void catchRogues() {
-		if(_myFragment.getView() != null) {
-			Iterator<Integer> iter = _currentlyPressed.iterator();
+		if(keyboardFragment.getView() != null) {
+			Iterator<Integer> iter = currentlyPressed.iterator();
 			while(iter.hasNext()) {
 				int n = iter.next();
-				Button b = (Button)_myFragment.getView().findViewById(_keys[n+39]);
+				Button b = (Button) keyboardFragment.getView().findViewById(KEY_IDS[n+39]);
 				if(!b.isPressed()) {
 					iter.remove();
 					liftNote(n);
@@ -248,10 +258,10 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		
 		boolean result = false;
 		if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-			pressNote(_keysInverse.get(arg0.getId()));
+			pressNote(KEY_IDS_INVERSE.get(arg0.getId()));
 			Log.i(TAG, "Got key Press " + harmonicInfo());
 		} else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
-			liftNote(_keysInverse.get(arg0.getId()));
+			liftNote(KEY_IDS_INVERSE.get(arg0.getId()));
 		} else if (event.getActionMasked() == MotionEvent.ACTION_MOVE 
 				&& event.getPointerCount() != 1 
 				&& getPressedKeys().size() > 1) {
@@ -263,11 +273,11 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	}
 	
 	public PitchSet getPressedKeys() {
-		return new PitchSet(_currentlyPressed);
+		return new PitchSet(currentlyPressed);
 	}
 	
 	public Chord getChord() {
-		Chord c = new Chord(_currentlyPressed);
+		Chord c = new Chord(currentlyPressed);
 		c.setRoot(getHarmonicRoot());
 		Log.i(TAG,"Found Chord " + c.toString());
 		return c;
@@ -275,12 +285,12 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	
 	public String harmonicInfo() {
 		String result = "";
-		if(_harmonicMode) {
+		if(harmonicMode) {
 			result += "H: ";
-			if(_harmonicChord != null && _harmonicChord.getRoot() != null)
-				result += "R:" + _harmonicChord.getRoot();
+			if(harmonicChord != null && harmonicChord.getRoot() != null)
+				result += "R:" + harmonicChord.getRoot();
 			result += "[";
-			for(int i : _currentlyPressed) {
+			for(int i : currentlyPressed) {
 				result += i + ",";
 			}
 			result += "]";
@@ -289,7 +299,7 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 		} else {
 			result += "M: ";
 			result += "[";
-			for(int i : _currentlyPressed) {
+			for(int i : currentlyPressed) {
 				result += i + ",";
 			}
 			result += "]";
@@ -301,11 +311,11 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	/*public String getHarmonicChord() {
 		String result = "";
 		Chord c = new Chord();
-		for(int i : _currentlyPressed) {
+		for(int i : currentlyPressed) {
 			c.add(i);
 		}
 		Log.i(TAG,"Constructed Chord:" + c.toString());
-		if(_harmonicMode) {
+		if(harmonicMode) {
 			if (_harmonicRoot != null) {
 				Log.i(TAG, "Getting chord for pre-specified root: " + _harmonicRoot);
 				Pair<String,Integer> p = Key.guessNameInC(c, _harmonicRoot);

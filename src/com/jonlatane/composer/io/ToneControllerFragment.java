@@ -13,13 +13,16 @@ import android.widget.TextView;
 
 import com.jonlatane.composer.R;
 import com.jonlatane.composer.VerticalSeekBar;
+import com.jonlatane.composer.audio.AudioTrackCache;
+import com.jonlatane.composer.audio.generator.HarmonicOvertoneSeriesGenerator;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 public class ToneControllerFragment extends Fragment {
 	public static final String TAG = "ToneControllerFragment";
-	private ManagedToneGenerator toneGenerator = null;
+	//private ManagedToneGenerator toneGenerator = null;
+	private HarmonicOvertoneSeriesGenerator trackGenerator = null;
 
 
 	@Override
@@ -86,19 +89,19 @@ public class ToneControllerFragment extends Fragment {
 		}
 	}
 	
-	public void attachToneGenerator(ManagedToneGenerator g) {
-		toneGenerator = g;
-		double max = Collections.max(Arrays.asList(g.overtones));
+	public void attachToneGenerator(HarmonicOvertoneSeriesGenerator g) {
+		trackGenerator = g;
+		double max = Collections.max(Arrays.asList(g.getOvertones()));
 		
 		LinearLayout ll = (LinearLayout) getView().findViewById(R.id.toneControllerOvertoneList);
-		while(ll.getChildCount() > g.overtones.length)
+		while(ll.getChildCount() > g.getOvertones().length)
 			removeElement();
 		
-		for(int i = 0; i < g.overtones.length; i++) {
+		for(int i = 0; i < g.getOvertones().length; i++) {
 			if(ll.getChildCount() - 1 < i)
 				addElement();
 			VerticalSeekBar vsb = (VerticalSeekBar)ll.getChildAt(i).findViewById(R.id.seekBar);
-			int progress = (int) (vsb.getMax() * g.overtones[i]/max);
+			int progress = (int) (vsb.getMax() * g.getOvertones()[i]/max);
 			vsb.setProgress(progress);
 		}
 		
@@ -107,9 +110,9 @@ public class ToneControllerFragment extends Fragment {
 	
 	synchronized void writeOvertones() {
 		Log.i(TAG, "Writing overtones ");
-		if(toneGenerator != null) {
-			toneGenerator.releaseAllMyTracks();
-			toneGenerator.overtones = getOvertones();
+		if(trackGenerator != null) {
+			AudioTrackCache.releaseAll(trackGenerator);
+			trackGenerator.setOvertones(getOvertones());
 		}
 	}
 	

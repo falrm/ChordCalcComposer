@@ -48,10 +48,6 @@ public class Chord extends PitchSet {
 		public int mod(int i) {
 			while(i < 0)
 				i += OCTAVE_STEPS;
-			//int result = i % OCTAVE_STEPS;
-			//if(result < 0)
-			//	result += OCTAVE_STEPS;
-			//return result;
 			return i % OCTAVE_STEPS;
 		}
 		

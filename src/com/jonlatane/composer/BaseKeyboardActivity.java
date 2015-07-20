@@ -9,9 +9,10 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 
-import com.jonlatane.composer.io.ManagedToneGenerator;
 import com.jonlatane.composer.io.ToneControllerFragment;
 import com.jonlatane.composer.io.TwelthKeyboardFragment;
+import com.jonlatane.composer.audio.AudioTrackCache;
+import com.jonlatane.composer.audio.generator.HarmonicOvertoneSeriesGenerator;
 import com.jonlatane.composer.music.harmony.Chord;
 import com.jonlatane.composer.music.harmony.Enharmonics;
 import com.jonlatane.composer.music.harmony.Key;
@@ -91,7 +92,7 @@ public class BaseKeyboardActivity extends Activity
 		
 		// Attach the tone controller to the keyboard
         toneController = (ToneControllerFragment) getFragmentManager().findFragmentById(R.id.toneControllerFragment);
-        toneController.attachToneGenerator(keyboard.getToneGenerator());
+        toneController.attachToneGenerator((HarmonicOvertoneSeriesGenerator) keyboard.getTrackGenerator());
         keyboard.linkView(toneController.getView());
 
 		if(getClass().equals(BaseKeyboardActivity.class)) {
@@ -134,7 +135,7 @@ public class BaseKeyboardActivity extends Activity
 	@Override
 	public void onPause() {
 		super.onPause();
-	    ManagedToneGenerator.releaseAudioResources();
+		AudioTrackCache.releaseAll();
 	}
 
 	@Override
