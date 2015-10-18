@@ -74,14 +74,14 @@ public class Clef {
 	 * the pair <-1, 1>, because A4 and C5 are respective one step below and above B4, 
 	 * the center of the Treble Clef staff.
 	 * 
-	 * This requires that the NOTENAMES field of the PitchSet is set.
+	 * This requires that the noteNameCache field of the PitchSet is set.
 	 * 
 	 * @param ps
 	 * @return
 	 */
 	public Pair<Integer, Integer> getHeptatonicStepsFromCenter(PitchSet ps) {
-		String bottomNoteName = ps.NOTENAMES[0];
-		String topNoteName = ps.NOTENAMES[ps.NOTENAMES.length - 1];
+		String bottomNoteName = ps.noteNameCache[0];
+		String topNoteName = ps.noteNameCache[ps.noteNameCache.length - 1];
 		
 		return new Pair<Integer, Integer>(getHeptatonicStepsFromCenter(bottomNoteName), getHeptatonicStepsFromCenter(topNoteName));
 	}

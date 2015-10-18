@@ -52,11 +52,9 @@ public class KeyboardIOHandler implements OnLongClickListener, OnTouchListener {
 	private boolean harmonicMode = false;
 	private boolean cancelHarmonicLongPressRootSelection = false;
 	
-	//private Integer _harmonicRoot = null;
 	private Chord harmonicChord = null;
 	
 	private Set<Integer> currentlyPressed = Collections.synchronizedSet(new HashSet<Integer>());
-	//ManagedToneGenerator _toneGenerator = new ManagedToneGenerator();
 	AudioTrackGenerator trackGenerator = new HarmonicOvertoneSeriesGenerator();
 	private TwelthKeyboardFragment keyboardFragment;
 	private final KeyboardScroller keyboardScroller;

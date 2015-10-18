@@ -195,12 +195,12 @@ public class Score {
 				public Rational getNoteheadAtLocation() {
 					Rational result = null;
 					if(CHANGED.NOTES != null) {
-						result = CHANGED.NOTES.TYING[0];
+						result = CHANGED.NOTES.tying[0];
 					} else if(ESTABLISHED.NOTES != null) {
-						for(int idx = 0; idx < ESTABLISHED.NOTES.TYING.length - 1; idx++){
-							Rational r = ESTABLISHED.TIME.plus(ESTABLISHED.NOTES.TYING[idx]);
+						for(int idx = 0; idx < ESTABLISHED.NOTES.tying.length - 1; idx++){
+							Rational r = ESTABLISHED.TIME.plus(ESTABLISHED.NOTES.tying[idx]);
 							if(LOCATION.equals(r)) {
-								result = ESTABLISHED.NOTES.TYING[idx + 1] .minus( ESTABLISHED.NOTES.TYING[idx] );
+								result = ESTABLISHED.NOTES.tying[idx + 1] .minus( ESTABLISHED.NOTES.tying[idx] );
 							}
 						}
 					}
@@ -459,7 +459,7 @@ public class Score {
 		}
 
 		/**
-		 * Fill end the NOTENAMES field for every Chord, PitchSet and Scale in the given interval using the Keys
+		 * Fill end the noteNameCache field for every Chord, PitchSet and Scale in the given interval using the Keys
 		 * present, or C Major if no key is provided.
 		 * 
 		 * @param start
@@ -678,8 +678,8 @@ public class Score {
 				result.addAll(v._notes.getRhythm());
 				for(Map.Entry<Rational, PitchSet> e : v._notes._data.entrySet()) {
 					result.add(e.getKey());
-					if(e.getValue() != null && e.getValue().TYING != null)
-						for(Rational tiedNoteheadPosition : e.getValue().TYING) {
+					if(e.getValue() != null && e.getValue().tying != null)
+						for(Rational tiedNoteheadPosition : e.getValue().tying) {
 							result.add(e.getKey().plus(tiedNoteheadPosition));
 						}
 				}
@@ -787,11 +787,11 @@ public class Score {
 	public void stripEnharmonics() {
 		for(Staff staff : getStaves()) {
 			for(Chord c : staff._chords._data.values()) {
-				c.NOTENAMES = null;
+				c.noteNameCache = null;
 			}
 			for(Voice v : staff.getVoices()) {
 				for(PitchSet ps : v._notes._data.values()) {
-					ps.NOTENAMES = null;
+					ps.noteNameCache = null;
 				}
 			}
 		}
@@ -857,7 +857,7 @@ public class Score {
 	}
 	
 	/**
-	 * Fill in the NOTENAMES field for every Chord and PitchSet within this Score
+	 * Fill in the noteNameCache field for every Chord and PitchSet within this Score
 	 * 
 	 * @param s
 	 */
@@ -996,15 +996,15 @@ public class Score {
 							duration = duration.minus(headLength);
 						}
 						Collections.sort(locations);
-						vd.CHANGED.NOTES.TYING = new Rational[locations.size()+1];
+						vd.CHANGED.NOTES.tying = new Rational[locations.size()+1];
 						Rational headLocation = vd.LOCATION;
 						int idx = 0;
 						for(Rational location : locations) {
 							Rational noteheadDuration = location.minus(headLocation);
-							vd.CHANGED.NOTES.TYING[idx++] = noteheadDuration;
+							vd.CHANGED.NOTES.tying[idx++] = noteheadDuration;
 							headLocation = headLocation.plus(noteheadDuration);
 						}
-						vd.CHANGED.NOTES.TYING[idx] = lastChangedNoteLocs[i][j].minus(headLocation);
+						vd.CHANGED.NOTES.tying[idx] = lastChangedNoteLocs[i][j].minus(headLocation);
 						
 						//TODO finish this
 					}
@@ -1060,9 +1060,9 @@ public class Score {
 						for(int n : vd.CHANGED.NOTES) {
 							voiceRepr[j] += n + " ";
 						}
-						if(vd.CHANGED.NOTES.NOTENAMES != null) {
-							for(int nameInd = 0; nameInd < vd.CHANGED.NOTES.NOTENAMES.length; nameInd++) {
-								voiceRepr[j] += vd.CHANGED.NOTES.NOTENAMES[nameInd] + " ";
+						if(vd.CHANGED.NOTES.noteNameCache != null) {
+							for(int nameInd = 0; nameInd < vd.CHANGED.NOTES.noteNameCache.length; nameInd++) {
+								voiceRepr[j] += vd.CHANGED.NOTES.noteNameCache[nameInd] + " ";
 							}
 							
 						}

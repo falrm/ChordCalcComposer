@@ -2,32 +2,36 @@ package com.jonlatane.composer.music.harmony;
 
 import com.jonlatane.composer.music.Rational;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.TreeSet;
 
 /**
 * A PitchSet represents a set of pitches.  In this model, middle C (C4) is 0.
 * 
-* Of important note are the fields NOTENAMES and DURATION.  These provide a caching layer - while a PitchSet
+* Of important note are the fields noteNameCache and DURATION.  These provide a caching layer - while a PitchSet
 * does not manage this information itself (as context is needed to fill in these fields) the rendering layer
 * may store it in these fields and invalidate them by setting them to null.
 */
 public class PitchSet extends TreeSet<Integer> {
+	private static final String TAG = "PitchSet";
     public static final char FLAT = '\u266D';
-    public static final char NATURAL = '\u266E';
+    public static final char NATURAL = '\u266E';	/**
+	 * It is imperative to use this and NOT a null pointer to represent a rest.
+	 */
+	public static final PitchSet REST = new PitchSet();
 
     public class Voicing extends TreeSet<Integer> {
 		private static final long serialVersionUID = 7889990288839184253L;};
 	private static final long serialVersionUID = -3127526528166358783L;
 
 	/**
-	 * NOTENAMES is a field to be filled in by the rendering layer.  It determines whether a C chord
-	 * is rendered as CEG or B#FbG, essentially.  NOTENAMES should be filled to match the notes of
+	 * noteNameCache is a field to be filled in by the rendering layer.  It determines whether a C chord
+	 * is rendered as CEG or B#FbG, essentially.  noteNameCache should be filled to match the notes of
 	 * the PitchSet/Chord/Scale in ascending order.  This means, in Chords, the note names are essentially
 	 * listed from C on up for each note in the Chord, regardless of its root.
 	 */
-	public String[] NOTENAMES = null;
+	public String[] noteNameCache = null;
 	
 	/**
 	 * An array of at minimum one element representing how to draw a note.  PitchSets do not manage these,
@@ -42,7 +46,7 @@ public class PitchSet extends TreeSet<Integer> {
 	 *  <li>[1 3/4] is a double dotted quarter note, equivalent musically to the previous entry</li>
 	 * </ul> 
 	 */
-	public Rational[] TYING = null;
+	public Rational[] tying = null;
 	
 	
 	public PitchSet() {
@@ -58,10 +62,7 @@ public class PitchSet extends TreeSet<Integer> {
 		super(c);
 	}
 	
-	/**
-	 * It is imperative to use this and NOT a null pointer to represent a rest.
-	 */
-	public static final PitchSet REST = new PitchSet();
+
 	
 	/**
 	 * Convert a note name ("C4", "D") to a PitchSet containing that note.  If no octave is specified,
@@ -101,12 +102,17 @@ public class PitchSet extends TreeSet<Integer> {
 
     @Override
     public String toString() {
-        StringBuffer result = new StringBuffer();
-        if(NOTENAMES != null) {
-            result.append(Arrays.toString(NOTENAMES));
-            result.append(" ");
-        }
-        result.append(super.toString());
-        return result.toString();
+		String result = TAG + "[";
+		Iterator<Integer> itr = iterator();
+		while(itr.hasNext()) {
+			result += itr.next();
+			if(itr.hasNext())
+				result += ",";
+		}
+		result += "]";
+		if(noteNameCache != null) {
+			result += ":" + noteNameCache.toString();
+		}
+		return result;
     }
 }

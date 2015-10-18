@@ -3,18 +3,12 @@
  */
 package com.jonlatane.composer.scoredisplay;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.jonlatane.composer.music.*;
-import com.jonlatane.composer.music.coverings.Clef;
 import com.jonlatane.composer.music.coverings.TimeSignature;
 import com.jonlatane.composer.music.harmony.Key;
-import com.jonlatane.composer.music.harmony.PitchSet;
 import com.jonlatane.composer.music.Score.ScoreDelta;
 import com.jonlatane.composer.music.Score.Staff.StaffDelta;
 import com.jonlatane.composer.music.Score.Staff.Voice.VoiceDelta;
-import com.jonlatane.composer.music.harmony.Chord;
 import com.jonlatane.composer.scoredisplay.ScoreDeltaView.StaffDeltaView;
 import com.jonlatane.composer.scoredisplay.ScoreDrawingSurface.SystemHeaderView.StaffHeaderView;
 import com.jonlatane.composer.scoredisplay.StaffSpec.VerticalStaffSpec;
@@ -26,13 +20,11 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
 
 /**
@@ -382,7 +374,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 					StaffDelta std = staffDV.getStaffDelta();
 					for(VoiceDelta vd : std.VOICES) {
 						if(vd.CHANGED.NOTES != null)
-							for(String noteName : vd.CHANGED.NOTES.NOTENAMES) {
+							for(String noteName : vd.CHANGED.NOTES.noteNameCache) {
 								int y2 = y - (int)((std.ESTABLISHED.CLEF.getHeptatonicStepsFromCenter(noteName) - 1) * StaffSpec.HEPTATONICSTEP_PX * _parent.getScalingFactor());
 								c.drawText("%", x, y2, __black);
 							}
@@ -410,17 +402,17 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 		Boolean isRest = null;
 		if(vd.CHANGED.NOTES != null) {
 			assert(vd.CHANGED.NOTES == vd.ESTABLISHED.NOTES);
-			assert(vd.CHANGED.NOTES.TYING != null);
-			assert(vd.LOCATION.equals(vd.CHANGED.TIME) && vd.LOCATION.equals(vd.CHANGED.NOTES.TYING[0]));
-			duration = vd.CHANGED.NOTES.TYING[1].minus(vd.CHANGED.NOTES.TYING[0]);
+			assert(vd.CHANGED.NOTES.tying != null);
+			assert(vd.LOCATION.equals(vd.CHANGED.TIME) && vd.LOCATION.equals(vd.CHANGED.NOTES.tying[0]));
+			duration = vd.CHANGED.NOTES.tying[1].minus(vd.CHANGED.NOTES.tying[0]);
 			isRest = vd.CHANGED.NOTES.isEmpty();
 		} else if(vd.ESTABLISHED.NOTES != null) {
 			Rational now = vd.LOCATION;
-			for(int i = 0; i < vd.ESTABLISHED.NOTES.TYING.length; i++) {
-				Rational r = vd.ESTABLISHED.NOTES.TYING[i];
+			for(int i = 0; i < vd.ESTABLISHED.NOTES.tying.length; i++) {
+				Rational r = vd.ESTABLISHED.NOTES.tying[i];
 				if(r.equals(now)) {
-					assert( (i+1) < vd.ESTABLISHED.NOTES.TYING.length);
-					duration = vd.ESTABLISHED.NOTES.TYING[i+1].minus(r);
+					assert( (i+1) < vd.ESTABLISHED.NOTES.tying.length);
+					duration = vd.ESTABLISHED.NOTES.tying[i+1].minus(r);
 				}
 			}
 			isRest = vd.ESTABLISHED.NOTES.isEmpty();
@@ -476,7 +468,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 			if(vd.CHANGED.NOTES != null) {
 				pitchSetToDraw = vd.CHANGED.NOTES;
 				durationToDraw = pitchSetToDraw.NOTEHEADLOCS[1].minus(pitchSetToDraw.NOTEHEADLOCS[0]);
-				for(String noteName : vd.CHANGED.NOTES.NOTENAMES) {
+				for(String noteName : vd.CHANGED.NOTES.noteNameCache) {
 					int stepsFromCenter = c.getHeptatonicStepsFromCenter(noteName);
 				}
 			} else if(vd.ESTABLISHED.NOTES.NOTEHEADLOCS.length > 2) {
@@ -489,7 +481,7 @@ public class ScoreDrawingSurface extends ViewGroup implements SurfaceHolder.Call
 			}
 			
 			if(pitchSetToDraw != null) {
-				for(String noteName : pitchSetToDraw.NOTENAMES) {
+				for(String noteName : pitchSetToDraw.noteNameCache) {
 					int stepsFromCenter = c.getHeptatonicStepsFromCenter(noteName);
 				}
 			}

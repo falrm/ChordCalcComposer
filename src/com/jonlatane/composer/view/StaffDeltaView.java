@@ -154,7 +154,7 @@ public class StaffDeltaView extends View {
 		float maxY = 0, minY = 0;
 		for(VoiceDelta voiceDelta : mStaffDelta.VOICES) {
 			Rational renderedDuration = voiceDelta.getNoteheadAtLocation();
-            for(String noteName : voiceDelta.CHANGED.NOTES.NOTENAMES) {
+            for(String noteName : voiceDelta.CHANGED.NOTES.noteNameCache) {
                 Integer distanceFromCenter = clef.getHeptatonicStepsFromCenter(noteName);
                 float y = heightAboveStaffCenter/scalingFactor -
                 		(distanceFromCenter * BASE_STAFF_LINE_DISTANCE/2)

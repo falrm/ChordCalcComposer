@@ -96,7 +96,7 @@ public class StaffSpec {
 			for(VoiceDelta vd : d.VOICES) {
 				PitchSet ps = (vd.CHANGED.NOTES != null) ? vd.CHANGED.NOTES : vd.ESTABLISHED.NOTES;
 				if(!ps.equals(PitchSet.REST)) {
-					assert(ps.NOTENAMES.length == ps.size());
+					assert(ps.noteNameCache.length == ps.size());
 					Pair<Integer,Integer> p = d.ESTABLISHED.CLEF.getHeptatonicStepsFromCenter(ps);
 					neededStepsAboveCenter = Math.max(neededStepsAboveCenter, p.first);
 					neededStepsBelowCenter = Math.max(neededStepsBelowCenter, -p.second);
@@ -455,8 +455,8 @@ public class StaffSpec {
 		}
 		
 		// Iterate from the top note down.
-		for(int i = ps.NOTENAMES.length - 1; i >=0; i--) {
-			String name = ps.NOTENAMES[i];
+		for(int i = ps.noteNameCache.length - 1; i >=0; i--) {
+			String name = ps.noteNameCache[i];
 			if(name.charAt(1) == '#' || name.charAt(1) == 'b' || name.charAt(1) == PitchSet.FLAT) {
 				// Double flats require two columns to draw properly
 				if(name.charAt(2) == 'b' || name.charAt(1) == PitchSet.FLAT) {

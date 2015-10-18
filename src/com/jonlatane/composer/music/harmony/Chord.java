@@ -1444,18 +1444,10 @@ public class Chord extends PitchSet {
 	
 	@Override
 	public String toString() {
-		String result = "[";
-		Iterator<Integer> itr = iterator();
-		while(itr.hasNext()) {
-			result += itr.next();
-			if(itr.hasNext())
-				result += ",";
-		}
-		result += "]";
-		return result;
+		return TAG + "{Mod" + MODULUS.OCTAVE_STEPS + "," + super.toString() + "}";
 	}
 	
 	public String getRootEnharmonic() {
-		return NOTENAMES[headSet(getRoot()).size()];
+		return noteNameCache[headSet(getRoot()).size()];
 	}
 }

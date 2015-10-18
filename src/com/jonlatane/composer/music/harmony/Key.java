@@ -115,7 +115,7 @@ public final class Key extends Scale
 		AsMinor.setRootName("A#");
 	}
 	
-	private String _rootName;
+	private String rootName;
 	
 	public Key() {
 		super();
@@ -136,33 +136,33 @@ public final class Key extends Scale
 			Scale s = (Scale)c;
 			if(s.isMajor()) {
 				//Log.i(TAG,"Key is major" + (majorKeys.length));
-				_rootName = majorKeys[c.getRoot()];
+				rootName = majorKeys[c.getRoot()];
 			}
 			if(s.isMinor())
-				_rootName = minorKeys[c.getRoot()];
+				rootName = minorKeys[c.getRoot()];
 		}
 	}
 	
 	// Override these to be sure root and root name are consistent
 	@Override
 	public Integer getRoot() {
-		if(_rootName != null) {
-			assert(Enharmonics.noteNameToInt(_rootName) == super.getRoot());
+		if(rootName != null) {
+			assert(Enharmonics.noteNameToInt(rootName) == super.getRoot());
 		}
 		return super.getRoot();
 	}
 	
 	public String getRootName() {
-		if(_rootName == null) {
+		if(rootName == null) {
 			int root = getRoot();
 			boolean isMajor = contains(root + 4);
 			if(isMajor)
-				_rootName = majorKeys[root];
+				rootName = majorKeys[root];
 			else
-				_rootName = minorKeys[root];
+				rootName = minorKeys[root];
 		}
 		
-		return _rootName;
+		return rootName;
 	}
 	
 	/**
@@ -173,7 +173,7 @@ public final class Key extends Scale
 	 */
 	public boolean setRootName(String str) {
 		if(Enharmonics.noteNameToInt(str) == getRoot()) {
-			_rootName = str;
+			rootName = str;
 			return true;
 		} else {
 			return false;
@@ -210,12 +210,12 @@ public final class Key extends Scale
 	 * @return
 	 */
 	public String getNoteName(int i) {
-		Log.i(TAG,"Getting note name for key" + toString() + " root name:" + _rootName);
+		Log.i(TAG,"Getting note name for " + i + " in " + toString());
 		String result = "";
 		i = MODULUS.mod(i);
 
 		// This method works by careful interlocking of the heptatonic and twelve-tone systems.
-		int rootCharIndex = heptatonicInverse.get( _rootName.charAt(0) );
+		int rootCharIndex = heptatonicInverse.get(rootName.charAt(0));
 		
 		// Note that this is scale degrees and thus is assumed to be heptatonic (as per documentation)
 		Pair<Integer,Integer> p = degreeOf(i);
@@ -377,6 +377,11 @@ public final class Key extends Scale
 	
 	public static TreeMap<Integer,List<String>> getRootLikelihoodsAndNamesInC(Collection<Integer> inputRootCandidates, Chord c) {
 		return getRootLikelihoodsAndNames(inputRootCandidates, c, CMajor);
+	}
+
+	@Override
+	public String toString() {
+		return TAG + "{" + rootName + "," + super.toString() + "}";
 	}
 
 	@Override
