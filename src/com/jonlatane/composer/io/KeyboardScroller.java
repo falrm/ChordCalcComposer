@@ -13,7 +13,7 @@ public class KeyboardScroller extends NonDelayedHorizontalScrollView {
 	@SuppressWarnings("unused") private static String TAG = "KBScroller";
 	//private KeyboardIOHandler _io = null;	
 	
-	public static int MARGIN = 40;
+	public int margin;
 	
 	public KeyboardScroller(Context context) {
 		super(context);
@@ -30,10 +30,11 @@ public class KeyboardScroller extends NonDelayedHorizontalScrollView {
 	}
 	
 	void onCreate(Context c){
+		margin = c.getResources().getDisplayMetrics().densityDpi / 10;
 	}
 
 	@Override public boolean onTouchEvent(MotionEvent event) {
-		if(event.getX() < MARGIN || event.getX() > getWidth() - MARGIN)
+		if(event.getX() < margin || event.getX() > getWidth() - margin)
 			enableScrolling();
 		
 		if(_enableScrolling && event.getPointerCount() < 2)
@@ -45,7 +46,7 @@ public class KeyboardScroller extends NonDelayedHorizontalScrollView {
 	}
 	@Override public boolean onInterceptTouchEvent(MotionEvent event) {
 		if(event.getActionMasked() == MotionEvent.ACTION_DOWN 
-				&& event.getX() < MARGIN || event.getX() > getWidth() - MARGIN)
+				&& event.getX() < margin || event.getX() > getWidth() - margin)
 			return true;
 		return false;
 	}
