@@ -104,7 +104,7 @@ public class BaseKeyboardActivity extends Activity
 
 		if(getClass().equals(BaseKeyboardActivity.class)) {
 			toneController.getView().setVisibility(View.GONE);
-			setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+			//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		}
 
 		// Set up lead sheet display

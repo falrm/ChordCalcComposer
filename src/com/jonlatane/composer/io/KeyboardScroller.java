@@ -30,7 +30,7 @@ public class KeyboardScroller extends NonDelayedHorizontalScrollView {
 	}
 	
 	void onCreate(Context c){
-		margin = c.getResources().getDisplayMetrics().densityDpi / 10;
+		margin = c.getResources().getDisplayMetrics().densityDpi / 5;
 	}
 
 	@Override public boolean onTouchEvent(MotionEvent event) {

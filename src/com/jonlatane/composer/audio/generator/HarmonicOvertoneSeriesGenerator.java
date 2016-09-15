@@ -20,32 +20,13 @@ public class HarmonicOvertoneSeriesGenerator implements AudioTrackGenerator {
     private static final double[] FREQUENCIES = {261.625625, 277.1825, 293.665, 311.1275, 329.6275, 349.22875, 369.995, 391.995, 415.305, 440, 466.16375, 493.88375};
     private final static Double[] DEFAULT_OVERTONES = {70., 30., 30., 10., 10., 20., 20., 1.};
 
-    /** All HarmonicOvertoneSeriesGenerators share the same {@link #AUDIO_SESSION} id and {@link #EQUALIZER} */
-    public static final int AUDIO_SESSION = 2375;
-    /** All HarmonicOvertoneSeriesGenerators share the same {@link #AUDIO_SESSION} id and {@link #EQUALIZER} */
-    public static final Equalizer EQUALIZER = new Equalizer(1, AUDIO_SESSION);
-    static {
-        EQUALIZER.setEnabled(true);
-        short bands = EQUALIZER.getNumberOfBands();
-        Log.d("EqualizerSample", "NumberOfBands: " + bands);
-
-        short min = EQUALIZER.getBandLevelRange()[0];
-        short max = EQUALIZER.getBandLevelRange()[1];
-        short span = (short)(max - min);
-        short midBand = (short)(bands/2);
-
-        for (short i = 0; i < bands; i++) {
-            Log.d("EqualizerSample", i + String.valueOf(EQUALIZER.getCenterFreq(i) / 1000) + "Hz");
-            //EQUALIZER.setBandLevel(i, (short)((minEQLevel + maxEQLevel) / 2));
-            float arctanCurveFactor = (float) (-.38 * Math.atan((float)(i-midBand)) + .5);
-
-            EQUALIZER.setBandLevel(i, (short) (min + (arctanCurveFactor * span)));
-        }
-
-    }
+    /** All HarmonicOvertoneSeriesGenerators share the same {@link #audioSessionId} id and {@link #equalizer} */
+    public Integer audioSessionId = null;
+    /** All HarmonicOvertoneSeriesGenerators share the same {@link #audioSessionId} id and {@link #equalizer} */
+    public Equalizer equalizer = null;
     Double[] overtones;
 
-    private static String TAG = "HarmonicOvertonSeriesGenerator";
+    private static final String TAG = "HOSGenerator";
 
     public HarmonicOvertoneSeriesGenerator() {
         this(DEFAULT_OVERTONES);
@@ -53,6 +34,7 @@ public class HarmonicOvertoneSeriesGenerator implements AudioTrackGenerator {
 
     public HarmonicOvertoneSeriesGenerator(Double[] overtones) {
         this.overtones = overtones;
+        setupEqualizer();
     }
 
     public Double[] getOvertones() {
@@ -61,6 +43,35 @@ public class HarmonicOvertoneSeriesGenerator implements AudioTrackGenerator {
 
     public void setOvertones(Double... overtones) {
         this.overtones = overtones;
+    }
+
+    private void setupEqualizer() {
+        // Get an audio session ID from a track without one
+        AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC,
+                NATIVE_OUTPUT_SAMPLE_RATE, AudioFormat.CHANNEL_OUT_DEFAULT,
+                AudioFormat.ENCODING_PCM_16BIT, 16,
+                AudioTrack.MODE_STATIC);
+        audioSessionId = track.getAudioSessionId();
+        track.flush();
+        track.release();
+
+        equalizer = new Equalizer(1, audioSessionId);
+        equalizer.setEnabled(true);
+        short bands = equalizer.getNumberOfBands();
+        Log.d("EqualizerSample", "NumberOfBands: " + bands);
+
+        short min = equalizer.getBandLevelRange()[0];
+        short max = equalizer.getBandLevelRange()[1];
+        short span = (short)(max - min);
+        short midBand = (short)(bands/2);
+
+        for (short i = 0; i < bands; i++) {
+            Log.d("EqualizerSample", i + String.valueOf(equalizer.getCenterFreq(i) / 1000) + "Hz");
+            //equalizer.setBandLevel(i, (short)((minEQLevel + maxEQLevel) / 2));
+            float arctanCurveFactor = (float) (-.38 * Math.atan((float)(i-midBand)) + .5);
+
+            equalizer.setBandLevel(i, (short) (min + (arctanCurveFactor * span)));
+        }
     }
 
     @Override
@@ -113,11 +124,13 @@ public class HarmonicOvertoneSeriesGenerator implements AudioTrackGenerator {
                 track = new AudioTrack(AudioManager.STREAM_MUSIC,
                         NATIVE_OUTPUT_SAMPLE_RATE, AudioFormat.CHANNEL_OUT_DEFAULT,
                         AudioFormat.ENCODING_PCM_16BIT, 2 * numFrames,
-                        AudioTrack.MODE_STATIC, AUDIO_SESSION);
+                        AudioTrack.MODE_STATIC, audioSessionId);
                 track.write(generatedSnd, 0, generatedSnd.length);
                 track.setLoopPoints(0, numFrames, -1);
-                if(track.getState() != AudioTrack.STATE_INITIALIZED)
+                if(track.getState() != AudioTrack.STATE_INITIALIZED) {
+                    Log.e(TAG, "Track state: " + track.getState());
                     throw new Exception();
+                }
             } catch (Throwable e) {
                 if(track != null) {
                     track.flush();
