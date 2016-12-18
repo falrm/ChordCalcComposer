@@ -274,77 +274,6 @@ public final class Key extends Scale
 		return result;
 	}
 	
-	public static Pair<String,Integer> guessName(Chord c, Integer root, Key k) {
-		Pair<String,Integer> data = guessCharacteristic(c, root);
-		String rootName = k.getNoteName(root);
-		return new Pair<String,Integer>(rootName+data.first, data.second);
-	}
-	
-	public static Pair<String,Integer> guessNameInC(Chord c, Integer root) {
-		//Log.i(TAG,"guessNameInC");
-		return guessName(c, root, CMajor);
-	}
-	
-	/**
-	 * Guess the name of the chord without knowing its root (we will ignore the root specified).
-	 * Assume the root is in the chord.
-	 * 
-	 * @param c
-	 * @return
-	 */
-	public static Pair<String,Integer> guessName(Chord c, Key k) {
-		Pair<String,Integer> result = new Pair<String,Integer>("", 0);
-		for(int i : c) {
-			Pair<String,Integer> contestant = guessName(c, i, k);
-			if(contestant.second > result.second) {
-				result = contestant;
-			}
-			Log.i(TAG, "Root " + i + "got " + contestant.first + " @ " + contestant.second);
-		}
-		return result;
-	}
-	
-	public static Pair<String,Integer> guessNameInC(Chord c) {
-		//Log.i(TAG, "Guessing chord name in C" + (Key.CMajor != null));
-		return guessName(c, Key.CMajor);
-	}
-	
-	/**
-	 * Guess the name of the chord without knowing its root (we will ignore the root specified).
-	 * Assume the root can be anything.
-	 * 
-	 * @param c
-	 * @return
-	 */
-	public static Pair<String,Integer> guessNameIncludeShells(Chord c, Key k) {
-		Pair<String,Integer> result = new Pair<String,Integer>("", 0);
-		for(int i = 0; i < 12; i++) {
-			Pair<String,Integer> contestant = guessName(c, i, k);
-			if(contestant.second > result.second) {
-				result = contestant;
-			}
-		}
-		return result;
-	}
-	
-	/**
-	 * Guess the name of the chord without knowing its root (we will ignore the root specified).
-	 * Assume the root is in the key.
-	 * 
-	 * @param c
-	 * @return
-	 */
-	public static Pair<String,Integer> guessDiatonic(Chord c, Key k) {
-		Pair<String,Integer> result = new Pair<String,Integer>("", 0);
-		for(int i : k) {
-			Pair<String,Integer> contestant = guessName(c, i, k);
-			if(contestant.second > result.second) {
-				result = contestant;
-			}
-		}
-		return result;
-	}
-	
 	public static TreeMap<Integer,List<String>> getRootLikelihoodsAndNames(Collection<Integer> inputRootCandidates, Chord c, Key k) {
 		TreeMap<Integer,List<String>> result = new TreeMap<Integer,List<String>>();
 		
@@ -364,19 +293,6 @@ public final class Key extends Scale
 		}
 		
 		return result;
-	}
-	
-	public int[] getRootLikelihoods(Chord c, Key k) {
-		int[] result = new int[12];
-		for(int i = 0; i < 12; i++) {
-			result[i] = guessCharacteristic(c, i).second;
-		}
-		
-		return result;
-	}
-	
-	public static TreeMap<Integer,List<String>> getRootLikelihoodsAndNamesInC(Collection<Integer> inputRootCandidates, Chord c) {
-		return getRootLikelihoodsAndNames(inputRootCandidates, c, CMajor);
 	}
 
 	@Override

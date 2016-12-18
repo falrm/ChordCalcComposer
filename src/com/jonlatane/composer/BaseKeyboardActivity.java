@@ -10,9 +10,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.WebView;
 
 import com.jonlatane.composer.audio.AudioTrackCache;
 import com.jonlatane.composer.audio.generator.HarmonicOvertoneSeriesGenerator;
@@ -36,6 +40,7 @@ public class BaseKeyboardActivity extends Activity
 {
 	protected TwelthKeyboardFragment keyboard;
 	protected ToneControllerFragment toneController;
+	protected WebView scoreWebView;
 	//private KeyboardIOHandler _myKbdIO;
 	//private KeyboardScroller _keyboardScroller;
 	//private HorizontalScrollView _chordScroller;
@@ -102,23 +107,13 @@ public class BaseKeyboardActivity extends Activity
         toneController.attachToneGenerator((HarmonicOvertoneSeriesGenerator) keyboard.getTrackGenerator());
         keyboard.linkView(toneController.getView());
 
+		// Load WebView
+		scoreWebView = (WebView) findViewById(R.id.scoreWebView);
+		scoreWebView.loadUrl("file:///android_asset/ngScore.html");
+
 		if(getClass().equals(BaseKeyboardActivity.class)) {
 			toneController.getView().setVisibility(View.GONE);
-			//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		}
-
-		// Set up lead sheet display
-		//HorizontalListView listview = (HorizontalListView) findViewById(R.id.leadSheet);
-        //listview.setAdapter(_adapter);
-        // Test Code
-//        SystemRecyclerView srv = (SystemRecyclerView)findViewById(R.id.systemRecyclerView);
-//        SystemRecyclerView srv2 = (SystemRecyclerView)findViewById(R.id.systemRecyclerView2);
-//        Score subject = Score.twinkleTwinkle();
-//        Score.testScore(subject);
-//        srv.setAdapter(new ScoreDataAdapter(subject));
-//        srv2.setAdapter(new ScoreDataAdapter(subject));
-//        srv.setViewBelow(srv2);
-//        srv2.setViewAbove(srv);
 	}
 
 	protected void themeWindow() {
@@ -127,7 +122,7 @@ public class BaseKeyboardActivity extends Activity
 			window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 			window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 			window.setStatusBarColor(getResources().getColor(R.color.toolbar));
-			window.setNavigationBarColor(getResources().getColor(R.color.toolbar));
+			//window.setNavigationBarColor(getResources().getColor(R.color.toolbar));
 
 			ActivityManager.TaskDescription taskDescription = new ActivityManager.TaskDescription(
 					getResources().getString(R.string.app_name),
@@ -174,6 +169,29 @@ public class BaseKeyboardActivity extends Activity
 	public void onResume() {
         super.onResume();
 	}
-	
-	
+
+
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.chorddisplaymenu, menu);
+		return true;
+	}
+
+
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			//TODO Interact with UI elements here
+			case R.id.toggleKeyboardAB:
+				keyboard.toggleKeyboardFragment();
+				break;
+			default:
+				break;
+		}
+
+		return true;
+	}
 }

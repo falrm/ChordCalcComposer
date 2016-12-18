@@ -61,9 +61,9 @@ public class StaffDeltaViewActivity extends BaseKeyboardActivity {
             case R.id.toggleKeyboardAB:
                 keyboard.toggleKeyboardFragment();
                 break;
-            case R.id.toggleFX:
-                toneController.toggleToneController(keyboard.getView());
-                break;
+            //case R.id.toggleFX:
+            //    toneController.toggleToneController(keyboard.getView());
+            //    break;
             default:
                 break;
         }

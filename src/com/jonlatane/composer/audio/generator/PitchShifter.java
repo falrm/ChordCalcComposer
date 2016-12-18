@@ -19,12 +19,23 @@ public class PitchShifter
     private static float[] gSynMagn = new float[MAX_FRAME_LENGTH];
     private static long gRover, gInit;
 
-    public static void pitchShift(float pitchShift, long numSampsToProcess,
+    public static float[] pitchShift(float pitchShift, long numSampsToProcess,
                                   float sampleRate, float[] indata) {
-        pitchShift(pitchShift, numSampsToProcess, (long) 2048, (long) 10, sampleRate, indata);
+        return pitchShift(pitchShift, numSampsToProcess, (long) 2048, (long) 10, sampleRate, indata);
     }
 
-    public static void pitchShift(float pitchShift, long numSampsToProcess, long fftFrameSize,
+    public static float[] toFloatArray(byte[] in_buff, int in_offset,
+                                float[] out_buff, int out_offset, int out_len) {
+        int ix = in_offset;
+        int len = out_offset + out_len;
+        for (int ox = out_offset; ox < len; ox++) {
+            out_buff[ox] = ((short) ((in_buff[ix++] & 0xFF) |
+                    (in_buff[ix++] << 8))) * (1.0f / 32767.0f);
+        }
+        return out_buff;
+    }
+
+    private static float[] pitchShift(float pitchShift, long numSampsToProcess, long fftFrameSize,
                                   long osamp, float sampleRate, float[] indata) {
         double magn, phase, tmp, window, real, imag;
         double freqPerBin, expct;
@@ -178,6 +189,7 @@ public class PitchShifter
                 for (k = 0; k < inFifoLatency; k++) gInFIFO[(int)(k)] = gInFIFO[(int)(k + stepSize)];
             }
         }
+        return outdata;
     }
 
     private static void shortTimeFourierTransform(float[] fftBuffer, long fftFrameSize, long sign) {

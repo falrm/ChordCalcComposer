@@ -258,27 +258,6 @@ public class Chord extends PitchSet {
 		return _root;
 	}
 	
-	/**
-	 * "Completing" the chord means adding anything that is assumed by the chord's characteristic.  Essentially,
-	 * this means adding P5s to voicings of chords that are missing them although other results may be possible.
-	 * 
-	 * A chord must have a defined root to have a completion.
-	 * 
-	 * @return
-	 */
-	public Chord completion() {
-		Chord result = getChordByName(Key.CMajor.getNoteName(getRoot()) + getCharacteristic());
-		return result;
-	}
-	
-	/**
-	 * Return a String naming the tones requested.  Voodoo.
-	 * @param c
-	 * @param root
-	 * @param nameSoFar
-	 * @param tones
-	 * @return
-	 */
 	private static Pair<String,Integer> nameTones(Chord c, int root, int... tones) {
 		String name = "";
 		int certainty = 0;
